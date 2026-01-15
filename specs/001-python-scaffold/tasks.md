@@ -35,6 +35,7 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 - [ ] T004 [P] Configure ty for type checking in pyproject.toml
 - [ ] T005 [P] Setup pytest and tox configuration for testing framework
 - [ ] T006 Create placeholder directory structure for future CFFI bindings in src/pychrony/_core/
+- [ ] T036 [P] Create placeholder module files for future libchrony bindings in src/pychrony/_core/
 
 ---
 
@@ -128,7 +129,7 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 - [ ] T030 [P] Create comprehensive README.md with setup and usage instructions
 - [ ] T031 Add .gitignore file for Python project standards
-- [ ] T032 Create .python-version file for UV Python version specification
+- [ ] T032 Create .python-version file specifying primary development Python version for UV
 - [ ] T033 [P] Add LICENSE file with GPL-2.0+ license text
 - [ ] T034 Validate quickstart.md instructions work end-to-end
 - [ ] T035 Run final test suite to ensure all functionality works

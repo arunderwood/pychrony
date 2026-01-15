@@ -41,15 +41,6 @@
 - ✅ No vendoring or reimplementation of libchrony
 
 **STATUS: PASS - All constitution gates satisfied**
-### pychrony Constitution Gates
-
-**MUST PASS:**
-- ✅ API scope limited to libchrony read-only capabilities
-- ✅ Implementation uses CFFI binding to system libchrony  
-- ✅ Full type hints and Pythonic interfaces
-- ✅ Linux-first design with Linux CI
-- ✅ Test coverage for all new features
-- ✅ No vendoring or reimplementation of libchrony
 
 ## Project Structure
 

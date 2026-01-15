@@ -21,6 +21,8 @@ Project Structure: A clear Python package layout under src/pychrony/ with an __i
 
 Build Configuration: A pyproject.toml file defining project metadata and build system requirements. This will declare the package name, version, authors, GPL-2.0+ license (matching chrony), modern uv-centric development dependencies (ruff, pytest, tox, ty), and specify a build backend. Even though this project will include a C binding, we will still use pyproject.toml for metadata per modern standards.
 
+UV Version Management: Use .python-version file to specify the primary development Python version, while pyproject.toml defines the supported version matrix (3.10-3.14) for testing and distribution. UV uses .python-version for local development and respects pyproject.toml requires-python for package compatibility.
+
 Testing Infrastructure: A tests/ directory with an initial test (e.g. a trivial test to ensure the package imports successfully). Use pytest as the primary testing framework with tox configuration for multi-environment testing, ensuring test commands work locally and in CI.
 
 CI Workflow: A GitHub Actions workflow file (e.g. .github/workflows/ci.yml) set up to run on pushes/PRs. It should checkout the code, set up Python, install dependencies, and run the test suite. The CI will target Linux (Ubuntu runners) since the initial platform support is Linux. It will test against multiple Python versions (for example, 3.10 through 3.14) to ensure broad compatibility.
@@ -101,9 +103,25 @@ Developers need assurance that their changes work across multiple Python version
 
 ### Edge Cases
 
-- What happens when the Python version is not supported by the package metadata?
-- How does the CI handle test failures in the matrix build? → Fail entire build if any Python version fails
-- What occurs when the package structure is malformed?
+**Unsupported Python Version**:
+- **Detection**: pyproject.toml requires-python field validation during install
+- **Handling**: Clear error message: `[pychrony] Build: Python X.Y not supported - requires Python 3.10-3.14`
+- **Test Coverage**: Verify install fails on Python 3.9 and succeeds on 3.10+
+
+**CI Test Failures**:
+- **Detection**: GitHub Actions matrix job failure
+- **Handling**: Fail-fast behavior stops entire build, log job-specific failure
+- **Test Coverage**: Simulate failure in one Python version, verify build stops
+
+**Malformed Package Structure**:
+- **Detection**: Import errors during package initialization
+- **Handling**: Structured error with missing component details
+- **Test Coverage**: Test with missing __init__.py and other critical files
+
+**Missing Dependencies**:
+- **Detection**: Import-time dependency resolution failure
+- **Handling**: Error indicates specific missing dependency and installation command
+- **Test Coverage**: Test behavior with pytest, ruff, tox unavailable
 
 ## Requirements *(mandatory)*
 
@@ -120,7 +138,16 @@ Developers need assurance that their changes work across multiple Python version
 - **FR-009**: System MUST run on Ubuntu runners in CI environment with fail-fast behavior on any version failure
 - **FR-010**: System MUST support local test execution via pytest
 - **FR-011**: System MUST include placeholder modules for future libchrony bindings
-- **FR-012**: System MUST provide clear error messages when tests fail
+- **FR-012**: System MUST provide clear error messages following pychrony error format standards
+
+#### Error Message Standards
+- **Format**: `[pychrony] <component>: <specific error message>`
+- **Component**: Import, Test, Build, or CI
+- **Examples**: 
+  - `[pychrony] Import: Failed to load pychrony package - check installation`
+  - `[pychrony] Test: No tests found in tests/ directory`
+  - `[pychrony] Build: pyproject.toml missing required metadata`
+- **Consistency**: All error messages follow this pattern for easy parsing
 
 ### Key Entities *(include if feature involves data)*
 
