@@ -1,118 +1,225 @@
-# Implementation Tasks: Python Bindings Scaffold and CI Setup
+---
 
-**Branch**: `001-python-scaffold`  
-**Date**: 2025-01-14  
-**Spec**: [/specs/001-python-scaffold/spec.md](/specs/001-python-scaffold/spec.md)
+description: "Task list for Python bindings scaffold and CI setup feature implementation"
+---
 
-## Summary
+# Tasks: Python Bindings Scaffold and CI Setup
 
-Total tasks generated: 25 across 4 phases, covering complete Python package scaffold, testing infrastructure, and CI/CD setup for pychrony project.
+**Input**: Design documents from `/specs/001-python-scaffold/`
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**MVP Scope**: User Story 1 (Package Import Validation) - provides foundation package import capability with 5 tasks.
+**Tests**: Tests are explicitly requested in the feature specification for validating package structure and CI functionality.
 
-**Parallel Opportunities**: User Story 2 (Local Test Execution) and User Story 3 (CI Validation) can be developed independently after User Story 1 completion.
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-## Phase 1: Project Setup (Foundational)
+## Format: `[ID] [P?] [Story] Description`
 
-**Goal**: Establish project structure and development environment
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
 
-- [ ] T001 Create project root structure and configuration files
-- [ ] T002 Set up UV package manager with pyproject.toml
-- [ ] T003 Create src/pychrony package structure
-- [ ] T004 Implement package __init__.py with metadata
-- [ ] T005 Create __about__.py for version and author info
-- [ ] T006 Add placeholder _core and _utils modules
-- [ ] T007 Create initial README.md documentation
-- [ ] T008 Add MIT license file (per main branch directive to revise from GPL-2.0+)
-- [ ] T009 Set up .gitignore for Python projects
-- [ ] T010 Initialize UV virtual environment
+## Path Conventions
 
-## Phase 2: Foundational Tasks (Blocking)
+- **Single project**: `src/`, `tests/` at repository root
+- Paths shown follow the standard Python package layout from plan.md
 
-**Goal**: Core package import and testing capability
+---
 
-- [ ] T011 [P] [US1] Create package import test in tests/test_import.py
-- [ ] T012 [P] [US1] Implement pychrony.__version__ property
-- [ ] T013 [P] [US1] Ensure package can be imported in fresh environment
-- [ ] T014 [P] [US1] Add package metadata and exports to __init__.py
-- [ ] T015 [P] [US1] Verify package structure follows Python standards
+## Phase 1: Setup (Shared Infrastructure)
 
-## Phase 3: Testing Infrastructure
+**Purpose**: Project initialization and basic structure
 
-**Goal**: Comprehensive testing setup with modern toolchain
+- [ ] T001 Create Python package structure with src/pychrony/ directory per implementation plan
+- [ ] T002 Initialize UV package manager with pyproject.toml using hatchling build backend
+- [ ] T003 [P] Configure ruff for linting and formatting in pyproject.toml
+- [ ] T004 [P] Configure ty for type checking in pyproject.toml
+- [ ] T005 [P] Setup pytest and tox configuration for testing framework
+- [ ] T006 Create placeholder directory structure for future CFFI bindings in src/pychrony/_core/
 
-- [ ] T016 [P] [US2] Create pytest configuration in pyproject.toml
-- [ ] T017 [P] [US2] Add pytest and tox to development dependencies
-- [ ] T018 [P] [US2] Add ruff and ty to development dependencies
-- [ ] T019 [P] [US2] Create basic test structure in tests/
-- [ ] T020 [P] [US2] Set up test discovery and execution
-- [ ] T021 [P] [US2] Verify pytest can discover and run tests
-- [ ] T022 [P] [US2] Add test coverage configuration
+---
 
-## Phase 4: CI/CD Implementation
+## Phase 2: Foundational (Blocking Prerequisites)
 
-**Goal**: Automated testing across Python versions with fail-fast behavior
+**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-- [ ] T023 [P] [US3] Create .github/workflows directory structure
-- [ ] T024 [P] [US3] Implement GitHub Actions workflow with Python matrix
-- [ ] T025 [P] [US3] Set up UV integration in CI workflow
-- [ ] T026 [P] [US3] Configure fail-fast behavior for version matrix
-- [ ] T027 [P] [US3] Add test execution and coverage reporting
-- [ ] T028 [P] [US3] Verify CI runs on all Python versions
-- [ ] T029 [P] [US3] Ensure CI fails build if any version fails
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-## Phase 5: Polish & Quality
+- [ ] T007 Create pyproject.toml with complete project metadata including GPL-2.0+ license
+- [ ] T008 [P] Create __init__.py with package exports and version handling in src/pychrony/
+- [ ] T009 [P] Create __about__.py with version and author information in src/pychrony/
+- [ ] T010 [P] Setup placeholder modules for future libchrony bindings in src/pychrony/_core/
+- [ ] T011 Create tests/ directory structure with conftest.py configuration
+- [ ] T012 Create GitHub Actions workflow file for CI matrix testing
 
-**Goal**: Complete project polish and developer experience
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
-- [ ] T030 Configure ruff linting rules for code quality
-- [ ] T031 Configure ty type checking for Python 3.10+
-- [ ] T032 Add pre-commit hooks for development workflow
-- [ ] T033 Create development documentation in quickstart.md
-- [ ] T034 Validate all requirements are met
-- [ ] T035 Verify package builds correctly with UV
+---
 
-## Dependencies
+## Phase 3: User Story 1 - Package Import Validation (Priority: P1) 🎯 MVP
 
-```mermaid
-graph TD
-    T001 --> T002 --> T003 --> T004 --> T005 --> T006 --> T007 --> T008 --> T009 --> T010
-    T011 --> T012 --> T013 --> T014 --> T015
-    T016 --> T017 --> T018 --> T019 --> T020 --> T021 --> T022
-    T023 --> T024 --> T025 --> T026 --> T027 --> T028 --> T029
-    T030 --> T031 --> T032 --> T033 --> T034 --> T035
+**Goal**: Developers need to verify that the pychrony package structure is correct and can be imported successfully without any libchrony dependencies.
+
+**Independent Test**: Create a fresh Python environment and run `import pychrony` successfully, then verify `pychrony.__version__` returns a valid version string.
+
+### Tests for User Story 1
+
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+
+- [ ] T013 [P] [US1] Test package import success in tests/test_import.py
+- [ ] T014 [P] [US1] Test version string accessibility in tests/test_import.py
+
+### Implementation for User Story 1
+
+- [ ] T015 [P] [US1] Implement package __init__.py with proper imports and __all__ in src/pychrony/__init__.py
+- [ ] T016 [P] [US1] Implement __about__.py with version and metadata in src/pychrony/__about__.py
+- [ ] T017 [US1] Setup dynamic version from VCS using hatch-vcs in pyproject.toml
+
+**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+
+---
+
+## Phase 4: User Story 2 - Local Test Execution (Priority: P1)
+
+**Goal**: Developers need to run tests locally to validate their changes before committing to ensure the testing infrastructure works correctly.
+
+**Independent Test**: Run `pytest tests/` in the repository root and observe all tests pass, including both placeholder and import tests.
+
+### Tests for User Story 2
+
+- [ ] T018 [P] [US2] Test pytest discovery works with placeholder tests in tests/test_discovery.py
+- [ ] T019 [P] [US2] Test test execution completes without errors in tests/test_execution.py
+
+### Implementation for User Story 2
+
+- [ ] T020 [P] [US2] Create pytest configuration in pyproject.toml or pytest.ini
+- [ ] T021 [US2] Setup tox.ini for multi-environment testing configuration
+- [ ] T022 [US2] Create initial placeholder test file in tests/test_placeholder.py
+- [ ] T023 [US2] Integrate test discovery with UV workflow in pyproject.toml
+
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+
+---
+
+## Phase 5: User Story 3 - CI Validation (Priority: P2)
+
+**Goal**: Developers need assurance that their changes work across multiple Python versions through automated CI checks.
+
+**Independent Test**: Submit a PR and observe GitHub Actions successfully run the test matrix across all Python versions (3.10, 3.11, 3.12, 3.13, 3.14).
+
+### Tests for User Story 3
+
+- [ ] T024 [P] [US3] Test CI workflow triggers correctly on PR in .github/workflows/ci.yml
+- [ ] T025 [P] [US3] Test matrix execution passes for all Python versions in .github/workflows/ci.yml
+
+### Implementation for User Story 3
+
+- [ ] T026 [P] [US3] Create GitHub Actions workflow with Python version matrix in .github/workflows/ci.yml
+- [ ] T027 [US3] Configure UV caching in GitHub Actions for faster CI runs
+- [ ] T028 [US3] Setup fail-fast behavior for matrix jobs in .github/workflows/ci.yml
+- [ ] T029 [US3] Configure test execution across all Python versions in tox.ini
+
+**Checkpoint**: All user stories should now be independently functional
+
+---
+
+## Phase 6: Polish & Cross-Cutting Concerns
+
+**Purpose**: Improvements that affect multiple user stories
+
+- [ ] T030 [P] Create comprehensive README.md with setup and usage instructions
+- [ ] T031 Add .gitignore file for Python project standards
+- [ ] T032 Create .python-version file for UV Python version specification
+- [ ] T033 [P] Add LICENSE file with GPL-2.0+ license text
+- [ ] T034 Validate quickstart.md instructions work end-to-end
+- [ ] T035 Run final test suite to ensure all functionality works
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User stories can then proceed in parallel (if staffed)
+  - Or sequentially in priority order (P1 → P1 → P2)
+- **Polish (Final Phase)**: Depends on all desired user stories being complete
+
+### User Story Dependencies
+
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - Integrates with US1 testing infrastructure but independently testable
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - Uses tests from US1/US2 but validates independently
+
+### Within Each User Story
+
+- Tests MUST be written and FAIL before implementation
+- Core package structure before test infrastructure
+- Local testing before CI validation
+- Story complete before moving to next priority
+
+### Parallel Opportunities
+
+- All Setup tasks marked [P] can run in parallel
+- All Foundational tasks marked [P] can run in parallel (within Phase 2)
+- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
+- All tests for a user story marked [P] can run in parallel
+- Different user stories can be worked on in parallel by different team members
+
+---
+
+## Parallel Example: User Story 1
+
+```bash
+# Launch all tests for User Story 1 together:
+Task: "Test package import success in tests/test_import.py"
+Task: "Test version string accessibility in tests/test_import.py"
+
+# Launch all package files for User Story 1 together:
+Task: "Implement package __init__.py with proper imports and __all__ in src/pychrony/__init__.py"
+Task: "Implement __about__.py with version and metadata in src/pychrony/__about__.py"
 ```
 
-## Independent Test Criteria
-
-- **User Story 1**: Tasks T011-T015 complete → Fresh `pip install .` + `import pychrony` succeeds
-- **User Story 2**: Tasks T016-T022 complete → `pytest tests/` runs without errors in dev environment
-- **User Story 3**: Tasks T023-T029 complete → GitHub Actions matrix runs successfully on PR/merge
-
-## Parallel Execution Examples
-
-### User Story 2 (Parallel with User Story 1)
-After T015 completion (US1 MVP), can start:
-- T016: Configure pytest while T011-T015 tests run locally
-- T017: Add development dependencies while T012-T014 import testing continues
-- T018: Create test structure while T013-T015 package structure is finalized
-
-### User Story 3 (Parallel with User Story 1)
-After T015 completion (US1 MVP), can start:
-- T023: Design CI workflow while T011-T015 tasks stabilize
-- T024: Implement GitHub Actions while package import tests pass locally
-- T025: Test CI locally using act or similar tools
-
-## MVP Recommendation
-
-**Minimum Viable Product**: Complete Phase 1 tasks (T001-T010) + T011-T015
-This provides a functional Python package that can be imported and has basic metadata, enabling downstream development of libchrony bindings.
+---
 
 ## Implementation Strategy
 
-1. **Complete Phase 1 first** - establishes foundation
-2. **Test Phase 1 thoroughly** - ensures package import works
-3. **Proceed to Phase 2** - add testing capability
-4. **Phase 3 and beyond** - add CI/CD and polish
+### MVP First (User Story 1 Only)
 
-All tasks are specific, actionable, and include clear file paths for immediate implementation.
+1. Complete Phase 1: Setup
+2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
+3. Complete Phase 3: User Story 1
+4. **STOP and VALIDATE**: Test User Story 1 independently with `import pychrony`
+5. Deploy/demo if ready
+
+### Incremental Delivery
+
+1. Complete Setup + Foundational → Foundation ready
+2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
+3. Add User Story 2 → Test independently → Deploy/Demo
+4. Add User Story 3 → Test independently → Deploy/Demo
+5. Each story adds value without breaking previous stories
+
+### Parallel Team Strategy
+
+With multiple developers:
+
+1. Team completes Setup + Foundational together
+2. Once Foundational is done:
+   - Developer A: User Story 1 (Package structure)
+   - Developer B: User Story 2 (Local testing)
+   - Developer C: User Story 3 (CI setup)
+3. Stories complete and integrate independently
+
+---
+
+## Notes
+
+- [P] tasks = different files, no dependencies
+- [Story] label maps task to specific user story for traceability
+- Each user story should be independently completable and testable
+- Verify tests fail before implementing
+- Commit after each task or logical group
+- Stop at any checkpoint to validate story independently
+- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
