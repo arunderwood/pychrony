@@ -53,11 +53,12 @@ uv pip install -e .
 
 ```python
 import pychrony
+from importlib.metadata import version
 
 # Check version
-print(f"PyChrony version: {pychrony.__version__}")
+print(f"PyChrony version: {version('pychrony')}")
 
-# Future API (placeholder):
+# Future API:
 # from pychrony import ChronyClient
 # client = ChronyClient()
 # status = client.get_tracking()
@@ -86,7 +87,7 @@ uv run ruff format .
 uv run ruff check .
 
 # Type checking
-uv run ty src/
+uv run ty check src/
 ```
 
 ### Testing
@@ -116,8 +117,7 @@ uv run tox -e py311
 
 ```
 src/pychrony/
-├── __init__.py          # Package exports and metadata
-├── __about__.py          # Version and author information
+├── __init__.py          # Package exports
 ├── _core/               # Future libchrony C bindings
 │   ├── __init__.py
 │   └── _bindings.py    # CFFI interface
