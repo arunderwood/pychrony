@@ -29,13 +29,13 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create Python package structure with src/pychrony/ directory per implementation plan
-- [ ] T002 Initialize UV package manager with pyproject.toml using hatchling build backend
-- [ ] T003 [P] Configure ruff for linting and formatting in pyproject.toml
-- [ ] T004 [P] Configure ty for type checking in pyproject.toml
-- [ ] T005 [P] Setup pytest and tox configuration for testing framework
-- [ ] T006 Create placeholder directory structure for future CFFI bindings in src/pychrony/_core/
-- [ ] T036 [P] Create placeholder module files for future libchrony bindings in src/pychrony/_core/
+- [X] T001 Create Python package structure with src/pychrony/ directory per implementation plan
+- [X] T002 Initialize UV package manager with pyproject.toml using hatchling build backend
+- [X] T003 [P] Configure ruff for linting and formatting in pyproject.toml
+- [X] T004 [P] Configure ty for type checking in pyproject.toml
+- [X] T005 [P] Setup pytest and tox configuration for testing framework
+- [X] T006 Create placeholder directory structure for future CFFI bindings in src/pychrony/_core/
+- [X] T036 [P] Create placeholder module files for future libchrony bindings in src/pychrony/_core/
 
 ---
 
@@ -45,12 +45,12 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Create pyproject.toml with complete project metadata including GPL-2.0+ license
-- [ ] T008 [P] Create __init__.py with package exports and version handling in src/pychrony/
-- [ ] T009 [P] Create __about__.py with version and author information in src/pychrony/
-- [ ] T010 [P] Setup placeholder modules for future libchrony bindings in src/pychrony/_core/
-- [ ] T011 Create tests/ directory structure with conftest.py configuration
-- [ ] T012 Create GitHub Actions workflow file for CI matrix testing
+- [X] T007 Create pyproject.toml with complete project metadata including GPL-2.0+ license
+- [X] T008 [P] Create __init__.py with package exports and version handling in src/pychrony/
+- [X] T009 [P] Create __about__.py with version and author information in src/pychrony/
+- [X] T010 [P] Setup placeholder modules for future libchrony bindings in src/pychrony/_core/
+- [X] T011 Create tests/ directory structure with conftest.py configuration
+- [X] T012 Create GitHub Actions workflow file for CI matrix testing
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -66,14 +66,11 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [P] [US1] Test package import success in tests/test_import.py
-- [ ] T014 [P] [US1] Test version string accessibility in tests/test_import.py
-
-### Implementation for User Story 1
-
-- [ ] T015 [P] [US1] Implement package __init__.py with proper imports and __all__ in src/pychrony/__init__.py
-- [ ] T016 [P] [US1] Implement __about__.py with version and metadata in src/pychrony/__about__.py
-- [ ] T017 [US1] Setup dynamic version from VCS using hatch-vcs in pyproject.toml
+- [X] T013 [P] [US1] Test package import success in tests/test_import.py
+- [X] T014 [P] [US1] Test version string accessibility in tests/test_import.py
+- [X] T015 [P] [US1] Implement package __init__.py with proper imports and __all__ in src/pychrony/__init__.py
+- [X] T016 [P] [US1] Implement __about__.py with version and metadata in src/pychrony/__about__.py
+- [X] T017 [US1] Setup dynamic version from VCS using hatch-vcs in pyproject.toml
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -87,15 +84,12 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Test pytest discovery works with placeholder tests in tests/test_discovery.py
-- [ ] T019 [P] [US2] Test test execution completes without errors in tests/test_execution.py
-
-### Implementation for User Story 2
-
-- [ ] T020 [P] [US2] Create pytest configuration in pyproject.toml or pytest.ini
-- [ ] T021 [US2] Setup tox.ini for multi-environment testing configuration
-- [ ] T022 [US2] Create initial placeholder test file in tests/test_placeholder.py
-- [ ] T023 [US2] Integrate test discovery with UV workflow in pyproject.toml
+- [X] T018 [P] [US2] Test pytest discovery works with placeholder tests in tests/test_discovery.py
+- [X] T019 [P] [US2] Test test execution completes without errors in tests/test_execution.py
+- [X] T020 [P] [US2] Create pytest configuration in pyproject.toml or pytest.ini
+- [X] T021 [US2] Setup tox.ini for multi-environment testing configuration
+- [X] T022 [US2] Create initial placeholder test file in tests/test_placeholder.py
+- [X] T023 [US2] Integrate test discovery with UV workflow in pyproject.toml
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -109,15 +103,12 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 ### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Test CI workflow triggers correctly on PR in .github/workflows/ci.yml
-- [ ] T025 [P] [US3] Test matrix execution passes for all Python versions in .github/workflows/ci.yml
-
-### Implementation for User Story 3
-
-- [ ] T026 [P] [US3] Create GitHub Actions workflow with Python version matrix in .github/workflows/ci.yml
-- [ ] T027 [US3] Configure UV caching in GitHub Actions for faster CI runs
-- [ ] T028 [US3] Setup fail-fast behavior for matrix jobs in .github/workflows/ci.yml
-- [ ] T029 [US3] Configure test execution across all Python versions in tox.ini
+- [X] T024 [P] [US3] Test CI workflow triggers correctly on PR in .github/workflows/ci.yml
+- [X] T025 [P] [US3] Test matrix execution passes for all Python versions in .github/workflows/ci.yml
+- [X] T026 [P] [US3] Create GitHub Actions workflow with Python version matrix in .github/workflows/ci.yml
+- [X] T027 [US3] Configure UV caching in GitHub Actions for faster CI runs
+- [X] T028 [US3] Setup fail-fast behavior for matrix jobs in .github/workflows/ci.yml
+- [X] T029 [US3] Configure test execution across all Python versions in tox.ini
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -127,12 +118,12 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T030 [P] Create comprehensive README.md with setup and usage instructions
-- [ ] T031 Add .gitignore file for Python project standards
-- [ ] T032 Create .python-version file specifying primary development Python version for UV
-- [ ] T033 [P] Add LICENSE file with GPL-2.0+ license text
-- [ ] T034 Validate quickstart.md instructions work end-to-end
-- [ ] T035 Run final test suite to ensure all functionality works
+- [X] T030 [P] Create comprehensive README.md with setup and usage instructions
+- [X] T031 Add .gitignore file for Python project standards
+- [X] T032 Create .python-version file specifying primary development Python version for UV
+- [X] T033 [P] Add LICENSE file with GPL-2.0+ license text
+- [X] T034 Validate quickstart.md instructions work end-to-end
+- [X] T035 Run final test suite to ensure all functionality works
 
 ---
 
