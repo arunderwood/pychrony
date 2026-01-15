@@ -1,6 +1,6 @@
 # pychrony
 
-pychrony is a Linux-first Python SDK that provides typed access to whatever monitoring data libchrony natively exposes.
+pychrony provides Python bindings for the chrony NTP client library, offering a modern, typed Python interface to libchrony's monitoring and time synchronization capabilities.
 
 It exists to replace fragile chronyc subprocess parsing with a stable, testable Python API.
 
