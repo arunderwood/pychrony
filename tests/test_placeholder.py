@@ -1,7 +1,6 @@
 """Placeholder test file for pytest discovery testing."""
 
 
-
 def test_placeholder_function():
     """A placeholder test to verify pytest discovery works."""
     assert True
