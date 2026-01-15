@@ -19,7 +19,7 @@ Key Deliverables:
 
 Project Structure: A clear Python package layout under src/pychrony/ with an __init__.py and placeholder modules.
 
-Build Configuration: A pyproject.toml file defining project metadata and build system requirements. This will declare the package name, version, authors, GPL-2.0+ license (matching chrony), modern uv-centric development dependencies (ruff, pytest, tox, ty), and specify a build backend. Even though this project will include a C binding, we will still use pyproject.toml for metadata per modern standards.
+Build Configuration: A pyproject.toml file defining project metadata and build system requirements. This will declare the package name, version, authors, MIT license, modern uv-centric development dependencies (ruff, pytest, tox, ty), and specify a build backend. Even though this project will include a C binding, we will still use pyproject.toml for metadata per modern standards.
 
 UV Version Management: Use .python-version file to specify the primary development Python version, while pyproject.toml defines the supported version matrix (3.10-3.14) for testing and distribution. UV uses .python-version for local development and respects pyproject.toml requires-python for package compatibility.
 
@@ -49,7 +49,6 @@ Set up status checks: the CI should fail the entire build if any Python version 
 
 - Q: What should be the exact package name for the Python bindings? → A: pychrony (aligned with repo/project name for consistency)
 - Q: Which testing framework should be used as primary and how should pytest/tox work together? → A: pytest as primary, tox for multi-environment testing
-- Q: What license should be specified for compatibility with chrony's GPL v2 license? → A: GPL-2.0+ (match chrony's license for full compatibility)
 - Q: How should CI handle test failures across the Python version matrix? → A: Fail entire build if any version fails (standard CI practice)
 - Q: What development dependencies should be included for the uv-based project? → A: Modern uv-centric stack (ruff, pytest, tox, ty)
 - Q: What import statement should be referenced in test scenario for consistency? → A: import pychrony (matches established package name)
@@ -129,7 +128,7 @@ Developers need assurance that their changes work across multiple Python version
 
 - **FR-001**: System MUST provide a proper Python package structure under src/pychrony/
 - **FR-002**: System MUST include an __init__.py file with package metadata
-- **FR-003**: System MUST provide a pyproject.toml file with complete project metadata including GPL-2.0+ license and uv-centric development dependencies
+- **FR-003**: System MUST provide a pyproject.toml file with complete project metadata including MIT license and uv-centric development dependencies
 - **FR-004**: System MUST use uv as the Python packaging tool
 - **FR-005**: System MUST provide a tests/ directory with pytest configuration as primary framework
 - **FR-006**: System MUST include at least one working test that validates package import
@@ -155,7 +154,7 @@ Developers need assurance that their changes work across multiple Python version
 - **Build Configuration**: pyproject.toml metadata and build system setup
 - **Test Suite**: pytest-based tests validating package functionality
 - **CI Workflow**: GitHub Actions configuration for automated testing
-- **Package Metadata**: Version, author, GPL-2.0+ license, and uv-centric development dependency information
+- **Package Metadata**: Version, author, MIT license, and uv-centric development dependency information
 
 ## Success Criteria *(mandatory)*
 

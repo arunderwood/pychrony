@@ -24,7 +24,7 @@
 **Target Platform**: Linux (Ubuntu runners), compatible with libchrony platforms  
 **Project Type**: Single Python package for system library bindings  
 **Performance Goals**: <2s local test execution, <10min CI matrix completion  
-**Constraints**: GPL-2.0+ license, CFFI binding, no libchrony vendoring
+**Constraints**: MIT license, CFFI binding, no libchrony vendoring
 
 ## Constitution Check
 

@@ -45,7 +45,7 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T007 Create pyproject.toml with complete project metadata including GPL-2.0+ license
+- [X] T007 Create pyproject.toml with complete project metadata including MIT license
 - [X] T008 [P] Create __init__.py with package exports and version handling in src/pychrony/
 - [X] T009 [P] Create __about__.py with version and author information in src/pychrony/
 - [X] T010 [P] Setup placeholder modules for future libchrony bindings in src/pychrony/_core/
@@ -121,7 +121,7 @@ description: "Task list for Python bindings scaffold and CI setup feature implem
 - [X] T030 [P] Create comprehensive README.md with setup and usage instructions
 - [X] T031 Add .gitignore file for Python project standards
 - [X] T032 Create .python-version file specifying primary development Python version for UV
-- [X] T033 [P] Add LICENSE file with GPL-2.0+ license text
+- [X] T033 [P] Add LICENSE file with MIT license text
 - [X] T034 Validate quickstart.md instructions work end-to-end
 - [X] T035 Run final test suite to ensure all functionality works
 

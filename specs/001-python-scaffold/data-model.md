@@ -9,7 +9,7 @@
 - version: Semantic version (string, dynamic from VCS)
 - description: Package description (string)
 - author: Package author information (object)
-- license: GPL-2.0+ (string)
+- license: MIT (string)
 - python_requires: >=3.10 (string)
 
 ### CLibraryBinding
@@ -52,7 +52,7 @@ CIWorkflow 1..* --validates--> PythonPackage
 ### Package Validation
 - name follows Python naming conventions
 - version format complies with semantic versioning
-- license is compatible with libchrony (GPL-2.0+)
+- license is compatible with libchrony (LGPL)
 - metadata required fields are complete
 
 ### CFFI Validation

@@ -114,7 +114,7 @@ git push origin main
 pychrony/
 ├── pyproject.toml          # Project configuration
 ├── README.md               # Documentation
-├── LICENSE                  # GPL-2.0+ license
+├── LICENSE                  # MIT license
 ├── .gitignore              # Git ignore patterns
 ├── .python-version           # Python version for UV
 ├── uv.lock                 # Dependency lock file

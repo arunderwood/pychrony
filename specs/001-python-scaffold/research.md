@@ -20,7 +20,7 @@ name = "pychrony"
 version = "0.1.0"  # dynamic from version control
 description = "Python bindings for chrony NTP client"
 readme = "README.md"
-license = {text = "GPL-2.0+"}
+license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     {name = "arunderwood", email = "arunderwood@users.noreply.github.com"}
@@ -29,7 +29,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12",

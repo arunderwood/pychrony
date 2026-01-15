@@ -33,7 +33,7 @@ def test_package_metadata():
     # Test basic metadata exists
     assert pychrony.__author__ == "arunderwood"
     assert pychrony.__email__ == "arunderwood@users.noreply.github.com"
-    assert pychrony.__license__ == "GPL-2.0+"
+    assert pychrony.__license__ == "MIT"
     assert pychrony.__description__ == "Python bindings for chrony NTP client"
 
 
