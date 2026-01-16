@@ -33,7 +33,7 @@ jobs:
       run: uv run ruff format --check .
     
     - name: Run type checking
-      run: uv run ty src/
+      run: uv run ty check src/
     
     - name: Run tests
       run: uv run pytest --cov=src --cov-report=xml
