@@ -67,7 +67,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker run --rm pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
+          docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
 
   # Full test suite in Docker (validates no silent skips)
   full-tests-docker:
@@ -80,4 +80,4 @@ jobs:
 
       - name: Run full test suite in Docker
         run: |
-          docker run --rm pychrony-test sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
+          docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
