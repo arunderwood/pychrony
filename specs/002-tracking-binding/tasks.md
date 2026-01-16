@@ -26,14 +26,14 @@ Based on plan.md structure:
 
 **Purpose**: Project initialization, build system, and CFFI infrastructure
 
-- [ ] T001 Create project directory structure per plan.md in src/pychrony/
-- [ ] T002 [P] Configure pyproject.toml with CFFI build-requires and hatchling
-- [ ] T003 [P] Create src/pychrony/__init__.py with __all__ exports stub
-- [ ] T004 [P] Create src/pychrony/_core/__init__.py
-- [ ] T005 Create CFFI build script in src/pychrony/_core/_build_bindings.py with ffi.set_source()
-- [ ] T006 [P] Create tests/conftest.py with pytest fixtures
-- [ ] T007 [P] Create docker/Dockerfile.test for Fedora + libchrony + libchrony-devel + chronyd
-- [ ] T008 Create docker/docker-compose.test.yml for test orchestration
+- [x] T001 Create project directory structure per plan.md in src/pychrony/
+- [x] T002 [P] Configure pyproject.toml with CFFI build-requires and hatchling
+- [x] T003 [P] Create src/pychrony/__init__.py with __all__ exports stub
+- [x] T004 [P] Create src/pychrony/_core/__init__.py
+- [x] T005 Create CFFI build script in src/pychrony/_core/_build_bindings.py with ffi.set_source()
+- [x] T006 [P] Create tests/conftest.py with pytest fixtures
+- [x] T007 [P] Create docker/Dockerfile.test for Fedora + libchrony + libchrony-devel + chronyd
+- [x] T008 Create docker/docker-compose.test.yml for test orchestration
 
 **Checkpoint**: Build infrastructure ready, CFFI extension can be compiled
 
@@ -45,14 +45,14 @@ Based on plan.md structure:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 Create exception hierarchy in src/pychrony/exceptions.py (ChronyError, ChronyConnectionError, ChronyPermissionError, ChronyDataError, ChronyLibraryError)
-- [ ] T010 Create TrackingStatus dataclass in src/pychrony/models.py with all 15 fields
-- [ ] T011 Add is_synchronized() method to TrackingStatus in src/pychrony/models.py
-- [ ] T012 Add is_leap_pending() method to TrackingStatus in src/pychrony/models.py
-- [ ] T013 Add _ref_id_to_name() helper function in src/pychrony/models.py
-- [ ] T014 Add _timespec_to_float() helper function in src/pychrony/_core/_bindings.py stub
-- [ ] T015 [P] Create tests/unit/test_exceptions.py for exception hierarchy
-- [ ] T016 [P] Create tests/unit/test_models.py for TrackingStatus dataclass
+- [x] T009 Create exception hierarchy in src/pychrony/exceptions.py (ChronyError, ChronyConnectionError, ChronyPermissionError, ChronyDataError, ChronyLibraryError)
+- [x] T010 Create TrackingStatus dataclass in src/pychrony/models.py with all 15 fields
+- [x] T011 Add is_synchronized() method to TrackingStatus in src/pychrony/models.py
+- [x] T012 Add is_leap_pending() method to TrackingStatus in src/pychrony/models.py
+- [x] T013 Add _ref_id_to_name() helper function in src/pychrony/models.py
+- [x] T014 Add _timespec_to_float() helper function in src/pychrony/_core/_bindings.py stub
+- [x] T015 [P] Create tests/unit/test_exceptions.py for exception hierarchy
+- [x] T016 [P] Create tests/unit/test_models.py for TrackingStatus dataclass
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -66,18 +66,18 @@ Based on plan.md structure:
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Create tests/unit/test_validation.py for field validation (_validate_tracking)
-- [ ] T018 [P] [US1] Create tests/contract/test_api.py for public API contract (imports, signatures, types)
-- [ ] T019 [US1] Create tests/integration/test_tracking.py for get_tracking() with real chronyd
+- [x] T017 [P] [US1] Create tests/unit/test_validation.py for field validation (_validate_tracking)
+- [x] T018 [P] [US1] Create tests/contract/test_api.py for public API contract (imports, signatures, types)
+- [x] T019 [US1] Create tests/integration/test_tracking.py for get_tracking() with real chronyd
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Implement _validate_tracking() function in src/pychrony/_core/_bindings.py
-- [ ] T021 [US1] Implement field accessor helpers (_get_float_field, _get_uinteger_field, _get_string_field, _get_timespec_field) in src/pychrony/_core/_bindings.py
-- [ ] T022 [US1] Implement _extract_tracking_fields() function in src/pychrony/_core/_bindings.py
-- [ ] T023 [US1] Implement get_tracking() function in src/pychrony/_core/_bindings.py with session lifecycle
-- [ ] T024 [US1] Export get_tracking in src/pychrony/__init__.py
-- [ ] T025 [US1] Add socket path fallback logic (check /run/chrony/chronyd.sock then /var/run/chrony/chronyd.sock)
+- [x] T020 [US1] Implement _validate_tracking() function in src/pychrony/_core/_bindings.py
+- [x] T021 [US1] Implement field accessor helpers (_get_float_field, _get_uinteger_field, _get_string_field, _get_timespec_field) in src/pychrony/_core/_bindings.py
+- [x] T022 [US1] Implement _extract_tracking_fields() function in src/pychrony/_core/_bindings.py
+- [x] T023 [US1] Implement get_tracking() function in src/pychrony/_core/_bindings.py with session lifecycle
+- [x] T024 [US1] Export get_tracking in src/pychrony/__init__.py
+- [x] T025 [US1] Add socket path fallback logic (check /run/chrony/chronyd.sock then /var/run/chrony/chronyd.sock)
 
 **Checkpoint**: User Story 1 complete - get_tracking() returns TrackingStatus from chronyd
 
@@ -91,15 +91,15 @@ Based on plan.md structure:
 
 ### Tests for User Story 2
 
-- [ ] T026 [P] [US2] Create tests/integration/test_connection.py for connection error scenarios
-- [ ] T027 [P] [US2] Add tests for ChronyLibraryError when libchrony missing in tests/unit/test_exceptions.py
+- [x] T026 [P] [US2] Create tests/integration/test_connection.py for connection error scenarios
+- [x] T027 [P] [US2] Add tests for ChronyLibraryError when libchrony missing in tests/unit/test_exceptions.py
 
 ### Implementation for User Story 2
 
-- [ ] T028 [US2] Add library availability check at import time in src/pychrony/_core/_bindings.py
-- [ ] T029 [US2] Implement socket connection error handling with ChronyConnectionError in src/pychrony/_core/_bindings.py
-- [ ] T030 [US2] Implement permission error detection with ChronyPermissionError in src/pychrony/_core/_bindings.py
-- [ ] T031 [US2] Add error code mapping from chrony_err to Python exceptions in src/pychrony/_core/_bindings.py
+- [x] T028 [US2] Add library availability check at import time in src/pychrony/_core/_bindings.py
+- [x] T029 [US2] Implement socket connection error handling with ChronyConnectionError in src/pychrony/_core/_bindings.py
+- [x] T030 [US2] Implement permission error detection with ChronyPermissionError in src/pychrony/_core/_bindings.py
+- [x] T031 [US2] Add error code mapping from chrony_err to Python exceptions in src/pychrony/_core/_bindings.py
 
 **Checkpoint**: User Story 2 complete - clear error messages for all failure scenarios
 
@@ -109,13 +109,13 @@ Based on plan.md structure:
 
 **Purpose**: Final validation, documentation, and CI setup
 
-- [ ] T032 [P] Update src/pychrony/__init__.py with complete __all__ list and docstring
-- [ ] T033 [P] Add py.typed marker file to src/pychrony/
-- [ ] T034 Run type checking with mypy/pyright on src/pychrony/
-- [ ] T035 [P] Create .github/workflows/test.yml for GitHub Actions CI
-- [ ] T036 Run full test suite: uv run pytest tests/unit tests/contract
-- [ ] T037 Run Docker integration tests: docker compose -f docker/docker-compose.test.yml run test-all
-- [ ] T038 Validate quickstart.md examples work end-to-end
+- [x] T032 [P] Update src/pychrony/__init__.py with complete __all__ list and docstring
+- [x] T033 [P] Add py.typed marker file to src/pychrony/
+- [x] T034 Run type checking with mypy/pyright on src/pychrony/
+- [x] T035 [P] Create .github/workflows/test.yml for GitHub Actions CI
+- [x] T036 Run full test suite: uv run pytest tests/unit tests/contract
+- [x] T037 Run Docker integration tests: docker compose -f docker/docker-compose.test.yml run test-all
+- [x] T038 Validate quickstart.md examples work end-to-end
 
 ---
 

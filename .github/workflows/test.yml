@@ -1,0 +1,83 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Unit and contract tests run on multiple Python versions
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run unit tests
+        run: uv run pytest tests/unit -v --tb=short
+
+      - name: Run contract tests
+        run: uv run pytest tests/contract -v --tb=short
+
+  # Lint and type checking
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run ruff check
+        run: uv run ruff check .
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+
+  # Integration tests run in Docker with libchrony
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build test container
+        run: docker build -t pychrony-test -f docker/Dockerfile.test .
+
+      - name: Run integration tests
+        run: |
+          docker run --rm pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
+
+  # Full test suite in Docker (validates no silent skips)
+  full-tests-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build test container
+        run: docker build -t pychrony-test -f docker/Dockerfile.test .
+
+      - name: Run full test suite in Docker
+        run: |
+          docker run --rm pychrony-test sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
