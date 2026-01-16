@@ -1,6 +1,7 @@
-"""Placeholder module for future libchrony C bindings.
+"""Core CFFI bindings for libchrony.
 
-This module will contain the CFFI interface to libchrony.
+This module contains the CFFI interface to libchrony for
+retrieving tracking status from chronyd.
 
-Currently empty placeholder for future implementation.
+Internal implementation - use pychrony.get_tracking() instead.
 """

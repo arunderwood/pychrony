@@ -1,0 +1,62 @@
+services:
+  # Run all tests (unit + integration + contract)
+  test-all:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    command: >
+      sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
+    volumes:
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+    environment:
+      - PYTHONPATH=/app/src
+    cap_add:
+      - SYS_TIME
+    privileged: true
+
+  # Run only unit tests (no chronyd needed)
+  test-unit:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    command: pytest tests/unit tests/contract -v --tb=short
+    volumes:
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+    environment:
+      - PYTHONPATH=/app/src
+
+  # Run only integration tests (requires chronyd)
+  test-integration:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    command: >
+      sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
+    volumes:
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+    environment:
+      - PYTHONPATH=/app/src
+    cap_add:
+      - SYS_TIME
+    privileged: true
+
+  # Interactive development shell with chronyd running
+  dev-shell:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    command: >
+      sh -c "chronyd && sleep 2 && /bin/bash"
+    stdin_open: true
+    tty: true
+    volumes:
+      - ../src:/app/src
+      - ../tests:/app/tests
+    environment:
+      - PYTHONPATH=/app/src
+    cap_add:
+      - SYS_TIME
+    privileged: true
