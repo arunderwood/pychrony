@@ -12,6 +12,9 @@
 - Q: What are the Python data types for tracking fields (offset, frequency, reference_id, stratum)? → A: Based on libchrony RPY_Tracking structure: offset=float (seconds), frequency=float (ppm), reference_id=int (uint32), stratum=int (0-15)
 - Q: Should spec use chrony-specific or generic "time service" terminology? → A: Use chrony-specific terms (chronyd, libchrony, chrony tracking data) throughout
 - Q: Should pychrony add observability/logging? → A: No logging in pychrony; rely on exception messages for diagnostics (keep binding thin)
+- Q: Session lifecycle for high-level API (open_socket → init_session → request → get_fields → deinit)? → A: New session per call; open/close each get_tracking() invocation (stateless, simple, avoids stale connections)
+- Q: Field access pattern (chrony_get_field_index then chrony_get_field_float)? → A: Lookup per request; fresh field index lookup each call (no caching, keeps implementation simple)
+- Q: Error handling when chrony_get_field_index returns -1 (field not found)? → A: Raise ChronyDataError; fail fast on missing expected fields (indicates protocol/version mismatch)
 
 ### Session 2025-06-17
 
