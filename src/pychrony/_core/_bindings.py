@@ -29,11 +29,12 @@ DEFAULT_SOCKET_PATHS = [
 NANOSECONDS_PER_SECOND = 1e9
 
 # Try to import compiled CFFI bindings
-_lib = None
-_ffi = None
+# These are generated at build time by CFFI, so they may not exist
+_lib: Any = None
+_ffi: Any = None
 
 try:
-    from pychrony._core._cffi_bindings import lib as _lib, ffi as _ffi
+    from pychrony._core._cffi_bindings import lib as _lib, ffi as _ffi  # type: ignore[import-not-found]
 
     _LIBRARY_AVAILABLE = True
 except ImportError:

@@ -46,7 +46,13 @@ line-length = 88
 target-version = "py310"
 
 [tool.ty]
-# Future C library binding configuration
+# Ignore warnings for CFFI bindings file - _lib and _ffi are dynamically imported
+# at runtime and may not exist until the package is built with libchrony
+[[tool.ty.overrides]]
+include = ["src/pychrony/_core/_bindings.py"]
+
+[tool.ty.overrides.rules]
+possibly-missing-attribute = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
