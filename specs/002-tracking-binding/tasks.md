@@ -10,7 +10,7 @@
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2)
 - Include exact file paths in descriptions
 
 ## Path Conventions
@@ -105,35 +105,17 @@ Based on plan.md structure:
 
 ---
 
-## Phase 5: User Story 3 - Demonstrate Usage Patterns (Priority: P3)
-
-**Goal**: Developers have working examples to integrate chrony monitoring into their applications
-
-**Independent Test**: Run example scripts and verify they display meaningful tracking data when chronyd is available
-
-### Implementation for User Story 3
-
-- [ ] T032 [P] [US3] Create examples/basic_usage.py demonstrating get_tracking() call
-- [ ] T033 [P] [US3] Create examples/error_handling.py demonstrating exception handling
-- [ ] T034 [P] [US3] Create examples/monitoring_script.py demonstrating periodic monitoring
-- [ ] T035 [P] [US3] Create examples/health_check.py demonstrating sync health validation
-- [ ] T036 [US3] Validate all examples match quickstart.md code samples
-
-**Checkpoint**: User Story 3 complete - examples run successfully and match documentation
-
----
-
-## Phase 6: Polish & Cross-Cutting Concerns
+## Phase 5: Polish & Cross-Cutting Concerns
 
 **Purpose**: Final validation, documentation, and CI setup
 
-- [ ] T037 [P] Update src/pychrony/__init__.py with complete __all__ list and docstring
-- [ ] T038 [P] Add py.typed marker file to src/pychrony/
-- [ ] T039 Run type checking with mypy/pyright on src/pychrony/
-- [ ] T040 [P] Create .github/workflows/test.yml for GitHub Actions CI
-- [ ] T041 Run full test suite: uv run pytest tests/unit tests/contract
-- [ ] T042 Run Docker integration tests: docker compose -f docker/docker-compose.test.yml run test-all
-- [ ] T043 Validate quickstart.md examples work end-to-end
+- [ ] T032 [P] Update src/pychrony/__init__.py with complete __all__ list and docstring
+- [ ] T033 [P] Add py.typed marker file to src/pychrony/
+- [ ] T034 Run type checking with mypy/pyright on src/pychrony/
+- [ ] T035 [P] Create .github/workflows/test.yml for GitHub Actions CI
+- [ ] T036 Run full test suite: uv run pytest tests/unit tests/contract
+- [ ] T037 Run Docker integration tests: docker compose -f docker/docker-compose.test.yml run test-all
+- [ ] T038 Validate quickstart.md examples work end-to-end
 
 ---
 
@@ -143,17 +125,15 @@ Based on plan.md structure:
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3-5)**: All depend on Foundational phase completion
+- **User Stories (Phase 3-4)**: All depend on Foundational phase completion
   - US1 (P1): Independent, no dependencies on other stories
   - US2 (P2): Independent, can run parallel to US1
-  - US3 (P3): Depends on US1 completion (examples need working get_tracking)
-- **Polish (Phase 6)**: Depends on all user stories being complete
+- **Polish (Phase 5)**: Depends on all user stories being complete
 
 ### User Story Dependencies
 
 - **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
 - **User Story 2 (P2)**: Can start after Foundational (Phase 2) - Can run parallel to US1
-- **User Story 3 (P3)**: Requires US1 completion (examples demonstrate working functionality)
 
 ### Within Each User Story
 
@@ -177,9 +157,6 @@ Based on plan.md structure:
 **Phase 4 (US2)**:
 - T026, T027 (tests) can run in parallel
 - Can start in parallel with US1 after Phase 2
-
-**Phase 5 (US3)**:
-- T032, T033, T034, T035 (examples) can all run in parallel
 
 ---
 
@@ -219,8 +196,7 @@ Task: "Create tests/contract/test_api.py for public API contract" (T018)
 1. Setup + Foundational → Foundation ready
 2. Add User Story 1 → Test independently → Can release MVP!
 3. Add User Story 2 → Test independently → Better error handling
-4. Add User Story 3 → Test independently → Complete with examples
-5. Each story adds value without breaking previous stories
+4. Each story adds value without breaking previous stories
 
 ### Single Developer Strategy (Recommended)
 
@@ -228,8 +204,7 @@ Task: "Create tests/contract/test_api.py for public API contract" (T018)
 2. Complete Foundational (Phase 2)
 3. Complete User Story 1 (Phase 3) - P1 Priority
 4. Complete User Story 2 (Phase 4) - P2 Priority
-5. Complete User Story 3 (Phase 5) - P3 Priority
-6. Complete Polish (Phase 6)
+5. Complete Polish (Phase 5)
 
 ---
 

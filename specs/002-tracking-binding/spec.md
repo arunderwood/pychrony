@@ -55,11 +55,15 @@ System administrators and DevOps teams need to verify that pychrony works correc
 
 ---
 
-### User Story 3 - Demonstrate Usage Patterns (Priority: P3)
+### User Story 3 - Demonstrate Usage Patterns (Priority: P3) ⏸️ DEFERRED
+
+> **Status**: Deferred - quickstart.md provides inline examples; standalone examples/ directory deferred to future release.
 
 Developers evaluating pychrony need working examples to understand how to integrate chrony tracking monitoring into their applications.
 
 **Why this priority**: Reduces learning curve and accelerates adoption by providing practical, copy-paste ready usage examples.
+
+**Current Coverage**: quickstart.md contains basic usage, error handling, monitoring, and health check examples inline.
 
 **Independent Test**: Can be fully tested by running example scripts and verifying they display meaningful chrony tracking data when chronyd is available.
 
@@ -87,7 +91,7 @@ Developers evaluating pychrony need working examples to understand how to integr
 - **FR-004**: pychrony MUST handle chronyd unavailability by raising specific Python exceptions with clear error messages and error codes
 - **FR-005**: pychrony MUST validate data types and reasonable ranges for all returned chrony tracking fields
 - **FR-006**: pychrony MUST provide clear documentation about libchrony dependency requirements
-- **FR-007**: pychrony MUST include example code demonstrating basic usage patterns
+- **FR-007**: pychrony MUST include example code demonstrating basic usage patterns (satisfied by quickstart.md)
 - **FR-008**: pychrony MUST support Linux as the primary deployment platform
 - **FR-009**: pychrony MUST maintain compatibility across supported Python versions
 
@@ -101,8 +105,8 @@ Developers evaluating pychrony need working examples to understand how to integr
 
 ### Measurable Outcomes
 
-- **SC-001**: Developers can retrieve chrony tracking status instantly when chronyd is running
-- **SC-002**: pychrony successfully initializes on majority of standard Linux distributions with libchrony installed
+- **SC-001**: Developers can retrieve chrony tracking status in under 10ms when chronyd is running (local Unix socket call)
+- **SC-002**: pychrony successfully initializes on Fedora 39+, RHEL/CentOS 9+, and Ubuntu 22.04+ with libchrony installed
 - **SC-003**: Comprehensive test coverage validates all pychrony functionality
 - **SC-004**: Example code runs successfully on first attempt for users with chronyd and libchrony installed
 - **SC-005**: Error handling provides clear guidance for all documented chronyd/libchrony failure scenarios
