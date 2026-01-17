@@ -68,7 +68,6 @@ dev = [
     "pyyaml>=6.0.3",
     "ruff>=0.14.11",
     "ty>=0.0.1",
-    "tox>=4.0.0",
 ]
 docs = [
     "mkdocs-material>=9.0.0",

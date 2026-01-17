@@ -1,31 +1,58 @@
-# pychrony Development Guidelines
+# CLAUDE.md
 
-Auto-generated from all feature plans. Last updated: 2026-01-15
-
-## Active Technologies
-- N/A (read-only monitoring, no persistence) (002-tracking-binding)
-
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (for libchrony binding), libchrony (system library) (002-tracking-binding)
-
-## Project Structure
-
-```text
-src/
-tests/
-```
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
 
-cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] pytest [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] ruff check .
+```bash
+# Testing
+uv run pytest                              # run all tests
+uv run pytest tests/unit -v                # run unit tests only
+uv run pytest tests/contract -v            # run contract tests
+uv run pytest tests/path/to/test.py -v     # run specific test file
+uv run pytest tests/unit/test_models.py::test_name -v  # run single test
+uv run pytest --cov=src --cov-report=html  # with coverage
 
-## Code Style
+# Code quality
+uv run ruff check .                        # lint
+uv run ruff format .                       # format
+uv run ty check src/                       # type check
 
-Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14): Follow standard conventions
+# Integration tests (require Docker with libchrony)
+docker build -t pychrony-test -f docker/Dockerfile.test .
+docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+```
+
+Cross-version testing (Python 3.10-3.14) is handled by CI.
+
+## Before Committing
+
+Always run the test suite before creating a commit:
+```bash
+uv run pytest
+```
+
+## Architecture
+
+- **CFFI bindings**: `src/pychrony/_core/_bindings.py` wraps libchrony C library
+- **Build script**: `src/pychrony/_core/_build_bindings.py` generates `_cffi_bindings*.so` at install time
+- **Data model**: `TrackingStatus` frozen dataclass in `models.py` (15 NTP tracking fields)
+- **Exceptions**: `ChronyError` base with 4 specific subclasses in `exceptions.py`
+
+## Testing Structure
+
+- **Unit tests** (`tests/unit/`): No external dependencies, mock CFFI bindings
+- **Contract tests** (`tests/contract/`): API stability verification
+- **Integration tests** (`tests/integration/`): Require Docker with running chronyd
+
+## Notes
+
+- ty configured to ignore `possibly-missing-attribute` in `_bindings.py` (dynamic CFFI imports)
+- This is a read-only monitoring library; it does not control chronyd
+
+## Active Technologies
+- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI + libchrony (system library via CFFI API mode bindings) (003-multiple-reports-bindings)
+- N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
 
 ## Recent Changes
-- 002-tracking-binding: Added Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (for libchrony binding), libchrony (system library)
-
-- 002-tracking-binding: Added Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (for libchrony binding), libchrony (system library)
-
-<!-- MANUAL ADDITIONS START -->
-<!-- MANUAL ADDITIONS END -->
+- 003-multiple-reports-bindings: Added Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI + libchrony (system library via CFFI API mode bindings)
