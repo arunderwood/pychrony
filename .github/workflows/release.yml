@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-wheels:
+    name: Build wheels
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Required for hatch-vcs versioning
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: arm64
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Build wheels with cibuildwheel
+      uses: pypa/cibuildwheel@v2.22
+      env:
+        CIBW_ARCHS_LINUX: x86_64 aarch64
+
+    - name: Build sdist
+      run: uv build --sdist
+
+    - name: Upload wheel artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheels
+        path: wheelhouse/*.whl
+
+    - name: Upload sdist artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sdist
+        path: dist/*.tar.gz
+
+  publish-testpypi:
+    name: Publish to Test PyPI
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    environment: testpypi
+
+    steps:
+    - name: Download wheel artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: wheels
+        path: dist/
+
+    - name: Download sdist artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: sdist
+        path: dist/
+
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/

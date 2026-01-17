@@ -19,10 +19,10 @@
 
 **Purpose**: Package metadata and cibuildwheel configuration
 
-- [ ] T001 Verify pyproject.toml has complete package metadata (classifiers, URLs, description)
-- [ ] T002 Add [tool.cibuildwheel] configuration to pyproject.toml
-- [ ] T003 Add [tool.cibuildwheel.linux] configuration for manylinux_2_28 in pyproject.toml
-- [ ] T004 [P] Add dist/ and wheelhouse/ to .gitignore
+- [x] T001 Verify pyproject.toml has complete package metadata (classifiers, URLs, description)
+- [x] T002 Add [tool.cibuildwheel] configuration to pyproject.toml
+- [x] T003 Add [tool.cibuildwheel.linux] configuration for manylinux_2_28 in pyproject.toml
+- [x] T004 [P] Add dist/ and wheelhouse/ to .gitignore
 
 ---
 
@@ -49,9 +49,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Update README.md with pip installation instructions
-- [ ] T010 [US1] Update README.md to document libchrony system dependency requirement
-- [ ] T011 [US1] Verify package metadata displays correctly with `uv build && uv pip show pychrony`
+- [x] T009 [US1] Update README.md with pip installation instructions
+- [x] T010 [US1] Update README.md to document libchrony system dependency requirement
+- [x] T011 [US1] Verify package metadata displays correctly with `uv build && uv pip show pychrony`
 
 **Checkpoint**: Package metadata and documentation complete for pip users
 
@@ -65,16 +65,16 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Create .github/workflows/release.yml with version tag trigger
-- [ ] T013 [US2] Add checkout step with fetch-depth: 0 for hatch-vcs versioning
-- [ ] T014 [US2] Add QEMU setup step for arm64 emulation in .github/workflows/release.yml
-- [ ] T015 [US2] Add cibuildwheel build step in .github/workflows/release.yml
-- [ ] T016 [US2] Add sdist build step using uv build --sdist in .github/workflows/release.yml
-- [ ] T017 [US2] Add artifact upload step in .github/workflows/release.yml
-- [ ] T018 [US2] Add Test PyPI publish step with id-token: write permission in .github/workflows/release.yml
-- [ ] T019 [US2] Create .github/workflows/publish.yml for manual production PyPI promotion
-- [ ] T020 [US2] Add workflow_dispatch trigger with artifact download in .github/workflows/publish.yml
-- [ ] T021 [US2] Add production PyPI publish step with pypi environment in .github/workflows/publish.yml
+- [x] T012 [US2] Create .github/workflows/release.yml with version tag trigger
+- [x] T013 [US2] Add checkout step with fetch-depth: 0 for hatch-vcs versioning
+- [x] T014 [US2] Add QEMU setup step for arm64 emulation in .github/workflows/release.yml
+- [x] T015 [US2] Add cibuildwheel build step in .github/workflows/release.yml
+- [x] T016 [US2] Add sdist build step using uv build --sdist in .github/workflows/release.yml
+- [x] T017 [US2] Add artifact upload step in .github/workflows/release.yml
+- [x] T018 [US2] Add Test PyPI publish step with id-token: write permission in .github/workflows/release.yml
+- [x] T019 [US2] Create .github/workflows/publish.yml for manual production PyPI promotion
+- [x] T020 [US2] Add workflow_dispatch trigger with artifact download in .github/workflows/publish.yml
+- [x] T021 [US2] Add production PyPI publish step with pypi environment in .github/workflows/publish.yml
 
 **Checkpoint**: Full release automation configured - tag push → Test PyPI → manual promote → Production PyPI
 
@@ -88,8 +88,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Configure test-requires in [tool.cibuildwheel] section of pyproject.toml
-- [ ] T023 [US3] Configure test-command to run unit and contract tests in pyproject.toml
+- [x] T022 [US3] Configure test-requires in [tool.cibuildwheel] section of pyproject.toml
+- [x] T023 [US3] Configure test-command to run unit and contract tests in pyproject.toml
 - [ ] T024 [US3] Verify tests run successfully in cibuildwheel container (local test with cibuildwheel --platform linux)
 
 **Checkpoint**: Built wheels are tested before publishing
@@ -104,8 +104,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T025 [P] [US4] Document local wheel build commands in CLAUDE.md commands section
-- [ ] T026 [P] [US4] Document cibuildwheel local testing in CLAUDE.md commands section
+- [x] T025 [P] [US4] Document local wheel build commands in CLAUDE.md commands section
+- [x] T026 [P] [US4] Document cibuildwheel local testing in CLAUDE.md commands section
 
 **Checkpoint**: Local build workflow documented for contributors
 
@@ -115,10 +115,10 @@
 
 **Purpose**: Final validation and documentation
 
-- [ ] T027 Run full quality checks: ruff check, ruff format, ty check
-- [ ] T028 Build wheel locally and verify import works: uv build && pip install dist/*.whl
+- [x] T027 Run full quality checks: ruff check, ruff format, ty check
+- [x] T028 Build wheel locally and verify import works: uv build && pip install dist/*.whl
 - [ ] T029 Validate all GitHub Actions workflows with act or push to test branch
-- [ ] T030 Update CLAUDE.md Recent Changes section with packaging feature
+- [x] T030 Update CLAUDE.md Recent Changes section with packaging feature
 
 ---
 
