@@ -58,8 +58,6 @@ As a developer, I want to distinguish between NTP clients, peers, and reference 
 
 - What happens when libchrony returns an integer value outside the known enum range (e.g., state=6)?
   - Behavior: Enum construction raises ValueError, caught and re-raised as ChronyDataError with descriptive message
-- How does the library handle comparison between enum and raw integer?
-  - Using IntEnum allows `source.state == 0` to still work for backward compatibility
 
 ## Requirements *(mandatory)*
 
@@ -72,7 +70,7 @@ As a developer, I want to distinguish between NTP clients, peers, and reference 
 - **FR-005**: Source.state field MUST have type SourceState
 - **FR-006**: Source.mode field MUST have type SourceMode
 - **FR-007**: All enum classes MUST be exported from the pychrony package
-- **FR-008**: Enum values MUST be comparable to integers for backward compatibility (using IntEnum)
+- **FR-008**: Enum classes MUST use standard library `enum.Enum` (not IntEnum - no backward compatibility needed)
 - **FR-009**: Invalid enum values from libchrony MUST raise ChronyDataError with descriptive message
 - **FR-010**: Existing Source.mode_name and Source.state_name properties MUST be removed (enum.name provides equivalent functionality; no deprecation period needed for pre-1.0 software)
 
@@ -88,9 +86,8 @@ As a developer, I want to distinguish between NTP clients, peers, and reference 
 
 - **SC-001**: Developers can identify source selection state without consulting documentation (enum names are self-explanatory)
 - **SC-002**: IDE autocomplete shows all valid enum values when typing `SourceState.`
-- **SC-003**: Existing code using integer comparisons (e.g., `state == 0`) continues to work without modification
-- **SC-004**: All existing unit, contract, and integration tests pass after migration to enums
-- **SC-005**: Type checkers (mypy, ty) correctly infer enum types for the affected fields
+- **SC-003**: All existing unit, contract, and integration tests pass after migration to enums
+- **SC-004**: Type checkers (mypy, ty) correctly infer enum types for the affected fields
 
 ## Clarifications
 
@@ -100,7 +97,8 @@ As a developer, I want to distinguish between NTP clients, peers, and reference 
 
 ## Assumptions
 
-- IntEnum from Python's standard library provides sufficient functionality (no third-party enum library needed)
+- Enum from Python's standard library provides sufficient functionality (no third-party enum library needed)
 - The integer values assigned by libchrony are stable and match chrony documentation
 - Removing mode_name and state_name properties is confirmed acceptable (pre-1.0, enum.name provides equivalent functionality)
 - chrony will not add new state/mode values that would break enum definitions (if this happens, the library will raise ChronyDataError)
+- No backward compatibility is required (pre-1.0, no consumers yet)
