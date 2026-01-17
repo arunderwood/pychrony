@@ -30,9 +30,7 @@ class TestConnectionErrors:
         else:
             with pytest.raises(ChronyConnectionError) as exc_info:
                 get_tracking(socket_path="/nonexistent/path.sock")
-            assert "Failed to connect" in str(exc_info.value) or "not found" in str(
-                exc_info.value
-            )
+            assert "Failed to connect" in str(exc_info.value)
 
     def test_connection_error_has_error_code(self):
         """Test that ChronyConnectionError includes error code."""
@@ -42,9 +40,7 @@ class TestConnectionErrors:
         with pytest.raises(ChronyConnectionError) as exc_info:
             get_tracking(socket_path="/nonexistent/path.sock")
         # Error code should be set (typically negative)
-        assert exc_info.value.error_code is not None or "not found" in str(
-            exc_info.value
-        )
+        assert exc_info.value.error_code is not None
 
 
 class TestLibraryErrors:
@@ -58,8 +54,9 @@ class TestLibraryErrors:
         with pytest.raises(ChronyLibraryError) as exc_info:
             get_tracking()
         message = str(exc_info.value)
-        # Should mention libchrony or installation
-        assert "libchrony" in message.lower() or "install" in message.lower()
+        # Should mention libchrony and installation
+        assert "libchrony" in message.lower()
+        assert "install" in message.lower()
 
     def test_library_error_has_no_error_code(self):
         """Test that ChronyLibraryError has None error_code."""
@@ -76,14 +73,9 @@ class TestSocketAutoDetection:
     """Tests for socket path auto-detection."""
 
     def test_auto_detects_default_socket(self):
-        """Test that get_tracking auto-detects default socket."""
-        # This should work if chronyd is running
-        try:
-            status = get_tracking()
-            assert status is not None
-        except ChronyConnectionError as e:
-            # Acceptable if chronyd not running
-            assert "socket" in str(e).lower() or "running" in str(e).lower()
+        """Test that get_tracking auto-detects default socket when chronyd is running."""
+        status = get_tracking()
+        assert status is not None
 
     def test_explicit_socket_path_used(self):
         """Test that explicit socket path is used."""
