@@ -56,8 +56,8 @@ jobs:
       - name: Run ruff format check
         run: uv run ruff format --check .
 
-  # Build Docker image once with caching, share via artifact
-  build-docker-image:
+  # Full test suite in Docker with libchrony
+  docker-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -73,49 +73,10 @@ jobs:
           context: .
           file: docker/Dockerfile.test
           tags: pychrony-test:latest
-          outputs: type=docker,dest=/tmp/pychrony-test.tar
+          load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp/pychrony-test.tar
-          retention-days: 1
-
-  # Integration tests run in Docker with libchrony
-  integration-tests:
-    runs-on: ubuntu-latest
-    needs: build-docker-image
-    steps:
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
-
-      - name: Load Docker image
-        run: docker load -i /tmp/pychrony-test.tar
-
-      - name: Run integration tests
-        run: |
-          docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
-
-  # Full test suite in Docker (validates no silent skips)
-  full-tests-docker:
-    runs-on: ubuntu-latest
-    needs: build-docker-image
-    steps:
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
-
-      - name: Load Docker image
-        run: docker load -i /tmp/pychrony-test.tar
-
-      - name: Run full test suite in Docker
+      - name: Run tests
         run: |
           docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
