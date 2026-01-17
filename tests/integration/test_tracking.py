@@ -36,11 +36,21 @@ class TestGetTrackingIntegration:
         assert 0 <= status.stratum <= 15
 
     def test_get_tracking_has_valid_leap_status(self):
-        """Test that returned status has valid leap_status value."""
+        """Test that returned status has valid leap_status value (LeapStatus enum)."""
+        from pychrony import get_tracking, LeapStatus
+
+        status = get_tracking()
+        assert isinstance(status.leap_status, LeapStatus)
+        assert status.leap_status in list(LeapStatus)
+
+    def test_leap_status_name_via_enum(self):
+        """Test that leap_status.name returns the enum name."""
         from pychrony import get_tracking
 
         status = get_tracking()
-        assert 0 <= status.leap_status <= 3
+        # Enum .name returns uppercase string
+        leap_name = status.leap_status.name
+        assert leap_name in ["NORMAL", "INSERT", "DELETE", "UNSYNC"]
 
     def test_get_tracking_has_non_negative_fields(self):
         """Test that non-negative fields are indeed non-negative."""

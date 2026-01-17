@@ -2,6 +2,8 @@
 
 import pytest
 
+from pychrony import LeapStatus, SourceState, SourceMode
+
 
 @pytest.fixture
 def sample_version():
@@ -23,7 +25,7 @@ def sample_tracking_data():
         "reference_id_name": "127.0.0.1",
         "reference_ip": "127.0.0.1",
         "stratum": 2,
-        "leap_status": 0,
+        "leap_status": LeapStatus.NORMAL,
         "ref_time": 1705320000.123456789,
         "offset": 0.000123456,
         "last_offset": 0.000111222,
@@ -44,6 +46,7 @@ def unsynchronized_tracking_data(sample_tracking_data):
     data["reference_id"] = 0
     data["reference_id_name"] = ""
     data["stratum"] = 16
+    data["leap_status"] = LeapStatus.UNSYNC
     return data
 
 
@@ -51,7 +54,7 @@ def unsynchronized_tracking_data(sample_tracking_data):
 def leap_pending_tracking_data(sample_tracking_data):
     """Provide tracking data with a pending leap second."""
     data = sample_tracking_data.copy()
-    data["leap_status"] = 1  # Insert leap second
+    data["leap_status"] = LeapStatus.INSERT
     return data
 
 
@@ -62,8 +65,8 @@ def sample_source_data():
         "address": "192.168.1.100",
         "poll": 6,  # 64 seconds
         "stratum": 2,
-        "state": 0,  # selected
-        "mode": 0,  # client
+        "state": SourceState.SELECTED,
+        "mode": SourceMode.CLIENT,
         "flags": 0,
         "reachability": 255,  # all recent polls succeeded
         "last_sample_ago": 32,

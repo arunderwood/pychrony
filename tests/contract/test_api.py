@@ -4,6 +4,8 @@ import inspect
 from dataclasses import fields, is_dataclass
 from typing import Optional
 
+from pychrony import LeapStatus, SourceState, SourceMode
+
 
 class TestPublicExports:
     """Tests for public API exports."""
@@ -100,7 +102,7 @@ class TestTrackingStatusContract:
         assert type_hints["reference_id_name"] is str
         assert type_hints["reference_ip"] is str
         assert type_hints["stratum"] is int
-        assert type_hints["leap_status"] is int
+        assert type_hints["leap_status"] is LeapStatus
         assert type_hints["ref_time"] is float
         assert type_hints["offset"] is float
         assert type_hints["last_offset"] is float
@@ -271,8 +273,8 @@ class TestSourceContract:
         assert type_hints["address"] is str
         assert type_hints["poll"] is int
         assert type_hints["stratum"] is int
-        assert type_hints["state"] is int
-        assert type_hints["mode"] is int
+        assert type_hints["state"] is SourceState
+        assert type_hints["mode"] is SourceMode
         assert type_hints["flags"] is int
         assert type_hints["reachability"] is int
         assert type_hints["last_sample_ago"] is int
@@ -293,18 +295,6 @@ class TestSourceContract:
 
         assert hasattr(Source, "is_selected")
         assert callable(getattr(Source, "is_selected"))
-
-    def test_has_mode_name_property(self):
-        """Test that Source has mode_name property."""
-        from pychrony import Source
-
-        assert hasattr(Source, "mode_name")
-
-    def test_has_state_name_property(self):
-        """Test that Source has state_name property."""
-        from pychrony import Source
-
-        assert hasattr(Source, "state_name")
 
 
 class TestSourceStatsContract:

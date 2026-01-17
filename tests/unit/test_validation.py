@@ -47,30 +47,8 @@ class TestValidateTracking:
         data["stratum"] = 15
         _validate_tracking(data)  # Should not raise
 
-    def test_leap_status_too_high(self, sample_tracking_data):
-        """Test that leap_status > 3 raises ChronyDataError."""
-        data = sample_tracking_data.copy()
-        data["leap_status"] = 4
-        with pytest.raises(ChronyDataError) as exc_info:
-            _validate_tracking(data)
-        assert "Invalid leap_status" in str(exc_info.value)
-
-    def test_leap_status_negative(self, sample_tracking_data):
-        """Test that negative leap_status raises ChronyDataError."""
-        data = sample_tracking_data.copy()
-        data["leap_status"] = -1
-        with pytest.raises(ChronyDataError) as exc_info:
-            _validate_tracking(data)
-        assert "Invalid leap_status" in str(exc_info.value)
-
-    def test_leap_status_boundary_valid(self, sample_tracking_data):
-        """Test that leap_status 0 and 3 are valid."""
-        data = sample_tracking_data.copy()
-        data["leap_status"] = 0
-        _validate_tracking(data)  # Should not raise
-
-        data["leap_status"] = 3
-        _validate_tracking(data)  # Should not raise
+    # Note: leap_status validation is now handled by enum conversion
+    # in _extract_tracking_fields, not in _validate_tracking
 
     def test_nan_float_field_rejected(self, sample_tracking_data):
         """Test that NaN values are rejected."""
@@ -234,21 +212,8 @@ class TestValidateSource:
         """Test that valid source data passes validation."""
         _validate_source(sample_source_data)  # Should not raise
 
-    def test_invalid_mode_rejected(self, sample_source_data):
-        """Test that invalid mode is rejected."""
-        data = sample_source_data.copy()
-        data["mode"] = 3  # Invalid (only 0-2 valid)
-        with pytest.raises(ChronyDataError) as exc_info:
-            _validate_source(data)
-        assert "Invalid mode" in str(exc_info.value)
-
-    def test_invalid_state_rejected(self, sample_source_data):
-        """Test that invalid state is rejected."""
-        data = sample_source_data.copy()
-        data["state"] = 6  # Invalid (only 0-5 valid)
-        with pytest.raises(ChronyDataError) as exc_info:
-            _validate_source(data)
-        assert "Invalid state" in str(exc_info.value)
+    # Note: mode and state validation is now handled by enum conversion
+    # in _get_source_from_record, not in _validate_source
 
     def test_invalid_stratum_rejected(self, sample_source_data):
         """Test that invalid stratum is rejected."""

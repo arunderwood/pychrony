@@ -45,20 +45,22 @@ class TestGetSourcesIntegration:
             assert 0 <= source.stratum <= 15
 
     def test_source_has_valid_mode(self):
-        """Test that returned sources have valid mode values."""
-        from pychrony import get_sources
+        """Test that returned sources have valid mode values (SourceMode enum)."""
+        from pychrony import get_sources, SourceMode
 
         sources = get_sources()
         for source in sources:
-            assert 0 <= source.mode <= 2
+            assert isinstance(source.mode, SourceMode)
+            assert source.mode in list(SourceMode)
 
     def test_source_has_valid_state(self):
-        """Test that returned sources have valid state values."""
-        from pychrony import get_sources
+        """Test that returned sources have valid state values (SourceState enum)."""
+        from pychrony import get_sources, SourceState
 
         sources = get_sources()
         for source in sources:
-            assert 0 <= source.state <= 5
+            assert isinstance(source.state, SourceState)
+            assert source.state in list(SourceState)
 
     def test_source_has_valid_reachability(self):
         """Test that returned sources have valid reachability values."""
@@ -110,35 +112,33 @@ class TestGetSourcesIntegration:
         assert isinstance(sources2, list)
         assert isinstance(sources3, list)
 
-    def test_source_mode_name_property(self):
-        """Test that mode_name property works correctly."""
+    def test_source_mode_name_via_enum(self):
+        """Test that mode.name returns the enum name."""
         from pychrony import get_sources
 
         sources = get_sources()
         for source in sources:
-            mode_name = source.mode_name
-            assert mode_name in [
-                "client",
-                "peer",
-                "reference clock",
-            ] or mode_name.startswith("unknown(")
+            # Enum .name returns uppercase string
+            mode_name = source.mode.name
+            assert mode_name in ["CLIENT", "PEER", "REFCLOCK"]
 
-    def test_source_state_name_property(self):
-        """Test that state_name property works correctly."""
+    def test_source_state_name_via_enum(self):
+        """Test that state.name returns the enum name."""
         from pychrony import get_sources
 
         sources = get_sources()
         valid_states = [
-            "selected",
-            "nonselectable",
-            "falseticker",
-            "jittery",
-            "unselected",
-            "selectable",
+            "SELECTED",
+            "NONSELECTABLE",
+            "FALSETICKER",
+            "JITTERY",
+            "UNSELECTED",
+            "SELECTABLE",
         ]
         for source in sources:
-            state_name = source.state_name
-            assert state_name in valid_states or state_name.startswith("unknown(")
+            # Enum .name returns uppercase string
+            state_name = source.state.name
+            assert state_name in valid_states
 
     def test_source_is_reachable_method(self):
         """Test that is_reachable method works correctly."""
@@ -151,9 +151,9 @@ class TestGetSourcesIntegration:
 
     def test_source_is_selected_method(self):
         """Test that is_selected method works correctly."""
-        from pychrony import get_sources
+        from pychrony import get_sources, SourceState
 
         sources = get_sources()
         for source in sources:
-            # is_selected should return True if state == 0
-            assert source.is_selected() == (source.state == 0)
+            # is_selected should return True if state is SELECTED
+            assert source.is_selected() == (source.state == SourceState.SELECTED)

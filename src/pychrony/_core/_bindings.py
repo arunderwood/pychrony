@@ -16,7 +16,16 @@ from ..exceptions import (
     ChronyLibraryError,
     ChronyPermissionError,
 )
-from ..models import TrackingStatus, Source, SourceStats, RTCData, _ref_id_to_name
+from ..models import (
+    TrackingStatus,
+    Source,
+    SourceStats,
+    RTCData,
+    _ref_id_to_name,
+    LeapStatus,
+    SourceState,
+    SourceMode,
+)
 
 
 # Default socket paths to try (in order)
@@ -127,9 +136,7 @@ def _validate_tracking(data: dict) -> None:
     if not 0 <= data["stratum"] <= 15:
         raise ChronyDataError(f"Invalid stratum: {data['stratum']}")
 
-    # Leap status bounds
-    if not 0 <= data["leap_status"] <= 3:
-        raise ChronyDataError(f"Invalid leap_status: {data['leap_status']}")
+    # leap_status is validated during enum conversion in _extract_tracking_fields
 
     # Float validity
     float_fields = [
@@ -258,13 +265,22 @@ def _extract_tracking_fields(session: Any) -> dict:
         - "frequency offset" (not just "frequency")
     """
     ref_id = _get_uinteger_field(session, "reference ID")
+    leap_status_int = _get_uinteger_field(session, "leap status")
+
+    try:
+        leap_status = LeapStatus(leap_status_int)
+    except ValueError:
+        raise ChronyDataError(
+            f"Unknown leap_status value {leap_status_int}. "
+            "This may indicate a newer chrony version - please update pychrony."
+        )
 
     return {
         "reference_id": ref_id,
         "reference_id_name": _ref_id_to_name(ref_id),
         "reference_ip": _get_string_field(session, "address"),
         "stratum": _get_uinteger_field(session, "stratum"),
-        "leap_status": _get_uinteger_field(session, "leap status"),
+        "leap_status": leap_status,
         "ref_time": _get_timespec_field(session, "reference time"),
         "offset": _get_float_field(session, "current correction"),
         "last_offset": _get_float_field(session, "last offset"),
@@ -421,11 +437,7 @@ def _validate_source(data: dict) -> None:
     Raises:
         ChronyDataError: If any field fails validation
     """
-    # Mode bounds (0=client, 1=peer, 2=reference clock)
-    _validate_bounded_int(data["mode"], "mode", 0, 2)
-
-    # State bounds (0-5)
-    _validate_bounded_int(data["state"], "state", 0, 5)
+    # mode and state are validated during enum conversion in _get_source_from_record
 
     # Stratum bounds (0-15)
     _validate_bounded_int(data["stratum"], "stratum", 0, 15)
@@ -463,12 +475,31 @@ def _get_source_from_record(session: Any) -> dict:
         ref_id = _get_uinteger_field(session, "reference ID")
         address = _ref_id_to_name(ref_id)
 
+    state_int = _get_uinteger_field(session, "state")
+    mode_int = _get_uinteger_field(session, "mode")
+
+    try:
+        state = SourceState(state_int)
+    except ValueError:
+        raise ChronyDataError(
+            f"Unknown state value {state_int}. "
+            "This may indicate a newer chrony version - please update pychrony."
+        )
+
+    try:
+        mode = SourceMode(mode_int)
+    except ValueError:
+        raise ChronyDataError(
+            f"Unknown mode value {mode_int}. "
+            "This may indicate a newer chrony version - please update pychrony."
+        )
+
     return {
         "address": address,
         "poll": _get_integer_field(session, "poll"),
         "stratum": _get_uinteger_field(session, "stratum"),
-        "state": _get_uinteger_field(session, "state"),
-        "mode": _get_uinteger_field(session, "mode"),
+        "state": state,
+        "mode": mode,
         "flags": _get_uinteger_field(session, "flags"),
         "reachability": _get_uinteger_field(session, "reachability"),
         "last_sample_ago": _get_uinteger_field(session, "last sample ago"),

@@ -33,11 +33,11 @@
 
 **⚠️ CRITICAL**: All enum definitions must be complete before any user story implementation
 
-- [ ] T001 [P] Define LeapStatus enum class in src/pychrony/models.py
-- [ ] T002 [P] Define SourceState enum class in src/pychrony/models.py
-- [ ] T003 [P] Define SourceMode enum class in src/pychrony/models.py
-- [ ] T004 Export all three enum classes from src/pychrony/__init__.py
-- [ ] T005 Add enum classes to __all__ list in src/pychrony/models.py
+- [x] T001 [P] Define LeapStatus enum class in src/pychrony/models.py
+- [x] T002 [P] Define SourceState enum class in src/pychrony/models.py
+- [x] T003 [P] Define SourceMode enum class in src/pychrony/models.py
+- [x] T004 Export all three enum classes from src/pychrony/__init__.py
+- [x] T005 Add enum classes to __all__ list in src/pychrony/models.py
 
 **Checkpoint**: All enum classes defined and exported - user story implementation can now begin
 
@@ -51,19 +51,19 @@
 
 ### Tests for User Story 1
 
-- [ ] T006 [P] [US1] Unit test for SourceState enum values and .name/.value attributes in tests/unit/test_enums.py
-- [ ] T007 [P] [US1] Contract test verifying Source.state is SourceState type in tests/contract/test_api_stability.py
-- [ ] T008 [P] [US1] Unit test for ChronyDataError on invalid state value in tests/unit/test_enums.py
+- [x] T006 [P] [US1] Unit test for SourceState enum values and .name/.value attributes in tests/unit/test_enums.py
+- [x] T007 [P] [US1] Contract test verifying Source.state is SourceState type in tests/contract/test_api_stability.py
+- [x] T008 [P] [US1] Unit test for ChronyDataError on invalid state value in tests/unit/test_enums.py
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Change Source.state field type from int to SourceState in src/pychrony/models.py
-- [ ] T010 [US1] Update Source.is_selected() method to use SourceState.SELECTED in src/pychrony/models.py
-- [ ] T011 [US1] Remove Source.state_name property from src/pychrony/models.py
-- [ ] T012 [US1] Update _get_source_from_record() to convert state integer to SourceState enum in src/pychrony/_core/_bindings.py
-- [ ] T013 [US1] Add try/except around SourceState conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
-- [ ] T014 [US1] Remove _validate_bounded_int call for state in _validate_source() in src/pychrony/_core/_bindings.py
-- [ ] T015 [US1] Integration test for Source.state enum values from running chronyd in tests/integration/test_enums.py
+- [x] T009 [US1] Change Source.state field type from int to SourceState in src/pychrony/models.py
+- [x] T010 [US1] Update Source.is_selected() method to use SourceState.SELECTED in src/pychrony/models.py
+- [x] T011 [US1] Remove Source.state_name property from src/pychrony/models.py
+- [x] T012 [US1] Update _get_source_from_record() to convert state integer to SourceState enum in src/pychrony/_core/_bindings.py
+- [x] T013 [US1] Add try/except around SourceState conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
+- [x] T014 [US1] Remove _validate_bounded_int call for state in _validate_source() in src/pychrony/_core/_bindings.py
+- [x] T015 [US1] Integration test for Source.state enum values from running chronyd in tests/integration/test_enums.py
 
 **Checkpoint**: User Story 1 complete - SourceState enum fully functional and tested
 
@@ -77,18 +77,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T016 [P] [US2] Unit test for LeapStatus enum values and .name/.value attributes in tests/unit/test_enums.py
-- [ ] T017 [P] [US2] Contract test verifying TrackingStatus.leap_status is LeapStatus type in tests/contract/test_api_stability.py
-- [ ] T018 [P] [US2] Unit test for ChronyDataError on invalid leap_status value in tests/unit/test_enums.py
+- [x] T016 [P] [US2] Unit test for LeapStatus enum values and .name/.value attributes in tests/unit/test_enums.py
+- [x] T017 [P] [US2] Contract test verifying TrackingStatus.leap_status is LeapStatus type in tests/contract/test_api_stability.py
+- [x] T018 [P] [US2] Unit test for ChronyDataError on invalid leap_status value in tests/unit/test_enums.py
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Change TrackingStatus.leap_status field type from int to LeapStatus in src/pychrony/models.py
-- [ ] T020 [US2] Update TrackingStatus.is_leap_pending() method to use LeapStatus.INSERT and LeapStatus.DELETE in src/pychrony/models.py
-- [ ] T021 [US2] Update _extract_tracking_fields() to convert leap_status integer to LeapStatus enum in src/pychrony/_core/_bindings.py
-- [ ] T022 [US2] Add try/except around LeapStatus conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
-- [ ] T023 [US2] Remove leap_status bounds check from _validate_tracking() in src/pychrony/_core/_bindings.py
-- [ ] T024 [US2] Integration test for TrackingStatus.leap_status enum values from running chronyd in tests/integration/test_enums.py
+- [x] T019 [US2] Change TrackingStatus.leap_status field type from int to LeapStatus in src/pychrony/models.py
+- [x] T020 [US2] Update TrackingStatus.is_leap_pending() method to use LeapStatus.INSERT and LeapStatus.DELETE in src/pychrony/models.py
+- [x] T021 [US2] Update _extract_tracking_fields() to convert leap_status integer to LeapStatus enum in src/pychrony/_core/_bindings.py
+- [x] T022 [US2] Add try/except around LeapStatus conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
+- [x] T023 [US2] Remove leap_status bounds check from _validate_tracking() in src/pychrony/_core/_bindings.py
+- [x] T024 [US2] Integration test for TrackingStatus.leap_status enum values from running chronyd in tests/integration/test_enums.py
 
 **Checkpoint**: User Story 2 complete - LeapStatus enum fully functional and tested
 
@@ -102,18 +102,18 @@
 
 ### Tests for User Story 3
 
-- [ ] T025 [P] [US3] Unit test for SourceMode enum values and .name/.value attributes in tests/unit/test_enums.py
-- [ ] T026 [P] [US3] Contract test verifying Source.mode is SourceMode type in tests/contract/test_api_stability.py
-- [ ] T027 [P] [US3] Unit test for ChronyDataError on invalid mode value in tests/unit/test_enums.py
+- [x] T025 [P] [US3] Unit test for SourceMode enum values and .name/.value attributes in tests/unit/test_enums.py
+- [x] T026 [P] [US3] Contract test verifying Source.mode is SourceMode type in tests/contract/test_api_stability.py
+- [x] T027 [P] [US3] Unit test for ChronyDataError on invalid mode value in tests/unit/test_enums.py
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Change Source.mode field type from int to SourceMode in src/pychrony/models.py
-- [ ] T029 [US3] Remove Source.mode_name property from src/pychrony/models.py
-- [ ] T030 [US3] Update _get_source_from_record() to convert mode integer to SourceMode enum in src/pychrony/_core/_bindings.py
-- [ ] T031 [US3] Add try/except around SourceMode conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
-- [ ] T032 [US3] Remove _validate_bounded_int call for mode in _validate_source() in src/pychrony/_core/_bindings.py
-- [ ] T033 [US3] Integration test for Source.mode enum values from running chronyd in tests/integration/test_enums.py
+- [x] T028 [US3] Change Source.mode field type from int to SourceMode in src/pychrony/models.py
+- [x] T029 [US3] Remove Source.mode_name property from src/pychrony/models.py
+- [x] T030 [US3] Update _get_source_from_record() to convert mode integer to SourceMode enum in src/pychrony/_core/_bindings.py
+- [x] T031 [US3] Add try/except around SourceMode conversion raising ChronyDataError for unknown values in src/pychrony/_core/_bindings.py
+- [x] T032 [US3] Remove _validate_bounded_int call for mode in _validate_source() in src/pychrony/_core/_bindings.py
+- [x] T033 [US3] Integration test for Source.mode enum values from running chronyd in tests/integration/test_enums.py
 
 **Checkpoint**: User Story 3 complete - SourceMode enum fully functional and tested
 
@@ -123,11 +123,11 @@
 
 **Purpose**: Final cleanup and verification
 
-- [ ] T034 Update Source dataclass docstring to reflect enum types in src/pychrony/models.py
-- [ ] T035 Update TrackingStatus dataclass docstring to reflect LeapStatus type in src/pychrony/models.py
-- [ ] T036 [P] Verify all existing tests pass with enum changes by running pytest
-- [ ] T037 [P] Verify type checker (ty) passes with enum types in src/
-- [ ] T038 Run full test suite including Docker integration tests
+- [x] T034 Update Source dataclass docstring to reflect enum types in src/pychrony/models.py
+- [x] T035 Update TrackingStatus dataclass docstring to reflect LeapStatus type in src/pychrony/models.py
+- [x] T036 [P] Verify all existing tests pass with enum changes by running pytest
+- [x] T037 [P] Verify type checker (ty) passes with enum types in src/
+- [x] T038 Run full test suite including Docker integration tests
 
 ---
 
