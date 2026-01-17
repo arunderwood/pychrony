@@ -22,6 +22,7 @@ PyChrony provides Python bindings for [chrony](https://chrony.tuxfamily.org/) NT
 ```bash
 git clone https://github.com/arunderwood/pychrony.git
 cd pychrony
+git submodule update --init
 uv sync --all-groups
 uv pip install -e .
 ```

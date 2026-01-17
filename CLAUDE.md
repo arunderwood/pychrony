@@ -43,6 +43,7 @@ docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && py
 - **Build script**: `src/pychrony/_core/_build_bindings.py` generates `_cffi_bindings*.so` at install time
 - **Data model**: `TrackingStatus` frozen dataclass in `models.py` (15 NTP tracking fields)
 - **Exceptions**: `ChronyError` base with 4 specific subclasses in `exceptions.py`
+- **libchrony reference**: `vendor/libchrony/` - submodule with API source (field definitions in `reports.h`)
 
 ## Testing Structure
 
