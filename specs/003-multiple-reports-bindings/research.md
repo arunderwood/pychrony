@@ -1,10 +1,11 @@
 # Research: Extend Bindings to Multiple Reports
 
 **Branch**: `003-multiple-reports-bindings` | **Date**: 2026-01-16
+**Verified against**: libchrony source (client.c from gitlab.com/chrony/libchrony)
 
 ## Executive Summary
 
-This document captures research findings for implementing `get_sources()`, `get_source_stats()`, and `get_rtc_data()` functions in pychrony. The research confirms that libchrony's introspection API provides all necessary functionality, and we can follow the established `get_tracking()` pattern.
+This document captures research findings for implementing `get_sources()`, `get_source_stats()`, and `get_rtc_data()` functions in pychrony. Field definitions have been **verified against libchrony source code** (client.c) to ensure accuracy.
 
 ## Research Tasks
 
@@ -21,7 +22,7 @@ This document captures research findings for implementing `get_sources()`, `get_
 - Direct struct access: Rejected (ABI fragile, against constitution principle)
 - Hardcoded field indices: Rejected (version-specific, maintenance burden)
 
-**Source**: [libchrony README](https://gitlab.com/chrony/libchrony) indicates using `chrony_get_field_*` functions with field names.
+**Source**: [libchrony repository](https://gitlab.com/chrony/libchrony) - client.c
 
 ### 2. Report Names for libchrony API
 
@@ -36,63 +37,78 @@ This document captures research findings for implementing `get_sources()`, `get_
 
 **Rationale**: libchrony supports these ten report types: `activity`, `authdata`, `ntpdata`, `rtcdata`, `selectdata`, `serverstats`, `smoothing`, `sources`, `sourcestats`, `tracking`. The report names match chronyc command names.
 
-**Source**: [libchrony README](https://gitlab.com/chrony/libchrony)
+**Source**: [libchrony repository](https://gitlab.com/chrony/libchrony) - client.c reports[] array
 
-### 3. Field Names for sources Report
+### 3. Field Names for sources Report (VERIFIED)
 
-**Decision**: Use the following field names (case-sensitive, based on chronyc sources output and existing tracking patterns):
+**Decision**: Use the following field names (verified from `sources_report_fields[]` in client.c):
 
-| libchrony Field Name | Python Attr | Type | Description |
-|---------------------|-------------|------|-------------|
-| `"address"` | `address` | string | IP address or hostname of source |
-| `"mode"` | `mode` | uint | 0=server, 1=peer, 2=reference clock |
-| `"state"` | `state` | uint | Selection state (0-6) |
-| `"stratum"` | `stratum` | uint | NTP stratum level (0-15) |
-| `"poll"` | `poll` | int | Polling interval (log2 seconds) |
-| `"reach"` | `reach` | uint | Reachability register (octal, 0-255) |
-| `"last sample ago"` | `last_sample_ago` | float | Seconds since last sample |
-| `"offset"` | `offset` | float | Current offset (seconds) |
-| `"offset error"` | `offset_err` | float | Offset error margin (seconds) |
+| libchrony Field Name | Python Attr | C Type | Description |
+|---------------------|-------------|--------|-------------|
+| `"address"` or `"reference ID"` | `address` | TYPE_ADDRESS_OR_UINT32_IN_ADDRESS | IP address or refclock ID |
+| `"poll"` | `poll` | TYPE_INT16 | Polling interval (log2 seconds) |
+| `"stratum"` | `stratum` | TYPE_UINT16 | NTP stratum level (0-15) |
+| `"state"` | `state` | TYPE_UINT16 (enum) | Selection state (0-5) |
+| `"mode"` | `mode` | TYPE_UINT16 (enum) | Source mode (0-2) |
+| `"flags"` | `flags` | TYPE_UINT16 | Source flags bitfield |
+| `"reachability"` | `reachability` | TYPE_UINT16 | Reachability register (0-255) |
+| `"last sample ago"` | `last_sample_ago` | TYPE_UINT32 | Seconds since last sample |
+| `"original last sample offset"` | `orig_latest_meas` | TYPE_FLOAT | Original offset (seconds) |
+| `"adjusted last sample offset"` | `latest_meas` | TYPE_FLOAT | Adjusted offset (seconds) |
+| `"last sample error"` | `latest_meas_err` | TYPE_FLOAT | Error bound (seconds) |
 
-**Rationale**: Field names match those used by tracking report (e.g., `"address"` not `"ip address"`). Names discovered via `chrony_get_field_name()` introspection at runtime.
+**State Enum** (from `sources_state_enums[]`):
+```c
+{ 0, "selected" },
+{ 1, "nonselectable" },
+{ 2, "falseticker" },
+{ 3, "jittery" },
+{ 4, "unselected" },
+{ 5, "selectable" },
+```
 
-**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
+**Mode Enum** (from `sources_mode_enums[]`):
+```c
+{ 0, "client" },
+{ 1, "peer" },
+{ 2, "reference clock" },
+```
 
-### 4. Field Names for sourcestats Report
+**Source**: libchrony client.c lines ~55-85
 
-**Decision**: Use the following field names:
+### 4. Field Names for sourcestats Report (VERIFIED)
 
-| libchrony Field Name | Python Attr | Type | Description |
-|---------------------|-------------|------|-------------|
-| `"address"` | `address` | string | Source identifier |
-| `"number of samples"` | `n_samples` | uint | Number of sample points |
-| `"number of runs"` | `n_runs` | uint | Number of same-sign residual runs |
-| `"span"` | `span` | float | Time span of samples (seconds) |
-| `"frequency"` | `frequency` | float | Estimated residual frequency (ppm) |
-| `"frequency skew"` | `freq_skew` | float | Error bounds on frequency (ppm) |
-| `"offset"` | `offset` | float | Estimated source offset (seconds) |
-| `"standard deviation"` | `std_dev` | float | Sample standard deviation (seconds) |
+**Decision**: Use the following field names (verified from `sourcestats_report_fields[]` in client.c):
 
-**Rationale**: Field names follow libchrony's verbose naming convention with spaces. Map to Pythonic snake_case attributes.
+| libchrony Field Name | Python Attr | C Type | Description |
+|---------------------|-------------|--------|-------------|
+| `"reference ID"` | `reference_id` | TYPE_UINT32 | NTP reference identifier |
+| `"address"` | `address` | TYPE_ADDRESS | IP address (empty for refclocks) |
+| `"samples"` | `n_samples` | TYPE_UINT32 | Number of sample points |
+| `"runs"` | `n_runs` | TYPE_UINT32 | Runs of same-sign residuals |
+| `"span"` | `span` | TYPE_UINT32 | Sample span (seconds) |
+| `"standard deviation"` | `std_dev` | TYPE_FLOAT | Standard deviation (seconds) |
+| `"residual frequency"` | `resid_freq` | TYPE_FLOAT | Residual frequency (ppm) |
+| `"skew"` | `skew` | TYPE_FLOAT | Frequency skew (ppm) |
+| `"offset"` | `offset` | TYPE_FLOAT | Estimated offset (seconds) |
+| `"offset error"` | `offset_err` | TYPE_FLOAT | Offset error bound (seconds) |
 
-**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
+**Source**: libchrony client.c lines ~87-98
 
-### 5. Field Names for rtcdata Report
+### 5. Field Names for rtcdata Report (VERIFIED)
 
-**Decision**: Use the following field names:
+**Decision**: Use the following field names (verified from `rtcdata_report_fields[]` in client.c):
 
-| libchrony Field Name | Python Attr | Type | Description |
-|---------------------|-------------|------|-------------|
-| `"reference time"` | `ref_time` | timespec | Last RTC measurement time |
-| `"number of samples"` | `n_samples` | uint | Number of RTC measurements |
-| `"number of runs"` | `n_runs` | uint | Number of same-sign residual runs |
-| `"span"` | `span` | float | Sample span period (seconds) |
-| `"offset"` | `offset` | float | RTC fast-by amount (seconds) |
-| `"frequency"` | `frequency` | float | RTC gain rate (ppm) |
+| libchrony Field Name | Python Attr | C Type | Description |
+|---------------------|-------------|--------|-------------|
+| `"reference time"` | `ref_time` | TYPE_TIMESPEC | Last RTC measurement time |
+| `"samples"` | `n_samples` | TYPE_UINT16 | Number of RTC measurements |
+| `"runs"` | `n_runs` | TYPE_UINT16 | Runs of same-sign residuals |
+| `"span"` | `span` | TYPE_UINT32 | Sample span (seconds) |
+| `"offset"` | `offset` | TYPE_FLOAT | RTC offset (seconds) |
+| `"frequency offset"` | `freq_offset` | TYPE_FLOAT | RTC frequency offset (ppm) |
 
-**Rationale**: RTC data is simpler than other reports. Maps directly to single dataclass.
-
-**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
+**Source**: libchrony client.c lines ~270-277
 
 ### 6. Multi-Record Report Handling
 
@@ -128,52 +144,53 @@ This document captures research findings for implementing `get_sources()`, `get_
 
 **Rationale**: Consistency with existing API. RTC unavailability raises error per spec clarification.
 
-### 8. Validation Rules
+### 8. Validation Rules (Updated)
 
-**Decision**: Apply validation similar to tracking:
+**Decision**: Apply validation based on verified C types:
 
 **Source validation**:
-- `mode` in [0, 1, 2] (server, peer, local)
-- `state` in [0, 1, 2, 3, 4, 5, 6] (see state codes below)
+- `mode` in [0, 1, 2] (client, peer, reference clock)
+- `state` in [0, 1, 2, 3, 4, 5] (selected, nonselectable, falseticker, jittery, unselected, selectable)
 - `stratum` in [0, 15]
-- `reach` in [0, 255]
+- `reachability` in [0, 255]
+- `last_sample_ago` >= 0 (uint32)
 - All floats finite
 
 **SourceStats validation**:
-- `n_samples` >= 0
-- `n_runs` >= 0
-- `span` >= 0
-- `freq_skew` >= 0
+- `n_samples` >= 0 (uint32)
+- `n_runs` >= 0 (uint32)
+- `span` >= 0 (uint32)
+- `skew` >= 0
 - `std_dev` >= 0
+- `offset_err` >= 0
 - All floats finite
 
 **RTCData validation**:
-- `n_samples` >= 0
-- `n_runs` >= 0
-- `span` >= 0
+- `n_samples` >= 0 (uint16)
+- `n_runs` >= 0 (uint16)
+- `span` >= 0 (uint32)
 - All floats finite
 
-**Rationale**: FR-009 requires validating numeric fields are finite. Bounds come from NTP/chrony specifications.
+**Rationale**: FR-009 requires validating numeric fields are finite. Bounds come from libchrony C types.
 
-### 9. Mode and State Constants
+### 9. Mode and State Constants (CORRECTED)
 
 **Decision**: Expose mode and state as integer constants with helper properties:
 
-**Source Mode**:
-- 0: Server (chronyc: ^)
-- 1: Peer (chronyc: =)
-- 2: Reference clock (chronyc: #)
+**Source Mode** (from libchrony):
+- 0: client (chronyc: ^)
+- 1: peer (chronyc: =)
+- 2: reference clock (chronyc: #)
 
-**Source State**:
-- 0: Selectable (chronyc: ?)
-- 1: Unselectable (bad samples)
-- 2: Falseticker (chronyc: x)
-- 3: Jittery (chronyc: ~)
-- 4: Candidate (chronyc: +)
-- 5: Combined (chronyc: -)
-- 6: Best/Selected (chronyc: *)
+**Source State** (from libchrony - NOTE: order differs from chronyc display):
+- 0: selected (chronyc: *)
+- 1: nonselectable
+- 2: falseticker (chronyc: x)
+- 3: jittery (chronyc: ~)
+- 4: unselected
+- 5: selectable (chronyc: ?)
 
-**Rationale**: Keep raw integer for programmatic access; add `mode_name` and `state_name` properties for display.
+**Rationale**: Values taken directly from libchrony source enums. The `is_selected()` helper checks for state == 0.
 
 ### 10. Testing Strategy
 
@@ -200,25 +217,39 @@ def get_rtc_data(socket_path: Optional[str] = None) -> RTCData
 
 **Rationale**: FR-004 requires optional socket_path. List return for multi-record reports.
 
-### 12. Field Name Discovery Strategy
+### 12. Key Corrections from Source Verification
 
-**Decision**: During integration testing, enumerate actual field names via `chrony_get_field_name(session, index)` for each report to confirm field names.
+The following corrections were made after verifying against libchrony source code:
 
-**Rationale**: libchrony field names are not hardcoded in documentation. Implementation should verify field names match expectations and document any discrepancies.
+1. **sources report**:
+   - Field `"reachability"` not `"reach"`
+   - State enum: 0=selected (not 6), 5=selectable (not 0) - order inverted from initial guess
+   - Mode enum: 0=client (not "unspecified")
+   - Additional fields: `flags`, `original last sample offset`, `adjusted last sample offset`, `last sample error`
+   - `last_sample_ago` is TYPE_UINT32 (int, not float)
 
-**Implementation approach**:
-1. Use known field names from tracking implementation as reference
-2. During integration testing, log all available field names per report
-3. Update data models if any field names differ from expectations
-4. Add field name comments in `_bindings.py` to document discovered names
+2. **sourcestats report**:
+   - Field `"samples"` not `"number of samples"`
+   - Field `"runs"` not `"number of runs"`
+   - Field `"residual frequency"` not `"frequency"`
+   - Field `"skew"` not `"frequency skew"`
+   - Additional field: `"reference ID"`
+   - Additional field: `"offset error"`
+   - `span` is TYPE_UINT32 (int, not float)
+
+3. **rtcdata report**:
+   - Field `"samples"` not `"number of samples"`
+   - Field `"runs"` not `"number of runs"`
+   - Field `"frequency offset"` not `"frequency"`
+   - `span` is TYPE_UINT32 (int, not float)
 
 ## Unresolved Items
 
-None - all clarifications from spec addressed.
+None - all field definitions verified against libchrony source.
 
 ## References
 
+- [libchrony repository](https://gitlab.com/chrony/libchrony) - **primary source for field definitions**
 - [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
-- [libchrony repository](https://gitlab.com/chrony/libchrony)
 - [chrony FAQ](https://chrony-project.org/faq.html)
 - Existing pychrony codebase (`src/pychrony/_core/_bindings.py`)

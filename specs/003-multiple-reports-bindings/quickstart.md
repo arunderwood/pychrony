@@ -2,6 +2,7 @@
 
 **Date**: 2026-01-16
 **Feature**: 003-multiple-reports-bindings
+**Verified against**: libchrony source (client.c from gitlab.com/chrony/libchrony)
 
 ## Overview
 
@@ -34,7 +35,8 @@ for source in sources:
     print(f"  State: {source.state_name}")
     print(f"  Stratum: {source.stratum}")
     print(f"  Reachable: {source.is_reachable()}")
-    print(f"  Offset: {source.offset:.6f} seconds")
+    print(f"  Offset: {source.latest_meas:.6f} seconds")
+    print(f"  Error: ±{source.latest_meas_err:.6f} seconds")
 ```
 
 ### Query Source Statistics
@@ -47,11 +49,11 @@ stats = get_source_stats()
 
 for stat in stats:
     print(f"{stat.address}:")
-    print(f"  Samples: {stat.n_samples}")
-    print(f"  Span: {stat.span:.0f} seconds")
+    print(f"  Samples: {stat.samples}")
+    print(f"  Span: {stat.span} seconds")
     print(f"  Offset: {stat.offset:.6f} seconds")
     print(f"  Std Dev: {stat.std_dev:.6f} seconds")
-    print(f"  Frequency: {stat.frequency:.3f} ppm")
+    print(f"  Residual Frequency: {stat.resid_freq:.3f} ppm")
 ```
 
 ### Query RTC Data
@@ -62,8 +64,8 @@ from pychrony import get_rtc_data, ChronyDataError
 try:
     rtc = get_rtc_data()
     print(f"RTC offset: {rtc.offset:.3f} seconds")
-    print(f"RTC drift: {rtc.frequency:.3f} ppm")
-    print(f"Calibration samples: {rtc.n_samples}")
+    print(f"RTC frequency offset: {rtc.freq_offset:.3f} ppm")
+    print(f"Calibration samples: {rtc.samples}")
 except ChronyDataError as e:
     print(f"RTC not available: {e}")
 ```
@@ -102,14 +104,14 @@ def monitor_chrony():
     stats = get_source_stats()
     print("=== Source Stats ===")
     for stat in stats:
-        print(f"{stat.address}: {stat.n_samples} samples, offset={stat.offset:.6f}s")
+        print(f"{stat.address}: {stat.samples} samples, offset={stat.offset:.6f}s")
     print()
 
     # RTC (may not be available)
     print("=== RTC ===")
     try:
         rtc = get_rtc_data()
-        print(f"Offset: {rtc.offset:.3f}s, drift: {rtc.frequency:.3f} ppm")
+        print(f"Offset: {rtc.offset:.3f}s, freq offset: {rtc.freq_offset:.3f} ppm")
     except ChronyDataError:
         print("RTC tracking not available")
 
@@ -135,7 +137,7 @@ for source in sources:
     if stat:
         print(f"{source.address}:")
         print(f"  State: {source.state_name}")
-        print(f"  Samples: {stat.n_samples}")
+        print(f"  Samples: {stat.samples}")
         print(f"  Offset: {stat.offset:.6f}s ± {stat.std_dev:.6f}s")
 ```
 
@@ -172,3 +174,47 @@ from pychrony import get_sources
 # Use custom socket location
 sources = get_sources(socket_path="/custom/path/chronyd.sock")
 ```
+
+## Field Reference
+
+### Source Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `address` | str | IP address or reference ID |
+| `poll` | int | Polling interval (log2 seconds) |
+| `stratum` | int | NTP stratum (0-15) |
+| `state` | int | Selection state (0=selected...5=selectable) |
+| `mode` | int | Mode (0=client, 1=peer, 2=refclock) |
+| `flags` | int | Source flags bitfield |
+| `reachability` | int | Reachability register (0-255) |
+| `last_sample_ago` | int | Seconds since last sample |
+| `orig_latest_meas` | float | Original last sample offset |
+| `latest_meas` | float | Adjusted last sample offset |
+| `latest_meas_err` | float | Last sample error bound |
+
+### SourceStats Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `reference_id` | int | NTP reference identifier |
+| `address` | str | IP address (empty for refclocks) |
+| `samples` | int | Sample count |
+| `n_runs` | int | Runs of same-sign residuals |
+| `span` | int | Sample span (seconds) |
+| `std_dev` | float | Standard deviation |
+| `resid_freq` | float | Residual frequency (ppm) |
+| `skew` | float | Frequency skew (ppm) |
+| `offset` | float | Estimated offset |
+| `offset_err` | float | Offset error bound |
+
+### RTCData Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ref_time` | float | Reference time (epoch) |
+| `samples` | int | Calibration samples |
+| `n_runs` | int | Residual runs |
+| `span` | int | Sample span (seconds) |
+| `offset` | float | RTC offset |
+| `freq_offset` | float | Frequency offset (ppm) |

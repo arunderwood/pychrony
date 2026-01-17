@@ -1,6 +1,7 @@
 # Python API Contract: Multiple Reports Bindings
 
 **Branch**: `003-multiple-reports-bindings` | **Date**: 2026-01-16
+**Verified against**: libchrony source (client.c from gitlab.com/chrony/libchrony)
 
 ## Overview
 
@@ -123,49 +124,66 @@ def get_rtc_data(socket_path: Optional[str] = None) -> RTCData:
     Example:
         >>> from pychrony import get_rtc_data
         >>> rtc = get_rtc_data()
-        >>> print(f"RTC offset: {rtc.offset:.6f}s, drift: {rtc.frequency:.2f} ppm")
+        >>> print(f"RTC offset: {rtc.offset:.6f}s, drift: {rtc.freq_offset:.2f} ppm")
         RTC offset: 0.012345s, drift: -1.23 ppm
     """
 ```
 
-## Data Classes
+## Data Classes (Verified from libchrony source)
 
 ### Source
 
 ```python
 @dataclass(frozen=True)
 class Source:
-    address: str          # IP address or reference ID
-    mode: int             # 0=unspecified, 1=server, 2=peer, 3=refclock
-    state: int            # 0-6, see state_name property
-    stratum: int          # 0-15, NTP stratum level
-    poll: int             # log2 of polling interval in seconds
-    reach: int            # 0-255, reachability register (octal 377 = full)
-    last_sample_ago: float  # seconds since last sample
-    offset: float         # offset in seconds
-    offset_err: float     # offset error bound in seconds
+    address: str           # IP address or reference ID (from "address" or "reference ID")
+    poll: int              # log2 of polling interval in seconds (TYPE_INT16)
+    stratum: int           # 0-15, NTP stratum level (TYPE_UINT16)
+    state: int             # 0-5, see state_name property (TYPE_UINT16 enum)
+    mode: int              # 0=client, 1=peer, 2=reference clock (TYPE_UINT16 enum)
+    flags: int             # source flags bitfield (TYPE_UINT16)
+    reachability: int      # 0-255, reachability register (TYPE_UINT16)
+    last_sample_ago: int   # seconds since last sample (TYPE_UINT32)
+    orig_latest_meas: float  # original last sample offset (TYPE_FLOAT)
+    latest_meas: float     # adjusted last sample offset (TYPE_FLOAT)
+    latest_meas_err: float # last sample error bound (TYPE_FLOAT)
 
     def is_reachable(self) -> bool: ...
-    def is_selected(self) -> bool: ...
+    def is_selected(self) -> bool: ...  # Returns state == 0
     @property
     def mode_name(self) -> str: ...
     @property
     def state_name(self) -> str: ...
 ```
 
+**State values** (from `sources_state_enums[]`):
+- 0: selected
+- 1: nonselectable
+- 2: falseticker
+- 3: jittery
+- 4: unselected
+- 5: selectable
+
+**Mode values** (from `sources_mode_enums[]`):
+- 0: client
+- 1: peer
+- 2: reference clock
+
 ### SourceStats
 
 ```python
 @dataclass(frozen=True)
 class SourceStats:
-    address: str          # IP address or reference ID
-    n_samples: int        # number of sample points
-    n_runs: int           # number of same-sign residual runs
-    span: float           # sample span in seconds
-    frequency: float      # residual frequency in ppm
-    freq_skew: float      # frequency error bound in ppm
-    offset: float         # estimated offset in seconds
-    std_dev: float        # sample standard deviation in seconds
+    reference_id: int      # NTP reference identifier (TYPE_UINT32)
+    address: str           # IP address (empty for refclocks) (TYPE_ADDRESS)
+    samples: int           # number of sample points (TYPE_UINT32)
+    runs: int              # number of same-sign residual runs (TYPE_UINT32)
+    span: int              # sample span in seconds (TYPE_UINT32)
+    std_dev: float         # sample standard deviation in seconds (TYPE_FLOAT)
+    resid_freq: float      # residual frequency in ppm (TYPE_FLOAT)
+    skew: float            # frequency skew in ppm (TYPE_FLOAT)
+    offset: float          # estimated offset in seconds (TYPE_FLOAT)
+    offset_err: float      # offset error bound in seconds (TYPE_FLOAT)
 
     def has_sufficient_samples(self, minimum: int = 4) -> bool: ...
 ```
@@ -175,15 +193,56 @@ class SourceStats:
 ```python
 @dataclass(frozen=True)
 class RTCData:
-    ref_time: float       # last RTC measurement time (epoch seconds)
-    n_samples: int        # calibration sample count
-    n_runs: int           # same-sign residual runs
-    span: float           # sample span in seconds
-    offset: float         # RTC offset (fast by) in seconds
-    frequency: float      # RTC drift rate in ppm
+    ref_time: float        # last RTC measurement time (TYPE_TIMESPEC -> float)
+    samples: int           # calibration sample count (TYPE_UINT16)
+    runs: int              # same-sign residual runs (TYPE_UINT16)
+    span: int              # sample span in seconds (TYPE_UINT32)
+    offset: float          # RTC offset (fast by) in seconds (TYPE_FLOAT)
+    freq_offset: float     # RTC frequency offset in ppm (TYPE_FLOAT)
 
     def is_calibrated(self) -> bool: ...
 ```
+
+## libchrony Field Name Mapping
+
+### Source Fields
+| libchrony Field | Python Attribute |
+|-----------------|------------------|
+| `"address"` or `"reference ID"` | `address` |
+| `"poll"` | `poll` |
+| `"stratum"` | `stratum` |
+| `"state"` | `state` |
+| `"mode"` | `mode` |
+| `"flags"` | `flags` |
+| `"reachability"` | `reachability` |
+| `"last sample ago"` | `last_sample_ago` |
+| `"original last sample offset"` | `orig_latest_meas` |
+| `"adjusted last sample offset"` | `latest_meas` |
+| `"last sample error"` | `latest_meas_err` |
+
+### SourceStats Fields
+| libchrony Field | Python Attribute |
+|-----------------|------------------|
+| `"reference ID"` | `reference_id` |
+| `"address"` | `address` |
+| `"samples"` | `samples` |
+| `"runs"` | `runs` |
+| `"span"` | `span` |
+| `"standard deviation"` | `std_dev` |
+| `"residual frequency"` | `resid_freq` |
+| `"skew"` | `skew` |
+| `"offset"` | `offset` |
+| `"offset error"` | `offset_err` |
+
+### RTCData Fields
+| libchrony Field | Python Attribute |
+|-----------------|------------------|
+| `"reference time"` | `ref_time` |
+| `"samples"` | `samples` |
+| `"runs"` | `runs` |
+| `"span"` | `span` |
+| `"offset"` | `offset` |
+| `"frequency offset"` | `freq_offset` |
 
 ## Error Conditions
 
