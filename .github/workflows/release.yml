@@ -27,14 +27,14 @@ jobs:
         fetch-depth: 0  # Required for hatch-vcs versioning
 
     - name: Build wheels with cibuildwheel
-      uses: pypa/cibuildwheel@v3
+      uses: pypa/cibuildwheel@v3.3
       with:
         extras: uv
       env:
         CIBW_ARCHS_LINUX: ${{ matrix.arch }}
 
     - name: Upload wheel artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: wheels-${{ matrix.arch }}
         path: wheelhouse/*.whl
@@ -57,7 +57,7 @@ jobs:
       run: uv build --sdist
 
     - name: Upload sdist artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: sdist
         path: dist/*.tar.gz
@@ -70,7 +70,7 @@ jobs:
 
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         path: dist/
         merge-multiple: true
@@ -92,7 +92,7 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python }}
         allow-prereleases: true
