@@ -1,28 +1,43 @@
 # Test environment for pychrony with libchrony and chronyd
-# Based on Fedora - builds libchrony from source
+# Multi-stage build: builder stage compiles libchrony, runtime stage runs tests
 
-FROM fedora:40
+# =============================================================================
+# Stage 1: Builder - compile libchrony from vendored source
+# =============================================================================
+FROM fedora:40 AS builder
 
-# Install system dependencies (chrony for chronyd, build tools for libchrony)
+# Install build tools only
 RUN dnf install -y \
-    chrony \
     gcc \
     make \
     libtool \
-    git \
+    && dnf clean all
+
+# Copy vendored libchrony source and build
+COPY vendor/libchrony/ /tmp/libchrony/
+WORKDIR /tmp/libchrony
+RUN make && \
+    make install prefix=/usr/local DESTDIR=/libchrony-install
+
+# =============================================================================
+# Stage 2: Runtime - minimal image with chrony and Python
+# =============================================================================
+FROM fedora:40
+
+# Install runtime dependencies
+# Note: gcc is needed to compile CFFI bindings at install time
+RUN dnf install -y \
+    chrony \
     python3 \
     python3-pip \
     python3-devel \
+    libffi-devel \
+    gcc \
     && dnf clean all
 
-# Build and install libchrony from source
-RUN git clone https://gitlab.com/chrony/libchrony.git /tmp/libchrony && \
-    cd /tmp/libchrony && \
-    make && \
-    make install prefix=/usr/local DESTDIR= && \
-    echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
-    ldconfig && \
-    rm -rf /tmp/libchrony
+# Copy compiled libchrony from builder
+COPY --from=builder /libchrony-install/usr/local/ /usr/local/
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && ldconfig
 
 # Create chrony socket directory with correct permissions
 RUN mkdir -p /run/chrony && chown chrony:chrony /run/chrony && chmod 750 /run/chrony
@@ -40,15 +55,19 @@ RUN pip3 install uv
 # Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY pyproject.toml .
-COPY README.md .
+# Copy dependency specification first (better layer caching)
+COPY pyproject.toml README.md ./
+
+# Install project dependencies before copying source
+# This layer will be cached if pyproject.toml doesn't change
+RUN uv pip install --system pytest pytest-cov setuptools cffi
+
+# Copy project source files
 COPY src/ src/
 COPY tests/ tests/
 
-# Install project dependencies
-RUN uv pip install --system -e "." && \
-    uv pip install --system pytest pytest-cov setuptools
+# Install the package in editable mode
+RUN uv pip install --system -e "."
 
 # Build CFFI bindings (requires libchrony headers)
 # ffi.compile() outputs to /app/pychrony/_core/, but editable install is at /app/src/pychrony/

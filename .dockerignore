@@ -1,0 +1,48 @@
+# Git
+.git/
+.github/
+.gitmodules
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+# Testing and coverage
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Build artifacts
+dist/
+wheelhouse/
+build/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Claude and specs
+.claude/
+.specify/
+specs/
+
+# Documentation
+*.md
+!README.md
+
+# Misc
+.DS_Store
+Thumbs.db
