@@ -18,6 +18,12 @@ uv run ruff check .                        # lint
 uv run ruff format .                       # format
 uv run ty check src/                       # type check
 
+# Building wheels
+uv build                                   # build sdist and wheel in dist/
+uv pip install cibuildwheel               # install cibuildwheel for manylinux builds
+cibuildwheel --platform linux             # build manylinux wheels (requires Docker)
+                                          # output in wheelhouse/
+
 # Integration tests (require Docker with libchrony)
 docker build -t pychrony-test -f docker/Dockerfile.test .
 docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
@@ -60,7 +66,10 @@ docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && py
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
 - N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
+- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
+- N/A (library package, no persistence) (005-pypi-packaging)
 
 ## Recent Changes
+- 005-pypi-packaging: Added PyPI packaging with cibuildwheel (manylinux_2_28), Trusted Publishers (OIDC), two-stage release workflow (Test PyPI → Production PyPI)
 - 004-categorical-enums: Added standard library Enum for categorical fields (LeapStatus, SourceState, SourceMode)
 - 003-multiple-reports-bindings: Added Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI + libchrony (system library via CFFI API mode bindings)

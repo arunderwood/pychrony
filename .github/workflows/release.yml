@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-wheels:
+    name: Build wheels (${{ matrix.arch }})
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Required for hatch-vcs versioning
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Build wheels with cibuildwheel
+      uses: pypa/cibuildwheel@v2.22
+      env:
+        CIBW_ARCHS_LINUX: ${{ matrix.arch }}
+
+    - name: Upload wheel artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheels-${{ matrix.arch }}
+        path: wheelhouse/*.whl
+
+  build-sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0  # Required for hatch-vcs versioning
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Build sdist
+      run: uv build --sdist
+
+    - name: Upload sdist artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sdist
+        path: dist/*.tar.gz
+
+  publish-testpypi:
+    name: Publish to Test PyPI
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    environment: testpypi
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: dist/
+        merge-multiple: true
+
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  verify-testpypi:
+    name: Verify Test PyPI (${{ matrix.python }})
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12", "3.14"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+        allow-prereleases: true
+
+    - name: Extract version from tag
+      id: version
+      run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Wait for Test PyPI availability
+      run: sleep 30
+
+    - name: Install from Test PyPI
+      run: |
+        for i in 1 2 3 4 5; do
+          pip install --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            pychrony==${{ steps.version.outputs.version }} && break
+          echo "Attempt $i failed, retrying in 30s..."
+          sleep 30
+        done
+
+    - name: Verify import and version
+      run: |
+        python -c "
+        import pychrony
+        print(f'Installed version: {pychrony.__version__}')
+        assert pychrony.__version__ == '${{ steps.version.outputs.version }}', \
+            f'Version mismatch: {pychrony.__version__} != ${{ steps.version.outputs.version }}'
+        "

@@ -14,10 +14,21 @@ PyChrony provides Python bindings for [chrony](https://chrony.tuxfamily.org/) NT
 
 ### Prerequisites
 
-- Python 3.10+
-- libchrony development library (`sudo apt-get install libchrony-dev` on Debian/Ubuntu)
+PyChrony requires the **libchrony** system library to be installed. This is the C library that provides the chrony client API.
 
-### Install
+| Distribution | Install Command |
+|--------------|-----------------|
+| Debian/Ubuntu | `sudo apt-get install libchrony-dev` |
+| Fedora/RHEL | `sudo dnf install libchrony-devel` |
+| Arch Linux | `sudo pacman -S chrony` |
+
+### Install from PyPI
+
+```bash
+pip install pychrony
+```
+
+### Install from Source (Development)
 
 ```bash
 git clone https://github.com/arunderwood/pychrony.git
