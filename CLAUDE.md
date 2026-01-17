@@ -60,6 +60,8 @@ docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && py
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
 - N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
+- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
+- N/A (library package, no persistence) (005-pypi-packaging)
 
 ## Recent Changes
 - 004-categorical-enums: Added standard library Enum for categorical fields (LeapStatus, SourceState, SourceMode)
