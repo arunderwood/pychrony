@@ -26,13 +26,10 @@ jobs:
       with:
         fetch-depth: 0  # Required for hatch-vcs versioning
 
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-
     - name: Build wheels with cibuildwheel
-      uses: pypa/cibuildwheel@v2.22
+      uses: pypa/cibuildwheel@v3
+      with:
+        extras: uv
       env:
         CIBW_ARCHS_LINUX: ${{ matrix.arch }}
 
