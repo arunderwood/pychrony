@@ -1,9 +1,14 @@
+# Docker Compose for local testing
+# Requires: git submodule update --init vendor/libchrony
+
 services:
   # Run all tests (unit + integration + contract)
   test-all:
     build:
       context: ..
       dockerfile: docker/Dockerfile.test
+      cache_from:
+        - type=local,src=.docker-cache
     command: >
       sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
     volumes:
@@ -20,6 +25,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.test
+      cache_from:
+        - type=local,src=.docker-cache
     command: pytest tests/unit tests/contract -v --tb=short
     volumes:
       - ../src:/app/src:ro
@@ -32,6 +39,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.test
+      cache_from:
+        - type=local,src=.docker-cache
     command: >
       sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
     volumes:
@@ -48,6 +57,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.test
+      cache_from:
+        - type=local,src=.docker-cache
     command: >
       sh -c "chronyd && sleep 2 && /bin/bash"
     stdin_open: true
