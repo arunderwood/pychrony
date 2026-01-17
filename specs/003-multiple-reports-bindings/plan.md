@@ -5,19 +5,19 @@
 
 ## Summary
 
-Extend pychrony's libchrony bindings to support three additional chronyd reports: `sources` (NTP time sources), `sourcestats` (source statistics), and `rtcdata` (Real-Time Clock data). Implementation follows existing `get_tracking()` patterns using CFFI API mode bindings, frozen dataclasses, and the existing exception hierarchy.
+Extend pychrony's CFFI bindings to support three additional libchrony reports: sources, sourcestats, and rtcdata. Following the established pattern from `get_tracking()`, implement `get_sources()`, `get_source_stats()`, and `get_rtc_data()` functions that return frozen dataclasses with full type annotations. All functions use libchrony's field introspection API for ABI stability.
 
 ## Technical Context
 
-**Language/Version**: Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI
-**Primary Dependencies**: libchrony (system library via CFFI API mode bindings)
+**Language/Version**: Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14)
+**Primary Dependencies**: CFFI + libchrony (system library via CFFI API mode bindings)
 **Storage**: N/A (read-only monitoring, no persistence)
-**Testing**: pytest with unit tests (mocked CFFI), contract tests (API stability), integration tests (Docker with chronyd)
-**Target Platform**: Linux (primary and only supported)
+**Testing**: pytest with unit/contract/integration test hierarchy
+**Target Platform**: Linux (primary), other platforms if libchrony available
 **Project Type**: Single Python package
-**Performance Goals**: N/A (monitoring library, performance bounded by libchrony/chronyd)
-**Constraints**: Read-only operations only; expose only what libchrony supports
-**Scale/Scope**: Typically <50 sources per chronyd instance; support 100+ without truncation
+**Performance Goals**: Minimal overhead per report query (<10ms typical)
+**Constraints**: Read-only access only; no modification of chronyd state
+**Scale/Scope**: Monitor chronyd instances with up to 100+ NTP sources
 
 ## Constitution Check
 
@@ -26,12 +26,14 @@ Extend pychrony's libchrony bindings to support three additional chronyd reports
 ### pychrony Constitution Gates
 
 **MUST PASS:**
-- ✅ API scope limited to libchrony read-only capabilities — new functions only retrieve data, no control operations
-- ✅ Implementation uses CFFI binding to system libchrony — extends existing `_bindings.py` with same patterns
-- ✅ Full type hints and Pythonic interfaces — frozen dataclasses with complete type annotations
-- ✅ Linux-first design with Linux CI — existing CI workflow, Docker-based integration tests
-- ✅ Test coverage for all new features — unit, contract, and integration tests planned
-- ✅ No vendoring or reimplementation of libchrony — uses system library via CFFI
+- ✅ API scope limited to libchrony read-only capabilities (sources/sourcestats/rtcdata are read-only reports)
+- ✅ Implementation uses CFFI binding to system libchrony (follows existing API mode pattern)
+- ✅ Full type hints and Pythonic interfaces (frozen dataclasses with annotations)
+- ✅ Linux-first design with Linux CI (Docker-based integration tests)
+- ✅ Test coverage for all new features (unit, contract, integration tests planned)
+- ✅ No vendoring or reimplementation of libchrony (direct bindings only)
+
+**All gates pass. Proceeding to Phase 0.**
 
 ## Project Structure
 
@@ -40,43 +42,93 @@ Extend pychrony's libchrony bindings to support three additional chronyd reports
 ```text
 specs/003-multiple-reports-bindings/
 ├── plan.md              # This file
-├── research.md          # Phase 0: libchrony report field names
-├── data-model.md        # Phase 1: Source, SourceStats, RTCData dataclasses
-├── quickstart.md        # Phase 1: Usage examples
-├── contracts/           # Phase 1: Function signatures and return types
-└── tasks.md             # Phase 2 output (created by /speckit.tasks)
+├── research.md          # Phase 0 output
+├── data-model.md        # Phase 1 output
+├── quickstart.md        # Phase 1 output
+├── contracts/           # Phase 1 output
+└── tasks.md             # Phase 2 output (via /speckit.tasks)
 ```
 
 ### Source Code (repository root)
 
 ```text
 src/pychrony/
-├── __init__.py          # Add exports: get_sources, get_source_stats, get_rtc_data
-├── models.py            # Add: Source, SourceStats, RTCData dataclasses
-├── exceptions.py        # No changes (use existing ChronyDataError, etc.)
+├── __init__.py          # Public API exports (add new functions/classes)
+├── models.py            # Dataclasses (add Source, SourceStats, RTCData)
+├── exceptions.py        # Exception hierarchy (no changes needed)
 └── _core/
-    ├── _bindings.py     # Add: get_sources(), get_source_stats(), get_rtc_data()
-    └── _build_bindings.py  # No changes (CFFI build script)
+    ├── _bindings.py     # CFFI wrapper (add new functions)
+    └── _build_bindings.py  # Build script (no changes expected)
 
 tests/
+├── conftest.py          # Fixtures (add sample data for new types)
 ├── unit/
-│   ├── test_models.py       # Add: Source, SourceStats, RTCData tests
-│   ├── test_bindings.py     # Add: new function tests with mocked CFFI
-│   └── test_validation.py   # Add: validation tests for new report fields
+│   ├── test_models.py   # Add Source, SourceStats, RTCData tests
+│   ├── test_bindings.py # Add extraction/validation tests
+│   └── test_validation.py  # Add validation tests for new types
 ├── contract/
-│   └── test_api.py          # Add: API contract tests for new exports
+│   └── test_api.py      # Add new public API contract tests
 └── integration/
-    ├── test_sources.py      # New: integration tests for get_sources()
-    ├── test_sourcestats.py  # New: integration tests for get_source_stats()
-    └── test_rtc.py          # New: integration tests for get_rtc_data()
+    ├── test_sources.py      # New: get_sources() integration
+    ├── test_sourcestats.py  # New: get_source_stats() integration
+    └── test_rtcdata.py      # New: get_rtc_data() integration
 ```
 
-**Structure Decision**: Single Python package with existing layout. New code extends `_bindings.py` (following existing `get_tracking()` patterns), adds dataclasses to `models.py`, and adds corresponding tests to each test category.
+**Structure Decision**: Single Python package structure matching existing codebase. New code extends existing modules rather than creating new directories.
 
 ## Complexity Tracking
 
-No violations. Design follows existing patterns exactly:
-- Same CFFI binding approach as `get_tracking()`
-- Same frozen dataclass pattern as `TrackingStatus`
-- Same exception hierarchy
-- Same test structure
+No constitution violations identified. Standard extension of existing patterns.
+
+## Post-Design Constitution Re-Check
+
+*Evaluated after Phase 1 design completion.*
+
+### pychrony Constitution Gates (Post-Design)
+
+**VERIFIED PASS:**
+- ✅ **API scope limited to libchrony read-only capabilities**
+  - Design uses only `sources`, `sourcestats`, `rtcdata` reports (all read-only)
+  - No control operations added
+  - Data models are read-only frozen dataclasses
+
+- ✅ **Implementation uses CFFI binding to system libchrony**
+  - Uses existing CFFI API mode infrastructure
+  - Uses `chrony_get_field_*` introspection functions
+  - No direct struct access or protocol implementation
+
+- ✅ **Full type hints and Pythonic interfaces**
+  - All dataclasses have complete type annotations
+  - All functions have typed parameters and return types
+  - Helper methods follow Python conventions (snake_case, properties)
+
+- ✅ **Linux-first design with Linux CI**
+  - Integration tests run in Docker with chronyd
+  - Socket path defaults work on Linux systems
+  - No Windows/macOS-specific code
+
+- ✅ **Test coverage for all new features**
+  - Unit tests for dataclasses and validation
+  - Contract tests for public API
+  - Integration tests for real chronyd interaction
+
+- ✅ **No vendoring or reimplementation of libchrony**
+  - Pure binding layer, no protocol reimplementation
+  - Field names discovered via introspection API
+  - No hardcoded wire formats
+
+**All gates verified. Ready for Phase 2 task generation.**
+
+## Generated Artifacts
+
+| Artifact | Path | Status |
+|----------|------|--------|
+| Implementation Plan | `specs/003-multiple-reports-bindings/plan.md` | ✅ Complete |
+| Research | `specs/003-multiple-reports-bindings/research.md` | ✅ Complete |
+| Data Model | `specs/003-multiple-reports-bindings/data-model.md` | ✅ Complete |
+| API Contract | `specs/003-multiple-reports-bindings/contracts/python-api.md` | ✅ Complete |
+| Quickstart | `specs/003-multiple-reports-bindings/quickstart.md` | ✅ Complete |
+
+## Next Steps
+
+Run `/speckit.tasks` to generate the implementation task list from this plan.

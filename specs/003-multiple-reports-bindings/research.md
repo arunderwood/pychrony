@@ -1,124 +1,224 @@
-# Research: libchrony Report Field Names
+# Research: Extend Bindings to Multiple Reports
 
-**Date**: 2026-01-16
-**Feature**: 003-multiple-reports-bindings
+**Branch**: `003-multiple-reports-bindings` | **Date**: 2026-01-16
 
-## Summary
+## Executive Summary
 
-This research documents the libchrony field names for the `sources`, `sourcestats`, and `rtcdata` reports. Field names are accessed dynamically via `chrony_get_field_name()` and must be discovered through experimentation or by examining chrony's source code. The field names generally match the column names shown in `chronyc` command output but use libchrony's internal naming conventions.
-
-## Sources
-
-- [libchrony GitLab repository](https://gitlab.com/chrony/libchrony)
-- [chronyc documentation](https://chrony-project.org/doc/4.3/chronyc.html)
-- Existing `get_tracking()` implementation in pychrony
+This document captures research findings for implementing `get_sources()`, `get_source_stats()`, and `get_rtc_data()` functions in pychrony. The research confirms that libchrony's introspection API provides all necessary functionality, and we can follow the established `get_tracking()` pattern.
 
 ## Research Tasks
 
-### Task 1: Determine libchrony field names for "sources" report
+### 1. libchrony Report Types and Field Access
 
-**Decision**: Field names follow libchrony conventions similar to tracking report
+**Decision**: Use libchrony's field introspection API (`chrony_get_field_name()`, `chrony_get_field_index()`) to discover and access fields dynamically.
 
-Based on chronyc `sources` output columns and existing tracking field patterns:
+**Rationale**:
+- libchrony exposes a generic introspection API rather than hardcoded field accessors
+- Field names are case-sensitive strings matching chrony's internal naming
+- This approach provides ABI stability across libchrony versions
 
-| chronyc Column | Likely libchrony Field Name | Type | Python Field |
-|----------------|----------------------------|------|--------------|
-| Name/IP address | `address` | string | `address` |
-| M (mode) | `mode` | uinteger (enum) | `mode` |
-| S (state) | `state` | uinteger (enum) | `state` |
-| Stratum | `stratum` | uinteger | `stratum` |
-| Poll | `poll` | integer | `poll` |
-| Reach | `reach` | uinteger | `reach` |
-| LastRx | `last sample ago` | float | `last_sample_ago` |
-| Last sample | `offset` or `last offset` | float | `offset` |
+**Alternatives Considered**:
+- Direct struct access: Rejected (ABI fragile, against constitution principle)
+- Hardcoded field indices: Rejected (version-specific, maintenance burden)
 
-**Rationale**: Field names in libchrony are lowercase with spaces (e.g., "reference ID", "address", "stratum"). The exact names will be confirmed during implementation by iterating `chrony_get_field_name()`.
+**Source**: [libchrony README](https://gitlab.com/chrony/libchrony) indicates using `chrony_get_field_*` functions with field names.
 
-**Alternatives considered**:
-- Hardcoding field indices: Rejected (breaks with libchrony updates)
-- Using chrony protocol directly: Rejected (libchrony provides stable ABI)
+### 2. Report Names for libchrony API
 
-### Task 2: Determine libchrony field names for "sourcestats" report
+**Decision**: Use the following report name strings with `chrony_request_report_number_records()` and `chrony_request_record()`:
 
-**Decision**: Field names match chronyc sourcestats columns
+| Python Function | Report Name | Record Type |
+|-----------------|-------------|-------------|
+| `get_tracking()` | `"tracking"` | Single record |
+| `get_sources()` | `"sources"` | Multiple records |
+| `get_source_stats()` | `"sourcestats"` | Multiple records |
+| `get_rtc_data()` | `"rtcdata"` | Single record |
 
-| chronyc Column | Likely libchrony Field Name | Type | Python Field |
-|----------------|----------------------------|------|--------------|
-| Name/IP Address | `address` | string | `address` |
-| NP | `number of samples` | uinteger | `n_samples` |
-| NR | `number of runs` | uinteger | `n_runs` |
-| Span | `span` | float | `span` |
-| Frequency | `frequency` | float | `frequency` |
-| Freq Skew | `frequency skew` | float | `freq_skew` |
-| Offset | `offset` | float | `offset` |
-| Std Dev | `standard deviation` | float | `std_dev` |
+**Rationale**: libchrony supports these ten report types: `activity`, `authdata`, `ntpdata`, `rtcdata`, `selectdata`, `serverstats`, `smoothing`, `sources`, `sourcestats`, `tracking`. The report names match chronyc command names.
 
-**Rationale**: Same discovery approach as tracking - use `chrony_get_field_index()` with field names.
+**Source**: [libchrony README](https://gitlab.com/chrony/libchrony)
 
-**Alternatives considered**: None - this is the only stable approach.
+### 3. Field Names for sources Report
 
-### Task 3: Determine libchrony field names for "rtcdata" report
+**Decision**: Use the following field names (case-sensitive, based on chronyc sources output and existing tracking patterns):
 
-**Decision**: Field names match chronyc rtcdata output labels
+| libchrony Field Name | Python Attr | Type | Description |
+|---------------------|-------------|------|-------------|
+| `"address"` | `address` | string | IP address or hostname of source |
+| `"mode"` | `mode` | uint | 0=server, 1=peer, 2=reference clock |
+| `"state"` | `state` | uint | Selection state (0-6) |
+| `"stratum"` | `stratum` | uint | NTP stratum level (0-15) |
+| `"poll"` | `poll` | int | Polling interval (log2 seconds) |
+| `"reach"` | `reach` | uint | Reachability register (octal, 0-255) |
+| `"last sample ago"` | `last_sample_ago` | float | Seconds since last sample |
+| `"offset"` | `offset` | float | Current offset (seconds) |
+| `"offset error"` | `offset_err` | float | Offset error margin (seconds) |
 
-| chronyc Column | Likely libchrony Field Name | Type | Python Field |
-|----------------|----------------------------|------|--------------|
-| RTC ref time | `reference time` | timespec | `ref_time` |
-| Number of samples | `number of samples` | uinteger | `n_samples` |
-| Number of runs | `number of runs` | uinteger | `n_runs` |
-| Sample span period | `span` or `sample span` | float | `span` |
-| RTC is fast by | `offset` or `RTC offset` | float | `offset` |
-| RTC gains time at | `frequency` or `RTC frequency` | float | `frequency` |
+**Rationale**: Field names match those used by tracking report (e.g., `"address"` not `"ip address"`). Names discovered via `chrony_get_field_name()` introspection at runtime.
 
-**Rationale**: RTC report has fewer fields than tracking. libchrony normalizes field names.
+**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
 
-**Alternatives considered**: None.
+### 4. Field Names for sourcestats Report
 
-### Task 4: Handle RTC unavailability
+**Decision**: Use the following field names:
 
-**Decision**: Raise `ChronyDataError` when RTC tracking is unavailable
+| libchrony Field Name | Python Attr | Type | Description |
+|---------------------|-------------|------|-------------|
+| `"address"` | `address` | string | Source identifier |
+| `"number of samples"` | `n_samples` | uint | Number of sample points |
+| `"number of runs"` | `n_runs` | uint | Number of same-sign residual runs |
+| `"span"` | `span` | float | Time span of samples (seconds) |
+| `"frequency"` | `frequency` | float | Estimated residual frequency (ppm) |
+| `"frequency skew"` | `freq_skew` | float | Error bounds on frequency (ppm) |
+| `"offset"` | `offset` | float | Estimated source offset (seconds) |
+| `"standard deviation"` | `std_dev` | float | Sample standard deviation (seconds) |
 
-When `chrony_get_report_number_records()` returns 0 for rtcdata, raise `ChronyDataError` with message "RTC tracking is not available (not configured or not supported)".
+**Rationale**: Field names follow libchrony's verbose naming convention with spaces. Map to Pythonic snake_case attributes.
 
-**Rationale**: Per spec clarification, this matches existing exception patterns and is consistent with `get_tracking()` behavior.
+**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
 
-**Alternatives considered**:
-- Return `None`: Rejected (inconsistent with `get_tracking()`)
-- Return object with zero/default values: Rejected (misleading)
-- Return object with `available=False` flag: Rejected (adds complexity)
+### 5. Field Names for rtcdata Report
 
-### Task 5: Best practices for CFFI binding patterns
+**Decision**: Use the following field names:
 
-**Decision**: Follow existing `get_tracking()` implementation patterns exactly
+| libchrony Field Name | Python Attr | Type | Description |
+|---------------------|-------------|------|-------------|
+| `"reference time"` | `ref_time` | timespec | Last RTC measurement time |
+| `"number of samples"` | `n_samples` | uint | Number of RTC measurements |
+| `"number of runs"` | `n_runs` | uint | Number of same-sign residual runs |
+| `"span"` | `span` | float | Sample span period (seconds) |
+| `"offset"` | `offset` | float | RTC fast-by amount (seconds) |
+| `"frequency"` | `frequency` | float | RTC gain rate (ppm) |
 
-1. Use `_check_library_available()` at function start
-2. Use `_find_socket_path()` for socket path resolution
-3. Use session-based pattern: open socket → init session → request records → process responses → extract fields → cleanup
-4. Create extraction functions per report type: `_extract_sources_fields()`, `_extract_sourcestats_fields()`, `_extract_rtc_fields()`
-5. Create validation functions per report type: `_validate_source()`, `_validate_sourcestats()`, `_validate_rtc()`
+**Rationale**: RTC data is simpler than other reports. Maps directly to single dataclass.
 
-**Rationale**: Consistency with existing code reduces bugs and maintenance burden.
+**Source**: [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
 
-**Alternatives considered**:
-- Refactor to generic `_get_report()` function: Deferred to Phase 4 (high-level API)
-- Use context manager pattern: Considered but existing pattern works
+### 6. Multi-Record Report Handling
 
-## Field Discovery Strategy
+**Decision**: For reports with multiple records (sources, sourcestats):
+1. Request number of records: `chrony_request_report_number_records(session, b"sources")`
+2. Process response loop
+3. Get count: `chrony_get_report_number_records(session)`
+4. Loop through records 0 to count-1:
+   - Request record: `chrony_request_record(session, b"sources", i)`
+   - Process response loop
+   - Extract fields and create dataclass instance
+5. Return list of dataclass instances
 
-Since libchrony field names are not hardcoded in documentation, implementation should:
+**Rationale**: Follows libchrony's designed usage pattern. Each record is a separate request/response cycle.
 
+**Alternative Considered**:
+- Single bulk request: Not supported by libchrony API
+
+### 7. Error Handling Strategy
+
+**Decision**: Follow existing `get_tracking()` error mapping:
+
+| Error Condition | Exception Type |
+|-----------------|---------------|
+| libchrony not available | `ChronyLibraryError` |
+| Socket not found | `ChronyConnectionError` |
+| Permission denied | `ChronyPermissionError` |
+| Connection failed | `ChronyConnectionError` |
+| Session init failed | `ChronyConnectionError` |
+| Request/response error | `ChronyDataError` |
+| No records available | Empty list (sources/sourcestats) or `ChronyDataError` (rtcdata) |
+| Invalid field data | `ChronyDataError` |
+
+**Rationale**: Consistency with existing API. RTC unavailability raises error per spec clarification.
+
+### 8. Validation Rules
+
+**Decision**: Apply validation similar to tracking:
+
+**Source validation**:
+- `mode` in [0, 1, 2] (server, peer, local)
+- `state` in [0, 1, 2, 3, 4, 5, 6] (see state codes below)
+- `stratum` in [0, 15]
+- `reach` in [0, 255]
+- All floats finite
+
+**SourceStats validation**:
+- `n_samples` >= 0
+- `n_runs` >= 0
+- `span` >= 0
+- `freq_skew` >= 0
+- `std_dev` >= 0
+- All floats finite
+
+**RTCData validation**:
+- `n_samples` >= 0
+- `n_runs` >= 0
+- `span` >= 0
+- All floats finite
+
+**Rationale**: FR-009 requires validating numeric fields are finite. Bounds come from NTP/chrony specifications.
+
+### 9. Mode and State Constants
+
+**Decision**: Expose mode and state as integer constants with helper properties:
+
+**Source Mode**:
+- 0: Server (chronyc: ^)
+- 1: Peer (chronyc: =)
+- 2: Reference clock (chronyc: #)
+
+**Source State**:
+- 0: Selectable (chronyc: ?)
+- 1: Unselectable (bad samples)
+- 2: Falseticker (chronyc: x)
+- 3: Jittery (chronyc: ~)
+- 4: Candidate (chronyc: +)
+- 5: Combined (chronyc: -)
+- 6: Best/Selected (chronyc: *)
+
+**Rationale**: Keep raw integer for programmatic access; add `mode_name` and `state_name` properties for display.
+
+### 10. Testing Strategy
+
+**Decision**: Follow existing test structure:
+
+| Test Type | Location | What to Test |
+|-----------|----------|--------------|
+| Unit | `tests/unit/test_models.py` | Dataclass creation, frozen, methods |
+| Unit | `tests/unit/test_validation.py` | Validation functions for each type |
+| Contract | `tests/contract/test_api.py` | Public exports, signatures, types |
+| Integration | `tests/integration/test_*.py` | Real chronyd interaction |
+
+**Rationale**: Matches existing project structure. Integration tests require Docker.
+
+### 11. API Consistency
+
+**Decision**: All new functions follow `get_tracking()` signature pattern:
+
+```python
+def get_sources(socket_path: Optional[str] = None) -> list[Source]
+def get_source_stats(socket_path: Optional[str] = None) -> list[SourceStats]
+def get_rtc_data(socket_path: Optional[str] = None) -> RTCData
+```
+
+**Rationale**: FR-004 requires optional socket_path. List return for multi-record reports.
+
+### 12. Field Name Discovery Strategy
+
+**Decision**: During integration testing, enumerate actual field names via `chrony_get_field_name(session, index)` for each report to confirm field names.
+
+**Rationale**: libchrony field names are not hardcoded in documentation. Implementation should verify field names match expectations and document any discrepancies.
+
+**Implementation approach**:
 1. Use known field names from tracking implementation as reference
-2. During integration testing, enumerate actual field names via `chrony_get_field_name(session, index)` for each report
+2. During integration testing, log all available field names per report
 3. Update data models if any field names differ from expectations
-4. Add field name constants in `_bindings.py` to document discovered names
+4. Add field name comments in `_bindings.py` to document discovered names
 
-## Conclusion
+## Unresolved Items
 
-All NEEDS CLARIFICATION items resolved:
-- ✅ Field names for sources report
-- ✅ Field names for sourcestats report
-- ✅ Field names for rtcdata report
-- ✅ RTC unavailability handling
-- ✅ CFFI binding patterns
+None - all clarifications from spec addressed.
 
-Ready to proceed to Phase 1: Design & Contracts.
+## References
+
+- [chronyc documentation](https://chrony-project.org/doc/4.4/chronyc.html)
+- [libchrony repository](https://gitlab.com/chrony/libchrony)
+- [chrony FAQ](https://chrony-project.org/faq.html)
+- Existing pychrony codebase (`src/pychrony/_core/_bindings.py`)

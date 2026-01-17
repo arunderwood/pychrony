@@ -24,8 +24,8 @@ class Source:
     Attributes:
         address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID)
         mode: Source mode (0=unspecified, 1=server, 2=peer, 3=local refclock)
-        state: Selection state (0=unselected, 1=candidate, 2=combined,
-               3=synced, 4=not-combined, 5=not-selectable)
+        state: Selection state (0=selectable, 1=unselectable, 2=falseticker,
+               3=jittery, 4=candidate, 5=combined, 6=selected/best)
         stratum: NTP stratum level of the source (0-15)
         poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds)
         reach: Reachability register (8-bit shift register, 377 octal = all recent polls succeeded)
@@ -56,9 +56,9 @@ class Source:
         """Check if this source is currently selected for synchronization.
 
         Returns:
-            True if state indicates synced (3) or combined (2).
+            True if state indicates combined (5) or selected/best (6).
         """
-        return self.state in (2, 3)
+        return self.state in (5, 6)
 
     @property
     def mode_name(self) -> str:
@@ -70,12 +70,13 @@ class Source:
     def state_name(self) -> str:
         """Human-readable state name."""
         states = {
-            0: "unselected",
-            1: "candidate",
-            2: "combined",
-            3: "synced",
-            4: "not-combined",
-            5: "not-selectable",
+            0: "selectable",
+            1: "unselectable",
+            2: "falseticker",
+            3: "jittery",
+            4: "candidate",
+            5: "combined",
+            6: "selected",
         }
         return states.get(self.state, f"unknown({self.state})")
 ```
@@ -172,7 +173,7 @@ class RTCData:
 |-----------------|------|--------------|------------|
 | `address` | string | `address` | Non-empty string |
 | `mode` | uinteger | `mode` | 0-3 |
-| `state` | uinteger | `state` | 0-5 |
+| `state` | uinteger | `state` | 0-6 |
 | `stratum` | uinteger | `stratum` | 0-15 |
 | `poll` | integer | `poll` | Any integer |
 | `reach` | uinteger | `reach` | 0-255 |
@@ -208,7 +209,7 @@ class RTCData:
 
 Each dataclass requires field validation before construction:
 
-1. **Integer bounds**: mode (0-3), state (0-5), stratum (0-15), reach (0-255)
+1. **Integer bounds**: mode (0-3), state (0-6), stratum (0-15), reach (0-255)
 2. **Non-negative floats**: last_sample_ago, offset_err, span, freq_skew, std_dev
 3. **Finite floats**: All float fields must not be NaN or Inf
 4. **Non-empty strings**: address must have length > 0
