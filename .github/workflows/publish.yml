@@ -19,34 +19,14 @@ jobs:
     environment: pypi
 
     steps:
-    - name: Download x86_64 wheel artifacts
+    - name: Download all release artifacts
       uses: dawidd6/action-download-artifact@v12
       with:
         workflow: release.yml
-        name: wheels-x86_64
+        name: ^(wheels-.*|sdist)$
+        name_is_regexp: true
         path: dist/
-        search_artifacts: true
-        workflow_conclusion: success
-        commit: ${{ github.event.inputs.release_tag }}
-        if_no_artifact_found: fail
-
-    - name: Download aarch64 wheel artifacts
-      uses: dawidd6/action-download-artifact@v12
-      with:
-        workflow: release.yml
-        name: wheels-aarch64
-        path: dist/
-        search_artifacts: true
-        workflow_conclusion: success
-        commit: ${{ github.event.inputs.release_tag }}
-        if_no_artifact_found: fail
-
-    - name: Download sdist artifact
-      uses: dawidd6/action-download-artifact@v12
-      with:
-        workflow: release.yml
-        name: sdist
-        path: dist/
+        merge_multiple: true
         search_artifacts: true
         workflow_conclusion: success
         commit: ${{ github.event.inputs.release_tag }}
