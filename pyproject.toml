@@ -71,6 +71,7 @@ before-all = """
 dnf install -y gcc make libtool libffi-devel && \
 cd vendor/libchrony && make && make install prefix=/usr && ldconfig
 """
+environment = { CIBUILDWHEEL = "1" }
 test-requires = "pytest"
 test-command = "python -m pytest {project}/tests/unit {project}/tests/contract -v"
 
