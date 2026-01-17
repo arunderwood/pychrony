@@ -51,6 +51,8 @@ For more information, see:
 - https://chrony-project.org/
 """
 
+from importlib.metadata import version, PackageNotFoundError
+
 from .models import (
     TrackingStatus,
     Source,
@@ -69,7 +71,14 @@ from .exceptions import (
 )
 from ._core._bindings import get_tracking, get_sources, get_source_stats, get_rtc_data
 
+try:
+    __version__ = version("pychrony")
+except PackageNotFoundError:
+    __version__ = "0.0.0.dev0"
+
 __all__ = [
+    # Version
+    "__version__",
     # Core functions
     "get_tracking",
     "get_sources",
