@@ -57,7 +57,7 @@ docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && py
 - This is a read-only monitoring library; it does not control chronyd
 
 ## Active Technologies
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI + libchrony (system library via CFFI API mode bindings) (003-multiple-reports-bindings)
+- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
 - N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
 
 ## Recent Changes

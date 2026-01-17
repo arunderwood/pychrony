@@ -106,9 +106,9 @@ As a developer using pychrony, I want all report functions to follow a consisten
 
 ### Key Entities
 
-- **Source**: Represents a single NTP time source with attributes: address (IPv4/IPv6), state (sync status), stratum, mode (server/peer/local), polling interval, reachability register
-- **SourceStats**: Statistical measurements for a source: sample count, offset (seconds), std_dev, delay (seconds), estimated error, jitter
-- **RTCData**: Real-Time Clock information: offset from system time (seconds), frequency error (ppm), calibration status, last update time
+- **Source**: Represents a single NTP time source with attributes: address (IPv4/IPv6), poll (log2 seconds), stratum, state (0-5), mode (0-2), flags, reachability (0-255), last_sample_ago, orig_latest_meas, latest_meas, latest_meas_err
+- **SourceStats**: Statistical measurements for a source: reference_id, address, samples, runs, span (seconds), std_dev (seconds), resid_freq (ppm), skew (ppm), offset (seconds), offset_err (seconds)
+- **RTCData**: Real-Time Clock information: ref_time (timestamp), samples, runs, span (seconds), offset (seconds), freq_offset (ppm)
 
 ## Success Criteria *(mandatory)*
 
