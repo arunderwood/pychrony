@@ -68,7 +68,10 @@ build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 archs = ["x86_64", "aarch64"]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
-before-all = "dnf install -y libchrony-devel libffi-devel"
+before-all = """
+dnf install -y gcc make libtool libffi-devel && \
+cd vendor/libchrony && make && make install prefix=/usr && ldconfig
+"""
 test-requires = "pytest"
 test-command = "python -m pytest {project}/tests/unit {project}/tests/contract -v"
 
