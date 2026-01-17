@@ -1,18 +1,84 @@
 """Data models for pychrony.
 
-This module defines dataclasses for chrony report types and helper functions
-for converting libchrony data to Python types.
+This module defines dataclasses for chrony report types, enums for categorical
+fields, and helper functions for converting libchrony data to Python types.
 """
 
 from dataclasses import dataclass
+from enum import Enum
 
 __all__ = [
+    # Enums
+    "LeapStatus",
+    "SourceState",
+    "SourceMode",
+    # Dataclasses
     "TrackingStatus",
     "Source",
     "SourceStats",
     "RTCData",
+    # Helpers
     "_ref_id_to_name",
 ]
+
+
+class LeapStatus(Enum):
+    """Leap second status for NTP synchronization.
+
+    Indicates whether time is normal or if a leap second adjustment
+    is scheduled at the next midnight UTC.
+
+    Attributes:
+        NORMAL: No leap second pending
+        INSERT: Leap second will be inserted at midnight (23:59:60)
+        DELETE: Leap second will be deleted at midnight (skip 23:59:59)
+        UNSYNC: Clock is unsynchronized
+    """
+
+    NORMAL = 0
+    INSERT = 1
+    DELETE = 2
+    UNSYNC = 3
+
+
+class SourceState(Enum):
+    """Selection state of a chrony time source.
+
+    Indicates whether chrony has selected, rejected, or is
+    considering this source for time synchronization.
+
+    Attributes:
+        SELECTED: Currently selected for synchronization
+        NONSELECTABLE: Cannot be selected (bad measurements)
+        FALSETICKER: Detected as providing incorrect time
+        JITTERY: Measurements have excessive jitter
+        UNSELECTED: Valid but not currently selected
+        SELECTABLE: Candidate for selection
+    """
+
+    SELECTED = 0
+    NONSELECTABLE = 1
+    FALSETICKER = 2
+    JITTERY = 3
+    UNSELECTED = 4
+    SELECTABLE = 5
+
+
+class SourceMode(Enum):
+    """Operational mode of a chrony time source.
+
+    Distinguishes between NTP client connections, peer
+    relationships, and local reference clocks.
+
+    Attributes:
+        CLIENT: NTP client polling a server
+        PEER: NTP peer relationship (bidirectional)
+        REFCLOCK: Local reference clock (GPS, PPS, etc.)
+    """
+
+    CLIENT = 0
+    PEER = 1
+    REFCLOCK = 2
 
 
 @dataclass(frozen=True)
@@ -27,7 +93,7 @@ class TrackingStatus:
         reference_id_name: Human-readable reference source name
         reference_ip: IP address of reference source (IPv4, IPv6, or ID#)
         stratum: NTP stratum level (0=reference clock, 1-15=downstream)
-        leap_status: Leap second status (0=normal, 1=insert, 2=delete, 3=unsync)
+        leap_status: Leap second status as LeapStatus enum
         ref_time: Timestamp of last measurement (seconds since epoch)
         offset: Current offset from reference in seconds (can be negative)
         last_offset: Offset at last measurement in seconds
@@ -44,7 +110,7 @@ class TrackingStatus:
     reference_id_name: str
     reference_ip: str
     stratum: int
-    leap_status: int
+    leap_status: LeapStatus
     ref_time: float
     offset: float
     last_offset: float
@@ -69,10 +135,10 @@ class TrackingStatus:
         """Check if a leap second adjustment is pending.
 
         Returns:
-            True if leap_status is 1 (insert) or 2 (delete),
+            True if leap_status is INSERT or DELETE,
             False otherwise.
         """
-        return self.leap_status in (1, 2)
+        return self.leap_status in (LeapStatus.INSERT, LeapStatus.DELETE)
 
 
 @dataclass(frozen=True)
@@ -86,9 +152,8 @@ class Source:
         address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID)
         poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds)
         stratum: NTP stratum level of the source (0-15)
-        state: Selection state (0=selected, 1=nonselectable, 2=falseticker,
-               3=jittery, 4=unselected, 5=selectable)
-        mode: Source mode (0=client, 1=peer, 2=reference clock)
+        state: Selection state as SourceState enum
+        mode: Source mode as SourceMode enum
         flags: Source flags (bitfield)
         reachability: Reachability register (8-bit, 377 octal = all recent polls succeeded)
         last_sample_ago: Seconds since last valid sample was received
@@ -100,8 +165,8 @@ class Source:
     address: str
     poll: int
     stratum: int
-    state: int
-    mode: int
+    state: SourceState
+    mode: SourceMode
     flags: int
     reachability: int
     last_sample_ago: int
@@ -121,28 +186,9 @@ class Source:
         """Check if this source is currently selected for synchronization.
 
         Returns:
-            True if state is 0 (selected).
+            True if state is SELECTED.
         """
-        return self.state == 0
-
-    @property
-    def mode_name(self) -> str:
-        """Human-readable mode name."""
-        modes = {0: "client", 1: "peer", 2: "reference clock"}
-        return modes.get(self.mode, f"unknown({self.mode})")
-
-    @property
-    def state_name(self) -> str:
-        """Human-readable state name."""
-        states = {
-            0: "selected",
-            1: "nonselectable",
-            2: "falseticker",
-            3: "jittery",
-            4: "unselected",
-            5: "selectable",
-        }
-        return states.get(self.state, f"unknown({self.state})")
+        return self.state == SourceState.SELECTED
 
 
 @dataclass(frozen=True)

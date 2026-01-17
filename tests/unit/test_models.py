@@ -9,6 +9,9 @@ from pychrony.models import (
     SourceStats,
     RTCData,
     _ref_id_to_name,
+    LeapStatus,
+    SourceState,
+    SourceMode,
 )
 
 
@@ -100,16 +103,16 @@ class TestTrackingStatusIsLeapPending:
         assert status.is_leap_pending() is True
 
     def test_leap_pending_when_delete(self, sample_tracking_data):
-        """Test is_leap_pending returns True when leap_status == 2 (delete)."""
+        """Test is_leap_pending returns True when leap_status is DELETE."""
         data = sample_tracking_data.copy()
-        data["leap_status"] = 2
+        data["leap_status"] = LeapStatus.DELETE
         status = TrackingStatus(**data)
         assert status.is_leap_pending() is True
 
     def test_no_leap_when_unsync(self, sample_tracking_data):
-        """Test is_leap_pending returns False when leap_status == 3 (unsync)."""
+        """Test is_leap_pending returns False when leap_status is UNSYNC."""
         data = sample_tracking_data.copy()
-        data["leap_status"] = 3
+        data["leap_status"] = LeapStatus.UNSYNC
         status = TrackingStatus(**data)
         assert status.is_leap_pending() is False
 
@@ -222,98 +225,52 @@ class TestSourceIsSelected:
         source = Source(**sample_source_data)
         assert source.is_selected() is True
 
-    def test_not_selected_when_state_nonzero(self, sample_source_data):
-        """Test is_selected returns False when state != 0."""
-        for state in range(1, 6):
+    def test_not_selected_when_state_not_selected(self, sample_source_data):
+        """Test is_selected returns False when state != SELECTED."""
+        non_selected_states = [
+            SourceState.NONSELECTABLE,
+            SourceState.FALSETICKER,
+            SourceState.JITTERY,
+            SourceState.UNSELECTED,
+            SourceState.SELECTABLE,
+        ]
+        for state in non_selected_states:
             data = sample_source_data.copy()
             data["state"] = state
             source = Source(**data)
             assert source.is_selected() is False
 
 
-class TestSourceModeName:
-    """Tests for Source.mode_name property."""
+class TestSourceEnumProperties:
+    """Tests for Source enum field properties."""
 
-    def test_mode_client(self, sample_source_data):
-        """Test mode_name returns 'client' for mode 0."""
+    def test_state_name_via_enum(self, sample_source_data):
+        """Test state.name returns uppercase string."""
+        source = Source(**sample_source_data)
+        assert source.state.name == "SELECTED"
+
+    def test_mode_name_via_enum(self, sample_source_data):
+        """Test mode.name returns uppercase string."""
+        source = Source(**sample_source_data)
+        assert source.mode.name == "CLIENT"
+
+    def test_state_values(self, sample_source_data):
+        """Test state enum values match expected integers."""
         data = sample_source_data.copy()
-        data["mode"] = 0
-        source = Source(**data)
-        assert source.mode_name == "client"
+        for state in SourceState:
+            data["state"] = state
+            source = Source(**data)
+            assert source.state == state
+            assert source.state.value == state.value
 
-    def test_mode_peer(self, sample_source_data):
-        """Test mode_name returns 'peer' for mode 1."""
+    def test_mode_values(self, sample_source_data):
+        """Test mode enum values match expected integers."""
         data = sample_source_data.copy()
-        data["mode"] = 1
-        source = Source(**data)
-        assert source.mode_name == "peer"
-
-    def test_mode_refclock(self, sample_source_data):
-        """Test mode_name returns 'reference clock' for mode 2."""
-        data = sample_source_data.copy()
-        data["mode"] = 2
-        source = Source(**data)
-        assert source.mode_name == "reference clock"
-
-    def test_mode_unknown(self, sample_source_data):
-        """Test mode_name returns 'unknown(N)' for unknown modes."""
-        data = sample_source_data.copy()
-        data["mode"] = 99
-        source = Source(**data)
-        assert source.mode_name == "unknown(99)"
-
-
-class TestSourceStateName:
-    """Tests for Source.state_name property."""
-
-    def test_state_selected(self, sample_source_data):
-        """Test state_name returns 'selected' for state 0."""
-        data = sample_source_data.copy()
-        data["state"] = 0
-        source = Source(**data)
-        assert source.state_name == "selected"
-
-    def test_state_nonselectable(self, sample_source_data):
-        """Test state_name returns 'nonselectable' for state 1."""
-        data = sample_source_data.copy()
-        data["state"] = 1
-        source = Source(**data)
-        assert source.state_name == "nonselectable"
-
-    def test_state_falseticker(self, sample_source_data):
-        """Test state_name returns 'falseticker' for state 2."""
-        data = sample_source_data.copy()
-        data["state"] = 2
-        source = Source(**data)
-        assert source.state_name == "falseticker"
-
-    def test_state_jittery(self, sample_source_data):
-        """Test state_name returns 'jittery' for state 3."""
-        data = sample_source_data.copy()
-        data["state"] = 3
-        source = Source(**data)
-        assert source.state_name == "jittery"
-
-    def test_state_unselected(self, sample_source_data):
-        """Test state_name returns 'unselected' for state 4."""
-        data = sample_source_data.copy()
-        data["state"] = 4
-        source = Source(**data)
-        assert source.state_name == "unselected"
-
-    def test_state_selectable(self, sample_source_data):
-        """Test state_name returns 'selectable' for state 5."""
-        data = sample_source_data.copy()
-        data["state"] = 5
-        source = Source(**data)
-        assert source.state_name == "selectable"
-
-    def test_state_unknown(self, sample_source_data):
-        """Test state_name returns 'unknown(N)' for unknown states."""
-        data = sample_source_data.copy()
-        data["state"] = 99
-        source = Source(**data)
-        assert source.state_name == "unknown(99)"
+        for mode in SourceMode:
+            data["mode"] = mode
+            source = Source(**data)
+            assert source.mode == mode
+            assert source.mode.value == mode.value
 
 
 class TestSourceStats:

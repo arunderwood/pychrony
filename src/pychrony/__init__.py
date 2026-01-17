@@ -51,7 +51,15 @@ For more information, see:
 - https://chrony-project.org/
 """
 
-from .models import TrackingStatus, Source, SourceStats, RTCData
+from .models import (
+    TrackingStatus,
+    Source,
+    SourceStats,
+    RTCData,
+    LeapStatus,
+    SourceState,
+    SourceMode,
+)
 from .exceptions import (
     ChronyError,
     ChronyConnectionError,
@@ -67,6 +75,10 @@ __all__ = [
     "get_sources",
     "get_source_stats",
     "get_rtc_data",
+    # Enums
+    "LeapStatus",
+    "SourceState",
+    "SourceMode",
     # Data models
     "TrackingStatus",
     "Source",
