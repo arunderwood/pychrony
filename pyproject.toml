@@ -7,7 +7,8 @@ name = "pychrony"
 dynamic = ["version"]
 description = "Python bindings for chrony NTP client"
 readme = "README.md"
-license = "MIT"
+license = "MIT AND LGPL-2.1-or-later"
+license-files = ["LICENSE", "LICENSES/*"]
 requires-python = ">=3.10"
 authors = [
     {name = "arunderwood", email = "arunderwood@users.noreply.github.com"}
