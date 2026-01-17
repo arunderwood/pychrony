@@ -14,7 +14,11 @@ PyChrony provides Python bindings for [chrony](https://chrony.tuxfamily.org/) NT
 
 ### Prerequisites
 
-PyChrony requires the **libchrony** system library to be installed. This is the C library that provides the chrony client API.
+PyChrony uses [libchrony](https://gitlab.com/chrony/libchrony), a C library for communicating with chronyd.
+
+**Pre-built wheels** (recommended): libchrony is bundled—no system dependencies needed.
+
+**Source installs** (sdist or development): Requires libchrony to be installed on your system. See below for installation instructions.
 
 #### libchrony Package Availability
 
@@ -55,8 +59,6 @@ sudo ldconfig
 pip install pychrony
 ```
 
-> **Note**: Pre-built wheels are available for manylinux (glibc-based) and musllinux (Alpine) systems. These wheels bundle libchrony, so no system library installation is required when using wheels.
-
 ### Install from Source (Development)
 
 ```bash
@@ -86,4 +88,6 @@ print(f"Synchronized: {status.is_synchronized()}")
 
 ## License
 
-MIT - see [LICENSE](LICENSE)
+PyChrony is licensed under MIT. See [LICENSE](LICENSE).
+
+Pre-built wheels bundle [libchrony](https://gitlab.com/chrony/libchrony) which is licensed under LGPL-2.1-or-later. See [LICENSES/LGPL-2.1-or-later.txt](LICENSES/LGPL-2.1-or-later.txt).
