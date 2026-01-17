@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# CFFI generated files
+*_cffi_bindings.c
+
+# CFFI build output (created in project root during build)
+/pychrony/
+
 # Distribution / packaging
 .Python
 build/

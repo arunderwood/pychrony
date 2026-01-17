@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.24.2", "hatch-vcs>=0.3", "cffi>=1.14.0"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "cffi>=1.14.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pychrony"
@@ -34,12 +34,11 @@ Homepage = "https://github.com/arunderwood/pychrony"
 Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
 
-[tool.hatch.version]
-source = "vcs"
-fallback-version = "0.0.0.dev0"
+[tool.setuptools_scm]
+fallback_version = "0.0.0.dev0"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/pychrony"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 88
