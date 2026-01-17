@@ -35,9 +35,9 @@ This feature builds on the existing pychrony project structure:
 
 **⚠️ CRITICAL**: Validation infrastructure must be complete before any user story implementation
 
-- [ ] T001 Add validation helper `_validate_finite_float()` in src/pychrony/_core/_bindings.py
-- [ ] T002 Add validation helper `_validate_bounded_int()` in src/pychrony/_core/_bindings.py
-- [ ] T003 Add validation helper `_validate_non_negative_int()` in src/pychrony/_core/_bindings.py
+- [X] T001 Add validation helper `_validate_finite_float()` in src/pychrony/_core/_bindings.py
+- [X] T002 Add validation helper `_validate_bounded_int()` in src/pychrony/_core/_bindings.py
+- [X] T003 Add validation helper `_validate_non_negative_int()` in src/pychrony/_core/_bindings.py
 
 **Checkpoint**: Validation infrastructure ready - user story implementation can now begin
 
@@ -51,28 +51,28 @@ This feature builds on the existing pychrony project structure:
 
 ### Tests for User Story 1
 
-- [ ] T004 [P] [US1] Contract test for Source dataclass in tests/contract/test_api.py
-- [ ] T005 [P] [US1] Contract test for get_sources() signature in tests/contract/test_api.py
-- [ ] T006 [P] [US1] Unit test for Source dataclass creation in tests/unit/test_models.py
-- [ ] T007 [P] [US1] Unit test for Source.is_reachable() method in tests/unit/test_models.py
-- [ ] T008 [P] [US1] Unit test for Source.is_selected() method in tests/unit/test_models.py
-- [ ] T009 [P] [US1] Unit test for Source.mode_name property in tests/unit/test_models.py
-- [ ] T010 [P] [US1] Unit test for Source.state_name property in tests/unit/test_models.py
-- [ ] T011 [P] [US1] Unit test for _validate_source() function in tests/unit/test_validation.py
-- [ ] T012 [P] [US1] Integration test for get_sources() in tests/integration/test_sources.py
+- [X] T004 [P] [US1] Contract test for Source dataclass in tests/contract/test_api.py
+- [X] T005 [P] [US1] Contract test for get_sources() signature in tests/contract/test_api.py
+- [X] T006 [P] [US1] Unit test for Source dataclass creation in tests/unit/test_models.py
+- [X] T007 [P] [US1] Unit test for Source.is_reachable() method in tests/unit/test_models.py
+- [X] T008 [P] [US1] Unit test for Source.is_selected() method in tests/unit/test_models.py
+- [X] T009 [P] [US1] Unit test for Source.mode_name property in tests/unit/test_models.py
+- [X] T010 [P] [US1] Unit test for Source.state_name property in tests/unit/test_models.py
+- [X] T011 [P] [US1] Unit test for _validate_source() function in tests/unit/test_validation.py
+- [X] T012 [P] [US1] Integration test for get_sources() in tests/integration/test_sources.py
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Create Source frozen dataclass in src/pychrony/models.py
-- [ ] T014 [US1] Add is_reachable() method to Source in src/pychrony/models.py
-- [ ] T015 [US1] Add is_selected() method to Source in src/pychrony/models.py
-- [ ] T016 [US1] Add mode_name property to Source in src/pychrony/models.py
-- [ ] T017 [US1] Add state_name property to Source in src/pychrony/models.py
-- [ ] T018 [US1] Add _validate_source() validation function in src/pychrony/_core/_bindings.py
-- [ ] T019 [US1] Add _get_source_from_record() helper to extract Source from libchrony record in src/pychrony/_core/_bindings.py
-- [ ] T020 [US1] Implement get_sources() function in src/pychrony/_core/_bindings.py
-- [ ] T021 [US1] Export Source from src/pychrony/models.py __all__
-- [ ] T022 [US1] Export get_sources and Source from src/pychrony/__init__.py
+- [X] T013 [US1] Create Source frozen dataclass in src/pychrony/models.py
+- [X] T014 [US1] Add is_reachable() method to Source in src/pychrony/models.py
+- [X] T015 [US1] Add is_selected() method to Source in src/pychrony/models.py
+- [X] T016 [US1] Add mode_name property to Source in src/pychrony/models.py
+- [X] T017 [US1] Add state_name property to Source in src/pychrony/models.py
+- [X] T018 [US1] Add _validate_source() validation function in src/pychrony/_core/_bindings.py
+- [X] T019 [US1] Add _get_source_from_record() helper to extract Source from libchrony record in src/pychrony/_core/_bindings.py
+- [X] T020 [US1] Implement get_sources() function in src/pychrony/_core/_bindings.py
+- [X] T021 [US1] Export Source from src/pychrony/models.py __all__
+- [X] T022 [US1] Export get_sources and Source from src/pychrony/__init__.py
 
 **Checkpoint**: User Story 1 complete - `get_sources()` is functional and testable independently
 
@@ -86,22 +86,22 @@ This feature builds on the existing pychrony project structure:
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Contract test for SourceStats dataclass in tests/contract/test_api.py
-- [ ] T024 [P] [US2] Contract test for get_source_stats() signature in tests/contract/test_api.py
-- [ ] T025 [P] [US2] Unit test for SourceStats dataclass creation in tests/unit/test_models.py
-- [ ] T026 [P] [US2] Unit test for SourceStats.has_sufficient_samples() method in tests/unit/test_models.py
-- [ ] T027 [P] [US2] Unit test for _validate_sourcestats() function in tests/unit/test_validation.py
-- [ ] T028 [P] [US2] Integration test for get_source_stats() in tests/integration/test_sourcestats.py
+- [X] T023 [P] [US2] Contract test for SourceStats dataclass in tests/contract/test_api.py
+- [X] T024 [P] [US2] Contract test for get_source_stats() signature in tests/contract/test_api.py
+- [X] T025 [P] [US2] Unit test for SourceStats dataclass creation in tests/unit/test_models.py
+- [X] T026 [P] [US2] Unit test for SourceStats.has_sufficient_samples() method in tests/unit/test_models.py
+- [X] T027 [P] [US2] Unit test for _validate_sourcestats() function in tests/unit/test_validation.py
+- [X] T028 [P] [US2] Integration test for get_source_stats() in tests/integration/test_sourcestats.py
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Create SourceStats frozen dataclass in src/pychrony/models.py
-- [ ] T030 [US2] Add has_sufficient_samples() method to SourceStats in src/pychrony/models.py
-- [ ] T031 [US2] Add _validate_sourcestats() validation function in src/pychrony/_core/_bindings.py
-- [ ] T032 [US2] Add _get_sourcestats_from_record() helper to extract SourceStats from libchrony record in src/pychrony/_core/_bindings.py
-- [ ] T033 [US2] Implement get_source_stats() function in src/pychrony/_core/_bindings.py
-- [ ] T034 [US2] Export SourceStats from src/pychrony/models.py __all__
-- [ ] T035 [US2] Export get_source_stats and SourceStats from src/pychrony/__init__.py
+- [X] T029 [US2] Create SourceStats frozen dataclass in src/pychrony/models.py
+- [X] T030 [US2] Add has_sufficient_samples() method to SourceStats in src/pychrony/models.py
+- [X] T031 [US2] Add _validate_sourcestats() validation function in src/pychrony/_core/_bindings.py
+- [X] T032 [US2] Add _get_sourcestats_from_record() helper to extract SourceStats from libchrony record in src/pychrony/_core/_bindings.py
+- [X] T033 [US2] Implement get_source_stats() function in src/pychrony/_core/_bindings.py
+- [X] T034 [US2] Export SourceStats from src/pychrony/models.py __all__
+- [X] T035 [US2] Export get_source_stats and SourceStats from src/pychrony/__init__.py
 
 **Checkpoint**: User Story 2 complete - `get_source_stats()` is functional and testable independently
 
@@ -115,23 +115,23 @@ This feature builds on the existing pychrony project structure:
 
 ### Tests for User Story 3
 
-- [ ] T036 [P] [US3] Contract test for RTCData dataclass in tests/contract/test_api.py
-- [ ] T037 [P] [US3] Contract test for get_rtc_data() signature in tests/contract/test_api.py
-- [ ] T038 [P] [US3] Unit test for RTCData dataclass creation in tests/unit/test_models.py
-- [ ] T039 [P] [US3] Unit test for RTCData.is_calibrated() method in tests/unit/test_models.py
-- [ ] T040 [P] [US3] Unit test for _validate_rtc() function in tests/unit/test_validation.py
-- [ ] T041 [P] [US3] Unit test for get_rtc_data() raising ChronyDataError when unavailable in tests/unit/test_bindings.py
-- [ ] T042 [P] [US3] Integration test for get_rtc_data() in tests/integration/test_rtcdata.py
+- [X] T036 [P] [US3] Contract test for RTCData dataclass in tests/contract/test_api.py
+- [X] T037 [P] [US3] Contract test for get_rtc_data() signature in tests/contract/test_api.py
+- [X] T038 [P] [US3] Unit test for RTCData dataclass creation in tests/unit/test_models.py
+- [X] T039 [P] [US3] Unit test for RTCData.is_calibrated() method in tests/unit/test_models.py
+- [X] T040 [P] [US3] Unit test for _validate_rtc() function in tests/unit/test_validation.py
+- [X] T041 [P] [US3] Unit test for get_rtc_data() raising ChronyDataError when unavailable in tests/unit/test_bindings.py
+- [X] T042 [P] [US3] Integration test for get_rtc_data() in tests/integration/test_rtcdata.py
 
 ### Implementation for User Story 3
 
-- [ ] T043 [US3] Create RTCData frozen dataclass in src/pychrony/models.py
-- [ ] T044 [US3] Add is_calibrated() method to RTCData in src/pychrony/models.py
-- [ ] T045 [US3] Add _validate_rtc() validation function in src/pychrony/_core/_bindings.py
-- [ ] T046 [US3] Add _get_rtc_from_record() helper to extract RTCData from libchrony record in src/pychrony/_core/_bindings.py
-- [ ] T047 [US3] Implement get_rtc_data() function in src/pychrony/_core/_bindings.py
-- [ ] T048 [US3] Export RTCData from src/pychrony/models.py __all__
-- [ ] T049 [US3] Export get_rtc_data and RTCData from src/pychrony/__init__.py
+- [X] T043 [US3] Create RTCData frozen dataclass in src/pychrony/models.py
+- [X] T044 [US3] Add is_calibrated() method to RTCData in src/pychrony/models.py
+- [X] T045 [US3] Add _validate_rtc() validation function in src/pychrony/_core/_bindings.py
+- [X] T046 [US3] Add _get_rtc_from_record() helper to extract RTCData from libchrony record in src/pychrony/_core/_bindings.py
+- [X] T047 [US3] Implement get_rtc_data() function in src/pychrony/_core/_bindings.py
+- [X] T048 [US3] Export RTCData from src/pychrony/models.py __all__
+- [X] T049 [US3] Export get_rtc_data and RTCData from src/pychrony/__init__.py
 
 **Checkpoint**: User Story 3 complete - `get_rtc_data()` is functional and testable independently
 
@@ -145,16 +145,16 @@ This feature builds on the existing pychrony project structure:
 
 ### Tests for User Story 4
 
-- [ ] T050 [P] [US4] Contract test verifying all functions accept optional socket_path in tests/contract/test_api.py
-- [ ] T051 [P] [US4] Unit test verifying connection error handling consistency in tests/unit/test_bindings.py
-- [ ] T052 [P] [US4] Unit test verifying all dataclasses are frozen in tests/unit/test_models.py
+- [X] T050 [P] [US4] Contract test verifying all functions accept optional socket_path in tests/contract/test_api.py
+- [X] T051 [P] [US4] Unit test verifying connection error handling consistency in tests/unit/test_bindings.py
+- [X] T052 [P] [US4] Unit test verifying all dataclasses are frozen in tests/unit/test_models.py
 
 ### Implementation for User Story 4
 
-- [ ] T053 [US4] Verify socket_path handling matches get_tracking() pattern in all new functions
-- [ ] T054 [US4] Verify error messages follow existing patterns (ChronyConnectionError, ChronyDataError)
-- [ ] T055 [US4] Add docstrings to all new public functions following existing format
-- [ ] T056 [US4] Add docstrings to all new dataclass fields
+- [X] T053 [US4] Verify socket_path handling matches get_tracking() pattern in all new functions
+- [X] T054 [US4] Verify error messages follow existing patterns (ChronyConnectionError, ChronyDataError)
+- [X] T055 [US4] Add docstrings to all new public functions following existing format
+- [X] T056 [US4] Add docstrings to all new dataclass fields
 
 **Checkpoint**: User Story 4 complete - all functions follow consistent API patterns
 
@@ -164,13 +164,13 @@ This feature builds on the existing pychrony project structure:
 
 **Purpose**: Final validation and documentation
 
-- [ ] T057 Run full test suite: `uv run pytest`
-- [ ] T058 Run linting: `uv run ruff check .`
-- [ ] T059 Run formatting: `uv run ruff format .`
-- [ ] T060 Run type checking: `uv run ty check src/`
-- [ ] T061 Build and run integration tests in Docker
-- [ ] T062 [P] Validate quickstart.md examples work correctly
-- [ ] T063 Verify all public exports are in __all__ lists
+- [X] T057 Run full test suite: `uv run pytest`
+- [X] T058 Run linting: `uv run ruff check .`
+- [X] T059 Run formatting: `uv run ruff format .`
+- [X] T060 Run type checking: `uv run ty check src/`
+- [X] T061 Build and run integration tests in Docker
+- [X] T062 [P] Validate quickstart.md examples work correctly
+- [X] T063 Verify all public exports are in __all__ lists
 
 ---
 
