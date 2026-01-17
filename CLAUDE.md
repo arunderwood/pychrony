@@ -27,9 +27,14 @@ Cross-version testing (Python 3.10-3.14) is handled by CI.
 
 ## Before Committing
 
-Always run the test suite before creating a commit:
+Always run the test suite and all quality checks before creating a commit:
 ```bash
 uv run pytest
+uv run ruff check .
+uv run ruff format .
+uv run ty check src/
+docker build -t pychrony-test -f docker/Dockerfile.test .
+docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
 
 ## Architecture
