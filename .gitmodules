@@ -1,0 +1,4 @@
+[submodule "vendor/libchrony"]
+	path = vendor/libchrony
+	url = https://gitlab.com/chrony/libchrony.git
+	shallow = true

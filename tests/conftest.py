@@ -53,3 +53,51 @@ def leap_pending_tracking_data(sample_tracking_data):
     data = sample_tracking_data.copy()
     data["leap_status"] = 1  # Insert leap second
     return data
+
+
+@pytest.fixture
+def sample_source_data():
+    """Provide sample source data for testing Source creation."""
+    return {
+        "address": "192.168.1.100",
+        "poll": 6,  # 64 seconds
+        "stratum": 2,
+        "state": 0,  # selected
+        "mode": 0,  # client
+        "flags": 0,
+        "reachability": 255,  # all recent polls succeeded
+        "last_sample_ago": 32,
+        "orig_latest_meas": 0.000123456,
+        "latest_meas": 0.000123456,
+        "latest_meas_err": 0.000010000,
+    }
+
+
+@pytest.fixture
+def sample_sourcestats_data():
+    """Provide sample sourcestats data for testing SourceStats creation."""
+    return {
+        "reference_id": 0xC0A80164,  # 192.168.1.100
+        "address": "192.168.1.100",
+        "samples": 8,
+        "runs": 3,
+        "span": 512,
+        "std_dev": 0.000100000,
+        "resid_freq": 0.001,
+        "skew": 0.005,
+        "offset": 0.000123456,
+        "offset_err": 0.000010000,
+    }
+
+
+@pytest.fixture
+def sample_rtcdata():
+    """Provide sample RTC data for testing RTCData creation."""
+    return {
+        "ref_time": 1705320000.123456789,
+        "samples": 10,
+        "runs": 4,
+        "span": 86400,
+        "offset": 0.123456,
+        "freq_offset": -1.234,
+    }

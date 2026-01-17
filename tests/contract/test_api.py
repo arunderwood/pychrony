@@ -1,6 +1,8 @@
 """Contract tests for pychrony public API stability."""
 
-from dataclasses import fields
+import inspect
+from dataclasses import fields, is_dataclass
+from typing import Optional
 
 
 class TestPublicExports:
@@ -144,7 +146,7 @@ class TestGetTrackingContract:
 
         sig = inspect.signature(get_tracking)
         param = sig.parameters["socket_path"]
-        assert param.default is None or param.default is not inspect.Parameter.empty
+        assert param.default is None
 
 
 class TestExceptionContract:
@@ -172,3 +174,357 @@ class TestExceptionContract:
 
         error = ChronyLibraryError("lib not found")
         assert error.error_code is None
+
+
+class TestNewPublicExports:
+    """Tests for new public API exports (003-multiple-reports-bindings)."""
+
+    def test_all_new_exports_in_all(self):
+        """Test that all new exports are in __all__."""
+        from pychrony import __all__
+
+        assert "get_sources" in __all__
+        assert "get_source_stats" in __all__
+        assert "get_rtc_data" in __all__
+        assert "Source" in __all__
+        assert "SourceStats" in __all__
+        assert "RTCData" in __all__
+
+    def test_get_sources_importable(self):
+        """Test that get_sources can be imported."""
+        from pychrony import get_sources
+
+        assert callable(get_sources)
+
+    def test_get_source_stats_importable(self):
+        """Test that get_source_stats can be imported."""
+        from pychrony import get_source_stats
+
+        assert callable(get_source_stats)
+
+    def test_get_rtc_data_importable(self):
+        """Test that get_rtc_data can be imported."""
+        from pychrony import get_rtc_data
+
+        assert callable(get_rtc_data)
+
+    def test_source_importable(self):
+        """Test that Source can be imported."""
+        from pychrony import Source
+
+        assert Source is not None
+
+    def test_sourcestats_importable(self):
+        """Test that SourceStats can be imported."""
+        from pychrony import SourceStats
+
+        assert SourceStats is not None
+
+    def test_rtcdata_importable(self):
+        """Test that RTCData can be imported."""
+        from pychrony import RTCData
+
+        assert RTCData is not None
+
+
+class TestSourceContract:
+    """Tests for Source API contract."""
+
+    def test_is_dataclass(self):
+        """Test that Source is a dataclass."""
+        from pychrony import Source
+
+        assert is_dataclass(Source)
+
+    def test_is_frozen(self):
+        """Test that Source is frozen (immutable)."""
+        from pychrony import Source
+
+        assert Source.__dataclass_fields__ is not None
+
+    def test_has_required_fields(self):
+        """Test that Source has all required fields."""
+        from pychrony import Source
+
+        field_names = {f.name for f in fields(Source)}
+        required_fields = {
+            "address",
+            "poll",
+            "stratum",
+            "state",
+            "mode",
+            "flags",
+            "reachability",
+            "last_sample_ago",
+            "orig_latest_meas",
+            "latest_meas",
+            "latest_meas_err",
+        }
+        assert required_fields.issubset(field_names)
+
+    def test_field_types(self):
+        """Test that Source fields have correct types."""
+        from pychrony import Source
+
+        type_hints = {f.name: f.type for f in fields(Source)}
+
+        assert type_hints["address"] is str
+        assert type_hints["poll"] is int
+        assert type_hints["stratum"] is int
+        assert type_hints["state"] is int
+        assert type_hints["mode"] is int
+        assert type_hints["flags"] is int
+        assert type_hints["reachability"] is int
+        assert type_hints["last_sample_ago"] is int
+        assert type_hints["orig_latest_meas"] is float
+        assert type_hints["latest_meas"] is float
+        assert type_hints["latest_meas_err"] is float
+
+    def test_has_is_reachable_method(self):
+        """Test that Source has is_reachable method."""
+        from pychrony import Source
+
+        assert hasattr(Source, "is_reachable")
+        assert callable(getattr(Source, "is_reachable"))
+
+    def test_has_is_selected_method(self):
+        """Test that Source has is_selected method."""
+        from pychrony import Source
+
+        assert hasattr(Source, "is_selected")
+        assert callable(getattr(Source, "is_selected"))
+
+    def test_has_mode_name_property(self):
+        """Test that Source has mode_name property."""
+        from pychrony import Source
+
+        assert hasattr(Source, "mode_name")
+
+    def test_has_state_name_property(self):
+        """Test that Source has state_name property."""
+        from pychrony import Source
+
+        assert hasattr(Source, "state_name")
+
+
+class TestSourceStatsContract:
+    """Tests for SourceStats API contract."""
+
+    def test_is_dataclass(self):
+        """Test that SourceStats is a dataclass."""
+        from pychrony import SourceStats
+
+        assert is_dataclass(SourceStats)
+
+    def test_is_frozen(self):
+        """Test that SourceStats is frozen (immutable)."""
+        from pychrony import SourceStats
+
+        assert SourceStats.__dataclass_fields__ is not None
+
+    def test_has_required_fields(self):
+        """Test that SourceStats has all required fields."""
+        from pychrony import SourceStats
+
+        field_names = {f.name for f in fields(SourceStats)}
+        required_fields = {
+            "reference_id",
+            "address",
+            "samples",
+            "runs",
+            "span",
+            "std_dev",
+            "resid_freq",
+            "skew",
+            "offset",
+            "offset_err",
+        }
+        assert required_fields.issubset(field_names)
+
+    def test_field_types(self):
+        """Test that SourceStats fields have correct types."""
+        from pychrony import SourceStats
+
+        type_hints = {f.name: f.type for f in fields(SourceStats)}
+
+        assert type_hints["reference_id"] is int
+        assert type_hints["address"] is str
+        assert type_hints["samples"] is int
+        assert type_hints["runs"] is int
+        assert type_hints["span"] is int
+        assert type_hints["std_dev"] is float
+        assert type_hints["resid_freq"] is float
+        assert type_hints["skew"] is float
+        assert type_hints["offset"] is float
+        assert type_hints["offset_err"] is float
+
+    def test_has_has_sufficient_samples_method(self):
+        """Test that SourceStats has has_sufficient_samples method."""
+        from pychrony import SourceStats
+
+        assert hasattr(SourceStats, "has_sufficient_samples")
+        assert callable(getattr(SourceStats, "has_sufficient_samples"))
+
+
+class TestRTCDataContract:
+    """Tests for RTCData API contract."""
+
+    def test_is_dataclass(self):
+        """Test that RTCData is a dataclass."""
+        from pychrony import RTCData
+
+        assert is_dataclass(RTCData)
+
+    def test_is_frozen(self):
+        """Test that RTCData is frozen (immutable)."""
+        from pychrony import RTCData
+
+        assert RTCData.__dataclass_fields__ is not None
+
+    def test_has_required_fields(self):
+        """Test that RTCData has all required fields."""
+        from pychrony import RTCData
+
+        field_names = {f.name for f in fields(RTCData)}
+        required_fields = {
+            "ref_time",
+            "samples",
+            "runs",
+            "span",
+            "offset",
+            "freq_offset",
+        }
+        assert required_fields.issubset(field_names)
+
+    def test_field_types(self):
+        """Test that RTCData fields have correct types."""
+        from pychrony import RTCData
+
+        type_hints = {f.name: f.type for f in fields(RTCData)}
+
+        assert type_hints["ref_time"] is float
+        assert type_hints["samples"] is int
+        assert type_hints["runs"] is int
+        assert type_hints["span"] is int
+        assert type_hints["offset"] is float
+        assert type_hints["freq_offset"] is float
+
+    def test_has_is_calibrated_method(self):
+        """Test that RTCData has is_calibrated method."""
+        from pychrony import RTCData
+
+        assert hasattr(RTCData, "is_calibrated")
+        assert callable(getattr(RTCData, "is_calibrated"))
+
+
+class TestGetSourcesContract:
+    """Tests for get_sources function contract."""
+
+    def test_signature_accepts_socket_path(self):
+        """Test that get_sources accepts socket_path parameter."""
+        from pychrony import get_sources
+
+        sig = inspect.signature(get_sources)
+        params = list(sig.parameters.keys())
+        assert "socket_path" in params
+
+    def test_socket_path_is_optional(self):
+        """Test that socket_path parameter has a default value of None."""
+        from pychrony import get_sources
+
+        sig = inspect.signature(get_sources)
+        param = sig.parameters["socket_path"]
+        assert param.default is None
+
+    def test_socket_path_annotation(self):
+        """Test that socket_path has Optional[str] annotation."""
+        from pychrony import get_sources
+
+        sig = inspect.signature(get_sources)
+        param = sig.parameters["socket_path"]
+        assert param.annotation == Optional[str]
+
+
+class TestGetSourceStatsContract:
+    """Tests for get_source_stats function contract."""
+
+    def test_signature_accepts_socket_path(self):
+        """Test that get_source_stats accepts socket_path parameter."""
+        from pychrony import get_source_stats
+
+        sig = inspect.signature(get_source_stats)
+        params = list(sig.parameters.keys())
+        assert "socket_path" in params
+
+    def test_socket_path_is_optional(self):
+        """Test that socket_path parameter has a default value of None."""
+        from pychrony import get_source_stats
+
+        sig = inspect.signature(get_source_stats)
+        param = sig.parameters["socket_path"]
+        assert param.default is None
+
+    def test_socket_path_annotation(self):
+        """Test that socket_path has Optional[str] annotation."""
+        from pychrony import get_source_stats
+
+        sig = inspect.signature(get_source_stats)
+        param = sig.parameters["socket_path"]
+        assert param.annotation == Optional[str]
+
+
+class TestGetRtcDataContract:
+    """Tests for get_rtc_data function contract."""
+
+    def test_signature_accepts_socket_path(self):
+        """Test that get_rtc_data accepts socket_path parameter."""
+        from pychrony import get_rtc_data
+
+        sig = inspect.signature(get_rtc_data)
+        params = list(sig.parameters.keys())
+        assert "socket_path" in params
+
+    def test_socket_path_is_optional(self):
+        """Test that socket_path parameter has a default value of None."""
+        from pychrony import get_rtc_data
+
+        sig = inspect.signature(get_rtc_data)
+        param = sig.parameters["socket_path"]
+        assert param.default is None
+
+    def test_socket_path_annotation(self):
+        """Test that socket_path has Optional[str] annotation."""
+        from pychrony import get_rtc_data
+
+        sig = inspect.signature(get_rtc_data)
+        param = sig.parameters["socket_path"]
+        assert param.annotation == Optional[str]
+
+
+class TestAllDataclassesAreFrozen:
+    """Tests verifying all dataclasses are frozen (immutable)."""
+
+    def test_tracking_status_is_frozen(self):
+        """Test that TrackingStatus is frozen."""
+        from pychrony import TrackingStatus
+
+        # Check frozen attribute
+        assert getattr(TrackingStatus, "__dataclass_params__").frozen is True
+
+    def test_source_is_frozen(self):
+        """Test that Source is frozen."""
+        from pychrony import Source
+
+        assert getattr(Source, "__dataclass_params__").frozen is True
+
+    def test_sourcestats_is_frozen(self):
+        """Test that SourceStats is frozen."""
+        from pychrony import SourceStats
+
+        assert getattr(SourceStats, "__dataclass_params__").frozen is True
+
+    def test_rtcdata_is_frozen(self):
+        """Test that RTCData is frozen."""
+        from pychrony import RTCData
+
+        assert getattr(RTCData, "__dataclass_params__").frozen is True
