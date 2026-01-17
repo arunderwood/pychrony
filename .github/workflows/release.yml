@@ -82,3 +82,46 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
+
+  verify-testpypi:
+    name: Verify Test PyPI (${{ matrix.python }})
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12", "3.14"]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python }}
+        allow-prereleases: true
+
+    - name: Extract version from tag
+      id: version
+      run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+    - name: Wait for Test PyPI availability
+      run: sleep 30
+
+    - name: Install from Test PyPI
+      run: |
+        for i in 1 2 3 4 5; do
+          pip install --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            pychrony==${{ steps.version.outputs.version }} && break
+          echo "Attempt $i failed, retrying in 30s..."
+          sleep 30
+        done
+
+    - name: Verify import and version
+      run: |
+        python -c "
+        import pychrony
+        print(f'Installed version: {pychrony.__version__}')
+        assert pychrony.__version__ == '${{ steps.version.outputs.version }}', \
+            f'Version mismatch: {pychrony.__version__} != ${{ steps.version.outputs.version }}'
+        "
