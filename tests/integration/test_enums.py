@@ -23,26 +23,27 @@ class TestSourceStateIntegration:
 
     def test_source_state_is_enum_instance(self):
         """Test that source.state is a SourceState enum instance."""
-        from pychrony import get_sources, SourceState
+        from pychrony import ChronyConnection, SourceState
 
-        sources = get_sources()
-        for source in sources:
-            assert isinstance(source.state, SourceState)
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            for source in sources:
+                assert isinstance(source.state, SourceState)
 
     def test_source_state_in_valid_members(self):
         """Test that source.state is a valid SourceState member."""
-        from pychrony import get_sources, SourceState
+        from pychrony import ChronyConnection, SourceState
 
-        sources = get_sources()
-        valid_states = list(SourceState)
-        for source in sources:
-            assert source.state in valid_states
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            valid_states = list(SourceState)
+            for source in sources:
+                assert source.state in valid_states
 
     def test_source_state_name_is_string(self):
         """Test that source.state.name returns a valid string."""
-        from pychrony import get_sources
+        from pychrony import ChronyConnection
 
-        sources = get_sources()
         valid_names = [
             "SELECTED",
             "NONSELECTABLE",
@@ -51,17 +52,21 @@ class TestSourceStateIntegration:
             "UNSELECTED",
             "SELECTABLE",
         ]
-        for source in sources:
-            assert source.state.name in valid_names
+
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            for source in sources:
+                assert source.state.name in valid_names
 
     def test_source_state_value_is_int(self):
         """Test that source.state.value returns an integer."""
-        from pychrony import get_sources
+        from pychrony import ChronyConnection
 
-        sources = get_sources()
-        for source in sources:
-            assert isinstance(source.state.value, int)
-            assert 0 <= source.state.value <= 5
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            for source in sources:
+                assert isinstance(source.state.value, int)
+                assert 0 <= source.state.value <= 5
 
 
 class TestLeapStatusIntegration:
@@ -69,34 +74,38 @@ class TestLeapStatusIntegration:
 
     def test_leap_status_is_enum_instance(self):
         """Test that tracking.leap_status is a LeapStatus enum instance."""
-        from pychrony import get_tracking, LeapStatus
+        from pychrony import ChronyConnection, LeapStatus
 
-        status = get_tracking()
-        assert isinstance(status.leap_status, LeapStatus)
+        with ChronyConnection() as conn:
+            status = conn.get_tracking()
+            assert isinstance(status.leap_status, LeapStatus)
 
     def test_leap_status_in_valid_members(self):
         """Test that tracking.leap_status is a valid LeapStatus member."""
-        from pychrony import get_tracking, LeapStatus
+        from pychrony import ChronyConnection, LeapStatus
 
-        status = get_tracking()
-        valid_statuses = list(LeapStatus)
-        assert status.leap_status in valid_statuses
+        with ChronyConnection() as conn:
+            status = conn.get_tracking()
+            valid_statuses = list(LeapStatus)
+            assert status.leap_status in valid_statuses
 
     def test_leap_status_name_is_string(self):
         """Test that tracking.leap_status.name returns a valid string."""
-        from pychrony import get_tracking
+        from pychrony import ChronyConnection
 
-        status = get_tracking()
-        valid_names = ["NORMAL", "INSERT", "DELETE", "UNSYNC"]
-        assert status.leap_status.name in valid_names
+        with ChronyConnection() as conn:
+            status = conn.get_tracking()
+            valid_names = ["NORMAL", "INSERT", "DELETE", "UNSYNC"]
+            assert status.leap_status.name in valid_names
 
     def test_leap_status_value_is_int(self):
         """Test that tracking.leap_status.value returns an integer."""
-        from pychrony import get_tracking
+        from pychrony import ChronyConnection
 
-        status = get_tracking()
-        assert isinstance(status.leap_status.value, int)
-        assert 0 <= status.leap_status.value <= 3
+        with ChronyConnection() as conn:
+            status = conn.get_tracking()
+            assert isinstance(status.leap_status.value, int)
+            assert 0 <= status.leap_status.value <= 3
 
 
 class TestSourceModeIntegration:
@@ -104,35 +113,39 @@ class TestSourceModeIntegration:
 
     def test_source_mode_is_enum_instance(self):
         """Test that source.mode is a SourceMode enum instance."""
-        from pychrony import get_sources, SourceMode
+        from pychrony import ChronyConnection, SourceMode
 
-        sources = get_sources()
-        for source in sources:
-            assert isinstance(source.mode, SourceMode)
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            for source in sources:
+                assert isinstance(source.mode, SourceMode)
 
     def test_source_mode_in_valid_members(self):
         """Test that source.mode is a valid SourceMode member."""
-        from pychrony import get_sources, SourceMode
+        from pychrony import ChronyConnection, SourceMode
 
-        sources = get_sources()
-        valid_modes = list(SourceMode)
-        for source in sources:
-            assert source.mode in valid_modes
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            valid_modes = list(SourceMode)
+            for source in sources:
+                assert source.mode in valid_modes
 
     def test_source_mode_name_is_string(self):
         """Test that source.mode.name returns a valid string."""
-        from pychrony import get_sources
+        from pychrony import ChronyConnection
 
-        sources = get_sources()
-        valid_names = ["CLIENT", "PEER", "REFCLOCK"]
-        for source in sources:
-            assert source.mode.name in valid_names
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            valid_names = ["CLIENT", "PEER", "REFCLOCK"]
+            for source in sources:
+                assert source.mode.name in valid_names
 
     def test_source_mode_value_is_int(self):
         """Test that source.mode.value returns an integer."""
-        from pychrony import get_sources
+        from pychrony import ChronyConnection
 
-        sources = get_sources()
-        for source in sources:
-            assert isinstance(source.mode.value, int)
-            assert 0 <= source.mode.value <= 2
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            for source in sources:
+                assert isinstance(source.mode.value, int)
+                assert 0 <= source.mode.value <= 2

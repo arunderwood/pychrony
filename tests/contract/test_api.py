@@ -2,7 +2,6 @@
 
 import inspect
 from dataclasses import fields, is_dataclass
-from typing import Optional
 
 from pychrony import LeapStatus, SourceState, SourceMode
 
@@ -14,7 +13,7 @@ class TestPublicExports:
         """Test that all __all__ exports are importable."""
         from pychrony import __all__
 
-        assert "get_tracking" in __all__
+        assert "ChronyConnection" in __all__
         assert "TrackingStatus" in __all__
         assert "ChronyError" in __all__
         assert "ChronyConnectionError" in __all__
@@ -22,11 +21,11 @@ class TestPublicExports:
         assert "ChronyDataError" in __all__
         assert "ChronyLibraryError" in __all__
 
-    def test_get_tracking_importable(self):
-        """Test that get_tracking can be imported."""
-        from pychrony import get_tracking
+    def test_chrony_connection_importable(self):
+        """Test that ChronyConnection can be imported."""
+        from pychrony import ChronyConnection
 
-        assert callable(get_tracking)
+        assert ChronyConnection is not None
 
     def test_tracking_status_importable(self):
         """Test that TrackingStatus can be imported."""
@@ -48,6 +47,63 @@ class TestPublicExports:
         assert issubclass(ChronyPermissionError, ChronyError)
         assert issubclass(ChronyDataError, ChronyError)
         assert issubclass(ChronyLibraryError, ChronyError)
+
+
+class TestChronyConnectionContract:
+    """Tests for ChronyConnection API contract."""
+
+    def test_is_context_manager(self):
+        """Test that ChronyConnection implements context manager protocol."""
+        from pychrony import ChronyConnection
+
+        assert hasattr(ChronyConnection, "__enter__")
+        assert hasattr(ChronyConnection, "__exit__")
+        assert callable(getattr(ChronyConnection, "__enter__"))
+        assert callable(getattr(ChronyConnection, "__exit__"))
+
+    def test_has_get_tracking_method(self):
+        """Test that ChronyConnection has get_tracking method."""
+        from pychrony import ChronyConnection
+
+        assert hasattr(ChronyConnection, "get_tracking")
+        assert callable(getattr(ChronyConnection, "get_tracking"))
+
+    def test_has_get_sources_method(self):
+        """Test that ChronyConnection has get_sources method."""
+        from pychrony import ChronyConnection
+
+        assert hasattr(ChronyConnection, "get_sources")
+        assert callable(getattr(ChronyConnection, "get_sources"))
+
+    def test_has_get_source_stats_method(self):
+        """Test that ChronyConnection has get_source_stats method."""
+        from pychrony import ChronyConnection
+
+        assert hasattr(ChronyConnection, "get_source_stats")
+        assert callable(getattr(ChronyConnection, "get_source_stats"))
+
+    def test_has_get_rtc_data_method(self):
+        """Test that ChronyConnection has get_rtc_data method."""
+        from pychrony import ChronyConnection
+
+        assert hasattr(ChronyConnection, "get_rtc_data")
+        assert callable(getattr(ChronyConnection, "get_rtc_data"))
+
+    def test_init_accepts_address_parameter(self):
+        """Test that ChronyConnection.__init__ accepts address parameter."""
+        from pychrony import ChronyConnection
+
+        sig = inspect.signature(ChronyConnection.__init__)
+        params = list(sig.parameters.keys())
+        assert "address" in params
+
+    def test_address_is_optional(self):
+        """Test that address parameter has a default value of None."""
+        from pychrony import ChronyConnection
+
+        sig = inspect.signature(ChronyConnection.__init__)
+        param = sig.parameters["address"]
+        assert param.default is None
 
 
 class TestTrackingStatusContract:
@@ -129,28 +185,6 @@ class TestTrackingStatusContract:
         assert callable(getattr(TrackingStatus, "is_leap_pending"))
 
 
-class TestGetTrackingContract:
-    """Tests for get_tracking function contract."""
-
-    def test_signature_accepts_socket_path(self):
-        """Test that get_tracking accepts socket_path parameter."""
-        import inspect
-        from pychrony import get_tracking
-
-        sig = inspect.signature(get_tracking)
-        params = list(sig.parameters.keys())
-        assert "socket_path" in params
-
-    def test_socket_path_is_optional(self):
-        """Test that socket_path parameter has a default value."""
-        import inspect
-        from pychrony import get_tracking
-
-        sig = inspect.signature(get_tracking)
-        param = sig.parameters["socket_path"]
-        assert param.default is None
-
-
 class TestExceptionContract:
     """Tests for exception class contracts."""
 
@@ -178,37 +212,16 @@ class TestExceptionContract:
         assert error.error_code is None
 
 
-class TestNewPublicExports:
-    """Tests for new public API exports (003-multiple-reports-bindings)."""
+class TestDataModelExports:
+    """Tests for data model exports."""
 
-    def test_all_new_exports_in_all(self):
-        """Test that all new exports are in __all__."""
+    def test_all_data_models_in_all(self):
+        """Test that all data models are in __all__."""
         from pychrony import __all__
 
-        assert "get_sources" in __all__
-        assert "get_source_stats" in __all__
-        assert "get_rtc_data" in __all__
         assert "Source" in __all__
         assert "SourceStats" in __all__
         assert "RTCData" in __all__
-
-    def test_get_sources_importable(self):
-        """Test that get_sources can be imported."""
-        from pychrony import get_sources
-
-        assert callable(get_sources)
-
-    def test_get_source_stats_importable(self):
-        """Test that get_source_stats can be imported."""
-        from pychrony import get_source_stats
-
-        assert callable(get_source_stats)
-
-    def test_get_rtc_data_importable(self):
-        """Test that get_rtc_data can be imported."""
-        from pychrony import get_rtc_data
-
-        assert callable(get_rtc_data)
 
     def test_source_importable(self):
         """Test that Source can be imported."""
@@ -405,104 +418,6 @@ class TestRTCDataContract:
 
         assert hasattr(RTCData, "is_calibrated")
         assert callable(getattr(RTCData, "is_calibrated"))
-
-
-class TestGetSourcesContract:
-    """Tests for get_sources function contract."""
-
-    def test_signature_accepts_socket_path(self):
-        """Test that get_sources accepts socket_path parameter."""
-        from pychrony import get_sources
-
-        sig = inspect.signature(get_sources)
-        params = list(sig.parameters.keys())
-        assert "socket_path" in params
-
-    def test_socket_path_is_optional(self):
-        """Test that socket_path parameter has a default value of None."""
-        from pychrony import get_sources
-
-        sig = inspect.signature(get_sources)
-        param = sig.parameters["socket_path"]
-        assert param.default is None
-
-    def test_socket_path_annotation(self):
-        """Test that socket_path has Optional[str] annotation."""
-        from pychrony import get_sources
-
-        sig = inspect.signature(get_sources)
-        param = sig.parameters["socket_path"]
-        assert param.annotation == Optional[str]
-
-
-class TestGetSourceStatsContract:
-    """Tests for get_source_stats function contract."""
-
-    def test_signature_accepts_socket_path(self):
-        """Test that get_source_stats accepts socket_path parameter."""
-        from pychrony import get_source_stats
-
-        sig = inspect.signature(get_source_stats)
-        params = list(sig.parameters.keys())
-        assert "socket_path" in params
-
-    def test_socket_path_is_optional(self):
-        """Test that socket_path parameter has a default value of None."""
-        from pychrony import get_source_stats
-
-        sig = inspect.signature(get_source_stats)
-        param = sig.parameters["socket_path"]
-        assert param.default is None
-
-    def test_socket_path_annotation(self):
-        """Test that socket_path has Optional[str] annotation."""
-        from pychrony import get_source_stats
-
-        sig = inspect.signature(get_source_stats)
-        param = sig.parameters["socket_path"]
-        assert param.annotation == Optional[str]
-
-
-class TestGetRtcDataContract:
-    """Tests for get_rtc_data function contract."""
-
-    def test_signature_accepts_socket_path(self):
-        """Test that get_rtc_data accepts socket_path parameter."""
-        from pychrony import get_rtc_data
-
-        sig = inspect.signature(get_rtc_data)
-        params = list(sig.parameters.keys())
-        assert "socket_path" in params
-
-    def test_socket_path_is_optional(self):
-        """Test that socket_path parameter has a default value of None."""
-        from pychrony import get_rtc_data
-
-        sig = inspect.signature(get_rtc_data)
-        param = sig.parameters["socket_path"]
-        assert param.default is None
-
-    def test_socket_path_annotation(self):
-        """Test that socket_path has Optional[str] annotation."""
-        from pychrony import get_rtc_data
-
-        sig = inspect.signature(get_rtc_data)
-        param = sig.parameters["socket_path"]
-        assert param.annotation == Optional[str]
-
-    def test_return_annotation_is_optional_rtcdata(self):
-        """Test that get_rtc_data returns RTCData | None."""
-        import types
-        from pychrony import get_rtc_data, RTCData
-
-        sig = inspect.signature(get_rtc_data)
-        return_annotation = sig.return_annotation
-
-        # Check it's a union type (RTCData | None)
-        assert isinstance(return_annotation, types.UnionType)
-        # Check it contains RTCData and NoneType
-        assert RTCData in return_annotation.__args__
-        assert type(None) in return_annotation.__args__
 
 
 class TestAllDataclassesAreFrozen:

@@ -56,6 +56,7 @@ include = ["src/pychrony/_core/_bindings.py"]
 
 [tool.ty.overrides.rules]
 possibly-missing-attribute = "ignore"
+invalid-argument-type = "ignore"  # Dict unpacking uses runtime validation
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

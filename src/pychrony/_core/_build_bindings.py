@@ -20,6 +20,7 @@ typedef int chrony_err;
 
 // Connection management
 int chrony_open_socket(const char *address);
+void chrony_close_socket(int fd);
 chrony_err chrony_init_session(chrony_session **session, int fd);
 void chrony_deinit_session(chrony_session *session);
 
