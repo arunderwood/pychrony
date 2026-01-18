@@ -4,7 +4,7 @@ These tests require a running chronyd daemon and libchrony installed.
 They should be run inside the Docker test container.
 
 Note: RTC tracking may not be available in all environments (especially VMs).
-Tests handle this gracefully by expecting ChronyDataError.
+Tests handle this gracefully by checking for None return value.
 """
 
 import importlib.util
@@ -24,41 +24,31 @@ pytestmark = pytest.mark.skipif(
 class TestGetRtcDataIntegration:
     """Integration tests for get_rtc_data() function."""
 
-    def test_get_rtc_data_returns_rtcdata_or_raises(self):
-        """Test that get_rtc_data returns RTCData or raises ChronyDataError."""
-        from pychrony import get_rtc_data, RTCData, ChronyDataError
+    def test_get_rtc_data_returns_rtcdata_or_none(self):
+        """Test that get_rtc_data returns RTCData or None."""
+        from pychrony import get_rtc_data, RTCData
 
-        try:
-            rtc = get_rtc_data()
-            assert isinstance(rtc, RTCData)
-        except ChronyDataError as e:
-            # RTC tracking not available is expected in many environments
-            assert "RTC tracking is not available" in str(e)
+        rtc = get_rtc_data()
+        # RTC tracking may not be available in all environments
+        assert rtc is None or isinstance(rtc, RTCData)
 
     def test_get_rtc_data_with_custom_socket_path(self):
         """Test get_rtc_data with explicit socket path."""
-        from pychrony import get_rtc_data, ChronyConnectionError, ChronyDataError
+        from pychrony import get_rtc_data, RTCData, ChronyConnectionError
 
         # Try primary socket path
         try:
             rtc = get_rtc_data(socket_path="/run/chrony/chronyd.sock")
-            # Success - RTC data returned
-            assert rtc is not None
+            # Success - RTC data returned or None (RTC not configured)
+            assert rtc is None or isinstance(rtc, RTCData)
             return
         except ChronyConnectionError:
             pass  # Try alternate path
-        except ChronyDataError as e:
-            # RTC not available - this is acceptable
-            assert "RTC tracking is not available" in str(e)
-            return
 
         # Try alternate socket path
-        try:
-            rtc = get_rtc_data(socket_path="/var/run/chrony/chronyd.sock")
-            assert rtc is not None
-        except ChronyDataError as e:
-            # RTC not available - this is acceptable
-            assert "RTC tracking is not available" in str(e)
+        rtc = get_rtc_data(socket_path="/var/run/chrony/chronyd.sock")
+        # RTC data returned or None (RTC not configured)
+        assert rtc is None or isinstance(rtc, RTCData)
 
 
 class TestRtcDataValidation:
@@ -67,12 +57,12 @@ class TestRtcDataValidation:
     @pytest.fixture
     def rtc_data_if_available(self):
         """Get RTC data if available, skip test otherwise."""
-        from pychrony import get_rtc_data, ChronyDataError
+        from pychrony import get_rtc_data
 
-        try:
-            return get_rtc_data()
-        except ChronyDataError:
+        rtc = get_rtc_data()
+        if rtc is None:
             pytest.skip("RTC tracking not available")
+        return rtc
 
     def test_rtcdata_has_non_negative_ref_time(self, rtc_data_if_available):
         """Test that ref_time is non-negative."""

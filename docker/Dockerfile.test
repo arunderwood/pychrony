@@ -56,7 +56,8 @@ RUN pip3 install uv
 WORKDIR /app
 
 # Copy dependency specification first (better layer caching)
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE ./
+COPY LICENSES/ LICENSES/
 
 # Install project dependencies before copying source
 # This layer will be cached if pyproject.toml doesn't change
