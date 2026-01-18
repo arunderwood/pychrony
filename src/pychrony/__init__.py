@@ -25,12 +25,12 @@ Source Statistics:
     ...     print(f"{s.address}: {s.samples} samples, offset {s.offset:.6f}s")
 
 RTC Data:
-    >>> from pychrony import get_rtc_data, ChronyDataError
-    >>> try:
-    ...     rtc = get_rtc_data()
+    >>> from pychrony import get_rtc_data
+    >>> rtc = get_rtc_data()
+    >>> if rtc:
     ...     print(f"RTC offset: {rtc.offset:.3f}s")
-    ... except ChronyDataError:
-    ...     print("RTC tracking not available")
+    ... else:
+    ...     print("RTC tracking not configured")
 
 Error Handling:
     >>> from pychrony import get_tracking, ChronyError

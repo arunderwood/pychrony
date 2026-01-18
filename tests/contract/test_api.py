@@ -490,6 +490,20 @@ class TestGetRtcDataContract:
         param = sig.parameters["socket_path"]
         assert param.annotation == Optional[str]
 
+    def test_return_annotation_is_optional_rtcdata(self):
+        """Test that get_rtc_data returns RTCData | None."""
+        import types
+        from pychrony import get_rtc_data, RTCData
+
+        sig = inspect.signature(get_rtc_data)
+        return_annotation = sig.return_annotation
+
+        # Check it's a union type (RTCData | None)
+        assert isinstance(return_annotation, types.UnionType)
+        # Check it contains RTCData and NoneType
+        assert RTCData in return_annotation.__args__
+        assert type(None) in return_annotation.__args__
+
 
 class TestAllDataclassesAreFrozen:
     """Tests verifying all dataclasses are frozen (immutable)."""

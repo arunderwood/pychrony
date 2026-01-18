@@ -850,31 +850,33 @@ def _get_rtc_from_record(session: Any) -> dict:
     }
 
 
-def get_rtc_data(socket_path: Optional[str] = None) -> RTCData:
+def get_rtc_data(socket_path: Optional[str] = None) -> RTCData | None:
     """Get Real-Time Clock tracking data from chronyd.
 
     Connects to chronyd and retrieves RTC calibration information.
-    RTC tracking must be enabled in chronyd configuration.
+    Returns None if RTC tracking is not enabled in chronyd configuration.
 
     Args:
         socket_path: Path to chronyd Unix socket. Defaults to
             '/run/chrony/chronyd.sock' or '/var/run/chrony/chronyd.sock'.
 
     Returns:
-        RTCData: RTC tracking information.
+        RTCData if RTC tracking is enabled, None otherwise.
 
     Raises:
         ChronyLibraryError: If libchrony is not installed or cannot be loaded.
         ChronyConnectionError: If chronyd is not running or unreachable.
         ChronyPermissionError: If insufficient permissions to access chronyd.
-        ChronyDataError: If RTC tracking is not enabled/available, or
-            if RTC data is invalid.
+        ChronyDataError: If RTC data is invalid or malformed.
 
     Example:
         >>> from pychrony import get_rtc_data
         >>> rtc = get_rtc_data()
-        >>> print(f"RTC offset: {rtc.offset:.6f}s, drift: {rtc.freq_offset:.2f} ppm")
-        RTC offset: 0.012345s, drift: -1.23 ppm
+        >>> if rtc:
+        ...     print(f"RTC offset: {rtc.offset:.6f}s, drift: {rtc.freq_offset:.2f} ppm")
+        ... else:
+        ...     print("RTC tracking not configured")
+        RTC tracking not configured
     """
     _check_library_available()
 
@@ -931,10 +933,7 @@ def get_rtc_data(socket_path: Optional[str] = None) -> RTCData:
 
         # RTC not available if no records
         if num_records < 1:
-            raise ChronyDataError(
-                "RTC tracking is not available. Ensure RTC tracking is "
-                "enabled in chronyd configuration (rtcsync or rtcfile directive)."
-            )
+            return None
 
         # Step 4: Request the first (and only) rtcdata record
         err = _lib.chrony_request_record(session[0], b"rtcdata", 0)
@@ -952,10 +951,7 @@ def get_rtc_data(socket_path: Optional[str] = None) -> RTCData:
             err = _lib.chrony_process_response(session[0])
             if err != 0:
                 # Treat errors during rtcdata fetch as "RTC not available"
-                raise ChronyDataError(
-                    "RTC tracking is not available. Ensure RTC tracking is "
-                    "enabled in chronyd configuration (rtcsync or rtcfile directive)."
-                )
+                return None
 
         # Step 6: Extract and validate fields
         data = _get_rtc_from_record(session[0])
