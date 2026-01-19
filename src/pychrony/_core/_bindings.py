@@ -6,6 +6,7 @@ to chronyd and retrieving time synchronization status.
 Internal implementation - use pychrony.ChronyConnection instead.
 """
 
+import errno
 import math
 import os
 from types import TracebackType
@@ -258,7 +259,7 @@ class ChronyConnection:
 
         if self._fd < 0:
             # Check for permission issues
-            if self._fd == -13 or (
+            if self._fd == -errno.EACCES or (
                 self._address is not None
                 and os.path.exists(self._address)
                 and not os.access(self._address, os.R_OK | os.W_OK)
