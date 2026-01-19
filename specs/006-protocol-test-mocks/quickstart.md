@@ -333,6 +333,20 @@ def test_tracking_data_error():
             conn.get_tracking()
 ```
 
+### Record Request Error
+
+```python
+def test_record_request_error():
+    """Test error during record retrieval."""
+    config = ChronyStateConfig(
+        error_injection={"chrony_request_record": -1}
+    )
+
+    with patched_chrony_connection(config) as conn:
+        with pytest.raises(ChronyDataError):
+            conn.get_sources()  # Fails when requesting source records
+```
+
 ---
 
 ## Source Statistics

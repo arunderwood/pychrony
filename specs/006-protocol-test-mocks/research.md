@@ -36,7 +36,38 @@ def patched_chrony_connection(config):
 
 ## Research Area 2: Field Name Mapping
 
-### Decision: Maintain Complete Field Name Registry
+### Decision: Centralized Field Type Registry in Production Code (Option C)
+
+**Updated Decision**: Create `src/pychrony/_core/_fields.py` with field type dictionaries that both production `_bindings.py` and test mocks share. This provides:
+
+1. **Single source of truth** for field names AND their types
+2. **Reduced duplication** between production and test code
+3. **Foundation for future pure Python client** (field types needed for protocol parsing)
+4. **Cleaner _bindings.py** via declarative field iteration
+
+**Implementation**:
+```python
+# src/pychrony/_core/_fields.py
+from enum import Enum
+
+class FieldType(Enum):
+    FLOAT = "float"
+    UINTEGER = "uinteger"
+    INTEGER = "integer"
+    STRING = "string"
+    TIMESPEC = "timespec"
+
+TRACKING_FIELDS: dict[str, FieldType] = {
+    "reference ID": FieldType.UINTEGER,
+    "stratum": FieldType.UINTEGER,
+    # ... all fields with their types
+}
+```
+
+**Rationale**: The project is in alpha and willing to make structural changes for long-term benefit. This approach:
+- Eliminates field name duplication between `_bindings.py` and `tests/mocks/`
+- Makes maintenance easier when libchrony changes
+- Positions the codebase for a future pure Python client mode
 
 The mock must know all field names used in `_bindings.py`. Analysis of the source reveals these field names:
 
@@ -336,7 +367,7 @@ def patched_chrony_connection(config: ChronyStateConfig | None = None):
 | Research Area | Decision | Key Rationale |
 |---------------|----------|---------------|
 | CFFI Mocking | Module-level patching | Existing patterns work; CFFI internals not subclassable |
-| Field Names | Complete registry | Must match `_bindings.py` exactly |
+| Field Names | Centralized _fields.py (Option C) | Single source of truth; enables future pure Python client |
 | Protocol State | Request/response tracking | Simulates async protocol lifecycle |
 | Structs | Simple Python objects | Only need attribute access |
 | Error Injection | Dictionary mapping | Flexible, per-operation errors |

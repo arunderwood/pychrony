@@ -34,9 +34,10 @@ Add a protocol-level mock layer for pychrony testing that simulates chronyd resp
 - ✅ **No vendoring or reimplementation of libchrony**: Mock simulates the CFFI interface, not libchrony itself - protocol behavior derived from existing `_bindings.py` patterns
 
 **Constitution Compliance Notes:**
-- The mock infrastructure lives entirely in `tests/` directory (test-only, not shipped)
-- No changes to production code in `src/pychrony/` except potentially exposing constants for field names
+- The mock infrastructure lives primarily in `tests/` directory (test-only, not shipped)
+- Production code gains `_fields.py` with field type registry - this benefits both production (cleaner _bindings.py) and testing (single source of truth for field names/types)
 - Mock behavior mirrors what libchrony's high-level introspection API returns
+- Field registry also positions pychrony for future pure Python client mode
 
 ## Project Structure
 
@@ -60,8 +61,9 @@ src/
 │   ├── __init__.py
 │   ├── _core/
 │   │   ├── __init__.py
-│   │   ├── _bindings.py       # Existing CFFI bindings (unchanged)
-│   │   └── _build_bindings.py # Build script (unchanged)
+│   │   ├── _bindings.py       # Existing CFFI bindings (refactored to use _fields.py)
+│   │   ├── _build_bindings.py # Build script (unchanged)
+│   │   └── _fields.py         # NEW: Field type registry for all report types
 │   ├── models.py              # Existing dataclasses/enums (unchanged)
 │   ├── exceptions.py          # Existing exceptions (unchanged)
 │   └── testing.py             # Existing factory functions (unchanged)
@@ -77,6 +79,7 @@ tests/
 ├── contract/                  # Existing contract tests (unchanged)
 ├── integration/               # Existing integration tests (unchanged)
 └── unit/                      # Existing + new unit tests
+    ├── test_fields.py         # NEW: Tests for _fields.py field registries
     ├── test_mock_config.py    # NEW: Tests for config dataclasses
     ├── test_mock_session.py   # NEW: Tests for MockChronySession
     ├── test_mock_scenarios.py # NEW: Tests using pre-built scenarios
@@ -90,7 +93,8 @@ tests/
 ## Complexity Tracking
 
 > No constitution violations identified. The mock infrastructure:
-> - Stays within test directory (no production code changes)
+> - Mock code stays within test directory (`tests/mocks/`)
+> - Production code gains `_fields.py` field registry (Option C) - benefits both production (cleaner `_bindings.py`) and testing (single source of truth)
 > - Simulates read-only operations only
 > - Uses standard Python patterns (dataclasses, context managers)
 > - Enables constitution-mandated test coverage for features that couldn't be tested before
