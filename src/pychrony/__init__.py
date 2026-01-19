@@ -64,6 +64,31 @@ Remote chronyd via UDP:
     >>> with ChronyConnection("192.168.1.100") as conn:
     ...     status = conn.get_tracking()
 
+Thread Safety:
+    ChronyConnection is NOT thread-safe. The underlying libchrony session
+    maintains stateful request/response cycles that cannot be safely shared
+    between threads.
+
+    For multi-threaded applications, use one of these patterns:
+
+    1. Connection per thread (simplest):
+        >>> def worker():
+        ...     with ChronyConnection() as conn:
+        ...         return conn.get_tracking()
+
+    2. Thread-local storage (for connection reuse):
+        >>> import threading
+        >>> _local = threading.local()
+        >>>
+        >>> def get_tracking():
+        ...     if not hasattr(_local, 'conn'):
+        ...         _local.conn = ChronyConnection()
+        ...     with _local.conn as conn:
+        ...         return conn.get_tracking()
+
+    The returned dataclasses (TrackingStatus, Source, etc.) are frozen and
+    immutable, so they can be safely shared across threads after retrieval.
+
 For more information, see:
 - https://github.com/arunderwood/pychrony
 - https://chrony-project.org/
