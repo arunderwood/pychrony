@@ -4,7 +4,7 @@
 # =============================================================================
 # Stage 1: Builder - compile libchrony from vendored source
 # =============================================================================
-FROM fedora:40 AS builder
+FROM fedora:43 AS builder
 
 # Install build tools only
 RUN dnf install -y \
@@ -22,7 +22,7 @@ RUN make && \
 # =============================================================================
 # Stage 2: Runtime - minimal image with chrony and Python
 # =============================================================================
-FROM fedora:40
+FROM fedora:43
 
 # Install runtime dependencies
 # Note: gcc is needed to compile CFFI bindings at install time
