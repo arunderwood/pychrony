@@ -68,6 +68,8 @@ docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && py
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
 - Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
 - N/A (library package, no persistence) (005-pypi-packaging)
+- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
+- N/A (test infrastructure, no persistence) (006-protocol-test-mocks)
 
 ## Recent Changes
 - 005-pypi-packaging: Added PyPI packaging with cibuildwheel (manylinux_2_28), Trusted Publishers (OIDC), two-stage release workflow (Test PyPI → Production PyPI)
