@@ -198,7 +198,7 @@ class ChronyConnection:
         `SourceStats`: Source statistics data model.
         `RTCData`: RTC tracking data model.
 
-    Example:
+    Examples:
         >>> with ChronyConnection() as conn:
         ...     tracking = conn.get_tracking()
         ...     sources = conn.get_sources()
@@ -389,10 +389,10 @@ class ChronyConnection:
             RuntimeError: If called outside context manager
             ChronyDataError: If tracking data is invalid or incomplete.
 
-        Example:
-            with ChronyConnection() as conn:
-                status = conn.get_tracking()
-                print(f"Offset: {status.offset:.6f} seconds")
+        Examples:
+            >>> with ChronyConnection() as conn:
+            ...     status = conn.get_tracking()
+            ...     print(f"Offset: {status.offset:.6f} seconds")
         """
         self._ensure_context()
 
@@ -481,11 +481,11 @@ class ChronyConnection:
             RuntimeError: If called outside context manager
             ChronyDataError: If source data is invalid or incomplete.
 
-        Example:
-            with ChronyConnection() as conn:
-                sources = conn.get_sources()
-                for src in sources:
-                    print(f"{src.address}: stratum {src.stratum}")
+        Examples:
+            >>> with ChronyConnection() as conn:
+            ...     sources = conn.get_sources()
+            ...     for src in sources:
+            ...         print(f"{src.address}: stratum {src.stratum}")
         """
         self._ensure_context()
 
@@ -575,11 +575,11 @@ class ChronyConnection:
             RuntimeError: If called outside context manager
             ChronyDataError: If statistics data is invalid or incomplete.
 
-        Example:
-            with ChronyConnection() as conn:
-                stats = conn.get_source_stats()
-                for s in stats:
-                    print(f"{s.address}: {s.samples} samples")
+        Examples:
+            >>> with ChronyConnection() as conn:
+            ...     stats = conn.get_source_stats()
+            ...     for s in stats:
+            ...         print(f"{s.address}: {s.samples} samples")
         """
         self._ensure_context()
 
@@ -639,11 +639,11 @@ class ChronyConnection:
             RuntimeError: If called outside context manager
             ChronyDataError: If RTC data is invalid or malformed.
 
-        Example:
-            with ChronyConnection() as conn:
-                rtc = conn.get_rtc_data()
-                if rtc:
-                    print(f"RTC offset: {rtc.offset:.6f}s")
+        Examples:
+            >>> with ChronyConnection() as conn:
+            ...     rtc = conn.get_rtc_data()
+            ...     if rtc:
+            ...         print(f"RTC offset: {rtc.offset:.6f}s")
         """
         self._ensure_context()
 

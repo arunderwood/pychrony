@@ -34,7 +34,7 @@ class LeapStatus(Enum):
         DELETE: Leap second will be deleted at midnight (skip 23:59:59).
         UNSYNC: Clock is unsynchronized.
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, LeapStatus
         >>> with ChronyConnection() as conn:
         ...     status = conn.get_tracking()
@@ -64,7 +64,7 @@ class SourceState(Enum):
         UNSELECTED: Valid but not currently selected.
         SELECTABLE: Candidate for selection.
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, SourceState
         >>> with ChronyConnection() as conn:
         ...     for src in conn.get_sources():
@@ -93,7 +93,7 @@ class SourceMode(Enum):
         PEER: NTP peer relationship (bidirectional).
         REFCLOCK: Local reference clock (GPS, PPS, etc.).
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, SourceMode
         >>> with ChronyConnection() as conn:
         ...     for src in conn.get_sources():
@@ -160,7 +160,7 @@ class TrackingStatus:
             True if synchronized (reference_id != 0 and stratum < 16),
             False otherwise.
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     status = conn.get_tracking()
             ...     if status.is_synchronized():
@@ -175,7 +175,7 @@ class TrackingStatus:
             True if leap_status is INSERT or DELETE,
             False otherwise.
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     status = conn.get_tracking()
             ...     if status.is_leap_pending():
@@ -228,7 +228,7 @@ class Source:
         Returns:
             True if reachability register is non-zero (at least one successful poll).
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     for src in conn.get_sources():
             ...         if not src.is_reachable():
@@ -242,7 +242,7 @@ class Source:
         Returns:
             True if state is SELECTED.
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     for src in conn.get_sources():
             ...         if src.is_selected():
@@ -294,7 +294,7 @@ class SourceStats:
         Returns:
             True if samples >= minimum.
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     for stats in conn.get_source_stats():
             ...         if stats.has_sufficient_samples(8):
@@ -338,7 +338,7 @@ class RTCData:
         Returns:
             True if samples > 0 (some calibration exists).
 
-        Example:
+        Examples:
             >>> with ChronyConnection() as conn:
             ...     rtc = conn.get_rtc_data()
             ...     if rtc and rtc.is_calibrated():

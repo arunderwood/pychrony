@@ -104,7 +104,7 @@ def make_tracking(**overrides: Any) -> TrackingStatus:
     Returns:
         TrackingStatus instance
 
-    Example:
+    Examples:
         >>> make_tracking()  # Synchronized status
         >>> make_tracking(stratum=16, reference_id=0)  # Unsynchronized
         >>> make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending
@@ -123,7 +123,7 @@ def make_source(**overrides: Any) -> Source:
     Returns:
         Source instance.
 
-    Example:
+    Examples:
         >>> make_source()  # Selected, reachable source
         >>> make_source(state=SourceState.FALSETICKER)  # Falseticker
         >>> make_source(reachability=0)  # Unreachable source
@@ -142,7 +142,7 @@ def make_source_stats(**overrides: Any) -> SourceStats:
     Returns:
         SourceStats instance.
 
-    Example:
+    Examples:
         >>> make_source_stats()  # Stats with 8 samples
         >>> make_source_stats(samples=2)  # Insufficient samples
         >>> make_source_stats(offset=0.001)  # Custom offset
@@ -161,7 +161,7 @@ def make_rtc_data(**overrides: Any) -> RTCData:
     Returns:
         RTCData instance.
 
-    Example:
+    Examples:
         >>> make_rtc_data()  # Calibrated RTC
         >>> make_rtc_data(samples=0)  # Uncalibrated RTC
         >>> make_rtc_data(freq_offset=-5.0)  # Custom drift rate
