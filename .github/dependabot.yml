@@ -17,3 +17,7 @@ updates:
     directory: "/docker"
     schedule:
       interval: "daily"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/vendor"
+    schedule:
+      interval: "daily"
