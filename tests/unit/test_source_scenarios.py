@@ -36,13 +36,18 @@ class TestRefclockMode:
 
     def test_custom_refclock_source(self) -> None:
         """Custom REFCLOCK source should work."""
+        # For REFCLOCK sources with the mock simulating real libchrony behavior,
+        # the address field doesn't exist and the reference_id is used instead.
+        # "PHC0" contains a digit so we need explicit reference_id.
+        ref_id = int.from_bytes(b"PHC0", "big")
         config = ChronyStateConfig(
             sources=[
                 SourceConfig(
-                    address="PHC0",
+                    address="PHC0",  # Used for sourcestats, ignored for sources
                     mode=SourceMode.REFCLOCK,
                     stratum=0,
                     state=SourceState.SELECTED,
+                    reference_id=ref_id,
                 ),
             ],
         )
@@ -237,3 +242,91 @@ class TestClientMode:
         with patched_chrony_connection(SCENARIO_NTP_SYNCED) as conn:
             sources = conn.get_sources()
             assert sources[0].mode == SourceMode.CLIENT
+
+
+class TestRefclockAddressFromReferenceId:
+    """Test reference clock address derived from reference ID.
+
+    In libchrony 0.2, the sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
+    which exposes either "address" (NTP sources) or "reference ID" (refclocks).
+    The code checks mode to determine which field to fetch.
+
+    This tests that REFCLOCK sources correctly derive their address from the
+    reference ID field.
+    """
+
+    def test_refclock_derives_address_from_reference_id(self) -> None:
+        """REFCLOCK source should derive address from reference ID."""
+        config = ChronyStateConfig(
+            sources=[
+                SourceConfig(
+                    address="GPS",  # This will be ignored by mock for REFCLOCK
+                    mode=SourceMode.REFCLOCK,
+                    stratum=0,
+                    state=SourceState.SELECTED,
+                ),
+            ],
+        )
+        with patched_chrony_connection(config) as conn:
+            sources = conn.get_sources()
+            assert len(sources) == 1
+            # The address should be derived from the reference_id
+            # which is computed from "GPS" -> 0x47505300 -> "GPS"
+            assert sources[0].address == "GPS"
+            assert sources[0].mode == SourceMode.REFCLOCK
+
+    def test_mixed_ntp_and_refclock_sources(self) -> None:
+        """Mix of NTP and REFCLOCK sources should work correctly."""
+        config = ChronyStateConfig(
+            sources=[
+                SourceConfig(
+                    address="192.168.1.1",
+                    mode=SourceMode.CLIENT,
+                    state=SourceState.SELECTABLE,
+                ),
+                SourceConfig(
+                    address="PPS",
+                    mode=SourceMode.REFCLOCK,
+                    stratum=0,
+                    state=SourceState.SELECTED,
+                ),
+                SourceConfig(
+                    address="10.0.0.1",
+                    mode=SourceMode.CLIENT,
+                    state=SourceState.SELECTABLE,
+                ),
+            ],
+        )
+        with patched_chrony_connection(config) as conn:
+            sources = conn.get_sources()
+            assert len(sources) == 3
+            # NTP source gets address directly
+            assert sources[0].address == "192.168.1.1"
+            assert sources[0].mode == SourceMode.CLIENT
+            # REFCLOCK source gets address from reference ID
+            assert sources[1].address == "PPS"
+            assert sources[1].mode == SourceMode.REFCLOCK
+            # Second NTP source gets address directly
+            assert sources[2].address == "10.0.0.1"
+            assert sources[2].mode == SourceMode.CLIENT
+
+    def test_refclock_with_custom_reference_id(self) -> None:
+        """REFCLOCK with explicit reference_id should use that value."""
+        # Reference ID 0x50484330 = "PHC0" in ASCII
+        ref_id = int.from_bytes(b"PHC0", "big")
+        config = ChronyStateConfig(
+            sources=[
+                SourceConfig(
+                    address="ignored",
+                    mode=SourceMode.REFCLOCK,
+                    stratum=0,
+                    state=SourceState.SELECTED,
+                    reference_id=ref_id,
+                ),
+            ],
+        )
+        with patched_chrony_connection(config) as conn:
+            sources = conn.get_sources()
+            assert len(sources) == 1
+            assert sources[0].address == "PHC0"
+            assert sources[0].mode == SourceMode.REFCLOCK

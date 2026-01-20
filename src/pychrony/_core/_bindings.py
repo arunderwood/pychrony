@@ -491,11 +491,6 @@ class ChronyConnection:
 
     def _extract_source(self) -> dict:
         """Extract source fields from the current session record."""
-        address = _get_string_field(self._session, "address")
-        if not address:
-            ref_id = _get_uinteger_field(self._session, "reference ID")
-            address = _ref_id_to_name(ref_id)
-
         state_int = _get_uinteger_field(self._session, "state")
         mode_int = _get_uinteger_field(self._session, "mode")
 
@@ -514,6 +509,15 @@ class ChronyConnection:
                 f"Unknown mode value {mode_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
             )
+
+        # In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
+        # which exposes either "address" (NTP sources) or "reference ID" (refclocks).
+        # We check mode to determine which field to fetch.
+        if mode == SourceMode.REFCLOCK:
+            ref_id = _get_uinteger_field(self._session, "reference ID")
+            address = _ref_id_to_name(ref_id)
+        else:
+            address = _get_string_field(self._session, "address")
 
         return {
             "address": address,
