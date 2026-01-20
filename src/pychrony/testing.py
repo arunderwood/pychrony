@@ -118,10 +118,15 @@ def make_source(**overrides: Any) -> Source:
     Default state is selected and reachable.
 
     Args:
-        **overrides: Field values to override defaults
+        **overrides: Field values to override defaults.
 
     Returns:
-        Source instance
+        Source instance.
+
+    Example:
+        >>> make_source()  # Selected, reachable source
+        >>> make_source(state=SourceState.FALSETICKER)  # Falseticker
+        >>> make_source(reachability=0)  # Unreachable source
     """
     return Source(**{**SOURCE_DEFAULTS, **overrides})
 
@@ -132,10 +137,15 @@ def make_source_stats(**overrides: Any) -> SourceStats:
     Default has 8 samples (sufficient for statistics).
 
     Args:
-        **overrides: Field values to override defaults
+        **overrides: Field values to override defaults.
 
     Returns:
-        SourceStats instance
+        SourceStats instance.
+
+    Example:
+        >>> make_source_stats()  # Stats with 8 samples
+        >>> make_source_stats(samples=2)  # Insufficient samples
+        >>> make_source_stats(offset=0.001)  # Custom offset
     """
     return SourceStats(**{**SOURCESTATS_DEFAULTS, **overrides})
 
@@ -146,10 +156,15 @@ def make_rtc_data(**overrides: Any) -> RTCData:
     Default is calibrated (samples > 0).
 
     Args:
-        **overrides: Field values to override defaults
+        **overrides: Field values to override defaults.
 
     Returns:
-        RTCData instance
+        RTCData instance.
+
+    Example:
+        >>> make_rtc_data()  # Calibrated RTC
+        >>> make_rtc_data(samples=0)  # Uncalibrated RTC
+        >>> make_rtc_data(freq_offset=-5.0)  # Custom drift rate
     """
     return RTCData(**{**RTCDATA_DEFAULTS, **overrides})
 

@@ -29,10 +29,19 @@ class LeapStatus(Enum):
     is scheduled at the next midnight UTC.
 
     Attributes:
-        NORMAL: No leap second pending
-        INSERT: Leap second will be inserted at midnight (23:59:60)
-        DELETE: Leap second will be deleted at midnight (skip 23:59:59)
-        UNSYNC: Clock is unsynchronized
+        NORMAL: No leap second pending.
+        INSERT: Leap second will be inserted at midnight (23:59:60).
+        DELETE: Leap second will be deleted at midnight (skip 23:59:59).
+        UNSYNC: Clock is unsynchronized.
+
+    Example:
+        >>> from pychrony import ChronyConnection, LeapStatus
+        >>> with ChronyConnection() as conn:
+        ...     status = conn.get_tracking()
+        ...     if status.leap_status == LeapStatus.INSERT:
+        ...         print("Leap second insertion scheduled")
+        ...     elif status.leap_status == LeapStatus.UNSYNC:
+        ...         print("Clock not synchronized")
     """
 
     NORMAL = 0
@@ -48,12 +57,21 @@ class SourceState(Enum):
     considering this source for time synchronization.
 
     Attributes:
-        SELECTED: Currently selected for synchronization
-        NONSELECTABLE: Cannot be selected (bad measurements)
-        FALSETICKER: Detected as providing incorrect time
-        JITTERY: Measurements have excessive jitter
-        UNSELECTED: Valid but not currently selected
-        SELECTABLE: Candidate for selection
+        SELECTED: Currently selected for synchronization.
+        NONSELECTABLE: Cannot be selected (bad measurements).
+        FALSETICKER: Detected as providing incorrect time.
+        JITTERY: Measurements have excessive jitter.
+        UNSELECTED: Valid but not currently selected.
+        SELECTABLE: Candidate for selection.
+
+    Example:
+        >>> from pychrony import ChronyConnection, SourceState
+        >>> with ChronyConnection() as conn:
+        ...     for src in conn.get_sources():
+        ...         if src.state == SourceState.FALSETICKER:
+        ...             print(f"Warning: {src.address} detected as falseticker")
+        ...         elif src.state == SourceState.SELECTED:
+        ...             print(f"Active source: {src.address}")
     """
 
     SELECTED = 0
@@ -71,9 +89,18 @@ class SourceMode(Enum):
     relationships, and local reference clocks.
 
     Attributes:
-        CLIENT: NTP client polling a server
-        PEER: NTP peer relationship (bidirectional)
-        REFCLOCK: Local reference clock (GPS, PPS, etc.)
+        CLIENT: NTP client polling a server.
+        PEER: NTP peer relationship (bidirectional).
+        REFCLOCK: Local reference clock (GPS, PPS, etc.).
+
+    Example:
+        >>> from pychrony import ChronyConnection, SourceMode
+        >>> with ChronyConnection() as conn:
+        ...     for src in conn.get_sources():
+        ...         if src.mode == SourceMode.REFCLOCK:
+        ...             print(f"Reference clock: {src.address}")
+        ...         elif src.mode == SourceMode.CLIENT:
+        ...             print(f"NTP server: {src.address}")
     """
 
     CLIENT = 0
@@ -89,21 +116,25 @@ class TrackingStatus:
     including offset, frequency, and accuracy metrics.
 
     Attributes:
-        reference_id: NTP reference identifier (uint32 as hex IP or name)
-        reference_id_name: Human-readable reference source name
-        reference_ip: IP address of reference source (IPv4, IPv6, or ID#)
-        stratum: NTP stratum level (0=reference clock, 1-15=downstream)
-        leap_status: Leap second status as LeapStatus enum
-        ref_time: Timestamp of last measurement (seconds since epoch)
-        offset: Current offset from reference in seconds (can be negative)
-        last_offset: Offset at last measurement in seconds
-        rms_offset: Root mean square of recent offsets in seconds
-        frequency: Clock frequency error in parts per million
-        residual_freq: Residual frequency for current source in ppm
-        skew: Estimated error bound on frequency in ppm
-        root_delay: Total roundtrip delay to stratum-1 source in seconds
-        root_dispersion: Total dispersion to reference in seconds
-        update_interval: Seconds since last successful update
+        reference_id: NTP reference identifier (uint32 as hex IP or name).
+        reference_id_name: Human-readable reference source name.
+        reference_ip: IP address of reference source (IPv4, IPv6, or ID#).
+        stratum: NTP stratum level (0=reference clock, 1-15=downstream).
+        leap_status: Leap second status (see `LeapStatus`).
+        ref_time: Timestamp of last measurement (seconds since epoch).
+        offset: Current offset from reference (seconds, can be negative).
+        last_offset: Offset at last measurement (seconds).
+        rms_offset: Root mean square of recent offsets (seconds).
+        frequency: Clock frequency error (parts per million).
+        residual_freq: Residual frequency for current source (ppm).
+        skew: Estimated error bound on frequency (ppm).
+        root_delay: Total roundtrip delay to stratum-1 source (seconds).
+        root_dispersion: Total dispersion to reference (seconds).
+        update_interval: Seconds since last successful update.
+
+    See Also:
+        `LeapStatus`: Enum for leap second status values.
+        `ChronyConnection.get_tracking`: Method to retrieve this data.
     """
 
     reference_id: int
@@ -128,6 +159,12 @@ class TrackingStatus:
         Returns:
             True if synchronized (reference_id != 0 and stratum < 16),
             False otherwise.
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     status = conn.get_tracking()
+            ...     if status.is_synchronized():
+            ...         print(f"Synced to {status.reference_ip}")
         """
         return self.reference_id != 0 and self.stratum < 16
 
@@ -137,6 +174,12 @@ class TrackingStatus:
         Returns:
             True if leap_status is INSERT or DELETE,
             False otherwise.
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     status = conn.get_tracking()
+            ...     if status.is_leap_pending():
+            ...         print(f"Leap second pending: {status.leap_status.name}")
         """
         return self.leap_status in (LeapStatus.INSERT, LeapStatus.DELETE)
 
@@ -149,17 +192,22 @@ class Source:
     as a time source by chronyd.
 
     Attributes:
-        address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID)
-        poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds)
-        stratum: NTP stratum level of the source (0-15)
-        state: Selection state as SourceState enum
-        mode: Source mode as SourceMode enum
-        flags: Source flags (bitfield)
-        reachability: Reachability register (8-bit, 377 octal = all recent polls succeeded)
-        last_sample_ago: Seconds since last valid sample was received
-        orig_latest_meas: Original last sample offset in seconds
-        latest_meas: Adjusted last sample offset in seconds
-        latest_meas_err: Last sample error bound in seconds
+        address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID).
+        poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds).
+        stratum: NTP stratum level of the source (0-15).
+        state: Selection state (see `SourceState`).
+        mode: Source mode (see `SourceMode`).
+        flags: Source flags (bitfield).
+        reachability: Reachability register (8-bit, 377 octal = all recent polls succeeded).
+        last_sample_ago: Seconds since last valid sample was received.
+        orig_latest_meas: Original last sample offset (seconds).
+        latest_meas: Adjusted last sample offset (seconds).
+        latest_meas_err: Last sample error bound (seconds).
+
+    See Also:
+        `SourceState`: Enum for source selection states.
+        `SourceMode`: Enum for source operational modes.
+        `ChronyConnection.get_sources`: Method to retrieve source list.
     """
 
     address: str
@@ -179,6 +227,12 @@ class Source:
 
         Returns:
             True if reachability register is non-zero (at least one successful poll).
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     for src in conn.get_sources():
+            ...         if not src.is_reachable():
+            ...             print(f"Source {src.address} is unreachable")
         """
         return self.reachability > 0
 
@@ -187,6 +241,12 @@ class Source:
 
         Returns:
             True if state is SELECTED.
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     for src in conn.get_sources():
+            ...         if src.is_selected():
+            ...             print(f"Currently using {src.address}")
         """
         return self.state == SourceState.SELECTED
 
@@ -199,16 +259,19 @@ class SourceStats:
     used for drift and offset estimation.
 
     Attributes:
-        reference_id: 32-bit NTP reference identifier
-        address: IP address of the source (empty for reference clocks)
-        samples: Number of sample points currently retained
-        runs: Number of runs of residuals with same sign
-        span: Time interval between oldest and newest samples in seconds
-        std_dev: Estimated sample standard deviation in seconds
-        resid_freq: Residual frequency in parts per million
-        skew: Frequency skew (error bound) in ppm
-        offset: Estimated offset of the source in seconds
-        offset_err: Offset error bound in seconds
+        reference_id: 32-bit NTP reference identifier.
+        address: IP address of the source (empty for reference clocks).
+        samples: Number of sample points currently retained.
+        runs: Number of runs of residuals with same sign.
+        span: Time interval between oldest and newest samples (seconds).
+        std_dev: Estimated sample standard deviation (seconds).
+        resid_freq: Residual frequency (parts per million).
+        skew: Frequency skew (error bound) in ppm.
+        offset: Estimated offset of the source (seconds).
+        offset_err: Offset error bound (seconds).
+
+    See Also:
+        `ChronyConnection.get_source_stats`: Method to retrieve statistics.
     """
 
     reference_id: int
@@ -226,10 +289,16 @@ class SourceStats:
         """Check if enough samples exist for reliable statistics.
 
         Args:
-            minimum: Minimum number of samples required (default 4)
+            minimum: Minimum number of samples required (default 4).
 
         Returns:
             True if samples >= minimum.
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     for stats in conn.get_source_stats():
+            ...         if stats.has_sufficient_samples(8):
+            ...             print(f"{stats.address}: offset={stats.offset:.6f}s")
         """
         return self.samples >= minimum
 
@@ -242,15 +311,18 @@ class RTCData:
     to system time, as tracked by chronyd.
 
     Note: RTC tracking must be enabled in chronyd configuration.
-    If not enabled, get_rtc_data() raises ChronyDataError.
+    If not enabled, `get_rtc_data()` returns ``None``.
 
     Attributes:
-        ref_time: RTC reading at last error measurement (seconds since epoch)
-        samples: Number of previous measurements used for calibration
-        runs: Number of runs of residuals (indicates linear model fit quality)
-        span: Time period covered by measurements in seconds
-        offset: Estimated RTC offset (fast by) in seconds
-        freq_offset: RTC frequency offset (drift rate) in parts per million
+        ref_time: RTC reading at last error measurement (seconds since epoch).
+        samples: Number of previous measurements used for calibration.
+        runs: Number of runs of residuals (indicates linear model fit quality).
+        span: Time period covered by measurements (seconds).
+        offset: Estimated RTC offset (fast by) in seconds.
+        freq_offset: RTC frequency offset (drift rate) in parts per million.
+
+    See Also:
+        `ChronyConnection.get_rtc_data`: Method to retrieve RTC data.
     """
 
     ref_time: float
@@ -265,6 +337,12 @@ class RTCData:
 
         Returns:
             True if samples > 0 (some calibration exists).
+
+        Example:
+            >>> with ChronyConnection() as conn:
+            ...     rtc = conn.get_rtc_data()
+            ...     if rtc and rtc.is_calibrated():
+            ...         print(f"RTC drift: {rtc.freq_offset:.2f} ppm")
         """
         return self.samples > 0
 
