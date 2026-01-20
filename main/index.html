@@ -323,6 +323,50 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multiple-queries-connection-reuse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Queries (Connection Reuse)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remote-and-custom-connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote and Custom Connections
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thread Safety
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -411,6 +455,8 @@ with ChronyConnection() as conn:
     status = conn.get_tracking()
     print(f&quot;Offset: {status.offset:.6f} seconds&quot;)
     print(f&quot;Stratum: {status.stratum}&quot;)
+    if status.is_synchronized():
+        print(f&quot;Synchronized to {status.reference_id_name}&quot;)
 </code></pre>
 <h2 id="features">Features</h2>
 <ul>
@@ -419,6 +465,68 @@ with ChronyConnection() as conn:
 <li><strong>Pythonic API</strong>: Native Python data structures and context managers</li>
 <li><strong>Multiple reports</strong>: Access tracking, sources, source stats, and RTC data</li>
 </ul>
+<h2 id="multiple-queries-connection-reuse">Multiple Queries (Connection Reuse)</h2>
+<p>Use a single connection for multiple queries to minimize overhead:</p>
+<pre><code class="language-python">from pychrony import ChronyConnection
+
+with ChronyConnection() as conn:
+    tracking = conn.get_tracking()
+    sources = conn.get_sources()
+    stats = conn.get_source_stats()
+    rtc = conn.get_rtc_data()
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<p>pychrony provides typed exceptions for different error conditions:</p>
+<pre><code class="language-python">from pychrony import (
+    ChronyConnection,
+    ChronyError,
+    ChronyLibraryError,
+    ChronyConnectionError,
+    ChronyPermissionError,
+)
+
+try:
+    with ChronyConnection() as conn:
+        status = conn.get_tracking()
+except ChronyLibraryError:
+    print(&quot;libchrony not installed&quot;)
+except ChronyConnectionError:
+    print(&quot;chronyd not running&quot;)
+except ChronyPermissionError:
+    print(&quot;Permission denied - add user to chrony group&quot;)
+</code></pre>
+<h2 id="remote-and-custom-connections">Remote and Custom Connections</h2>
+<p>Connect to a custom Unix socket path:</p>
+<pre><code class="language-python">with ChronyConnection(&quot;/custom/path/chronyd.sock&quot;) as conn:
+    status = conn.get_tracking()
+</code></pre>
+<p>Connect to a remote chronyd instance via UDP:</p>
+<pre><code class="language-python">with ChronyConnection(&quot;192.168.1.100&quot;) as conn:
+    status = conn.get_tracking()
+</code></pre>
+<h2 id="thread-safety">Thread Safety</h2>
+<p><code>ChronyConnection</code> is <strong>NOT thread-safe</strong>. The underlying libchrony session
+maintains stateful request/response cycles that cannot be safely shared
+between threads.</p>
+<p>For multi-threaded applications, use one of these patterns:</p>
+<p><strong>Connection per thread (simplest):</strong></p>
+<pre><code class="language-python">def worker():
+    with ChronyConnection() as conn:
+        return conn.get_tracking()
+</code></pre>
+<p><strong>Thread-local storage (for connection reuse):</strong></p>
+<pre><code class="language-python">import threading
+
+_local = threading.local()
+
+def get_tracking():
+    if not hasattr(_local, 'conn'):
+        _local.conn = ChronyConnection()
+    with _local.conn as conn:
+        return conn.get_tracking()
+</code></pre>
+<p>The returned dataclasses (<code>TrackingStatus</code>, <code>Source</code>, etc.) are frozen and
+immutable, so they can be safely shared across threads after retrieval.</p>
 <h2 id="quick-links">Quick Links</h2>
 <ul>
 <li><a href="api/">API Reference</a> - Complete API documentation</li>

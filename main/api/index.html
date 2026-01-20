@@ -866,11 +866,13 @@ context, properly managing socket and session lifecycle.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Connection address. Supports:
-- Unix socket path: "/run/chrony/chronyd.sock"
-- IPv4: "192.168.1.1" or "192.168.1.1:323"
-- IPv6: "2001:db8::1" or "[2001:db8::1]:323"
-- None: Auto-detect (tries Unix socket paths, then localhost)</p>
+                <p>Connection address. Supports:</p>
+<ul>
+<li>Unix socket path: <code>"/run/chrony/chronyd.sock"</code></li>
+<li>IPv4: <code>"192.168.1.1"</code> or <code>"192.168.1.1:323"</code></li>
+<li>IPv6: <code>"2001:db8::1"</code> or <code>"[2001:db8::1]:323"</code></li>
+<li><code>None</code>: Auto-detect (tries Unix socket paths, then localhost)</li>
+</ul>
               </div>
             </td>
             <td>
@@ -881,18 +883,77 @@ context, properly managing socket and session lifecycle.</p>
     </table>
 
 
+<p><span class="doc-section-title">Methods:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="get_tracking() (pychrony.ChronyConnection.get_tracking)" href="#pychrony.ChronyConnection.get_tracking">get_tracking</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Get current NTP tracking status (returns <code>TrackingStatus</code>).</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="get_sources() (pychrony.ChronyConnection.get_sources)" href="#pychrony.ChronyConnection.get_sources">get_sources</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Get configured time sources (returns <code>list[Source]</code>).</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="get_source_stats() (pychrony.ChronyConnection.get_source_stats)" href="#pychrony.ChronyConnection.get_source_stats">get_source_stats</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Get source statistics (returns <code>list[SourceStats]</code>).</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="get_rtc_data() (pychrony.ChronyConnection.get_rtc_data)" href="#pychrony.ChronyConnection.get_rtc_data">get_rtc_data</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Get RTC tracking data (returns <code>RTCData</code> or <code>None</code>).</p>
+                </div>
+              </td>
+            </tr>
+      </tbody>
+    </table>
+
+
 <details class="thread-safety" open>
   <summary>Thread Safety</summary>
   <p>NOT thread-safe. Each thread needs its own connection.</p>
 </details>
 
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p><code>TrackingStatus</code>: Tracking data model.
+<code>Source</code>: Time source data model.
+<code>SourceStats</code>: Source statistics data model.
+<code>RTCData</code>: RTC tracking data model.</p>
+</details>
+
 <details class="example" open>
   <summary>Example</summary>
-  <p>with ChronyConnection() as conn:
-    tracking = conn.get_tracking()
-    sources = conn.get_sources()
-    stats = conn.get_source_stats()
-    rtc = conn.get_rtc_data()</p>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     tracking = conn.get_tracking()
+...     sources = conn.get_sources()
+...     stats = conn.get_source_stats()
+...     rtc = conn.get_rtc_data()</p>
+</blockquote>
+</blockquote>
+</blockquote>
 </details>
 
 
@@ -1411,7 +1472,20 @@ context, properly managing socket and session lifecycle.</p>
 <span class="normal">677</span>
 <span class="normal">678</span>
 <span class="normal">679</span>
-<span class="normal">680</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for chrony connections.</span>
 
 <span class="sd">    Provides connection reuse for multiple queries to chronyd within a single</span>
@@ -1419,20 +1493,33 @@ context, properly managing socket and session lifecycle.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        address: Connection address. Supports:</span>
-<span class="sd">            - Unix socket path: &quot;/run/chrony/chronyd.sock&quot;</span>
-<span class="sd">            - IPv4: &quot;192.168.1.1&quot; or &quot;192.168.1.1:323&quot;</span>
-<span class="sd">            - IPv6: &quot;2001:db8::1&quot; or &quot;[2001:db8::1]:323&quot;</span>
-<span class="sd">            - None: Auto-detect (tries Unix socket paths, then localhost)</span>
+
+<span class="sd">            - Unix socket path: ``&quot;/run/chrony/chronyd.sock&quot;``</span>
+<span class="sd">            - IPv4: ``&quot;192.168.1.1&quot;`` or ``&quot;192.168.1.1:323&quot;``</span>
+<span class="sd">            - IPv6: ``&quot;2001:db8::1&quot;`` or ``&quot;[2001:db8::1]:323&quot;``</span>
+<span class="sd">            - ``None``: Auto-detect (tries Unix socket paths, then localhost)</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        get_tracking: Get current NTP tracking status (returns `TrackingStatus`).</span>
+<span class="sd">        get_sources: Get configured time sources (returns ``list[Source]``).</span>
+<span class="sd">        get_source_stats: Get source statistics (returns ``list[SourceStats]``).</span>
+<span class="sd">        get_rtc_data: Get RTC tracking data (returns `RTCData` or ``None``).</span>
 
 <span class="sd">    Thread Safety:</span>
 <span class="sd">        NOT thread-safe. Each thread needs its own connection.</span>
 
+<span class="sd">    See Also:</span>
+<span class="sd">        `TrackingStatus`: Tracking data model.</span>
+<span class="sd">        `Source`: Time source data model.</span>
+<span class="sd">        `SourceStats`: Source statistics data model.</span>
+<span class="sd">        `RTCData`: RTC tracking data model.</span>
+
 <span class="sd">    Example:</span>
-<span class="sd">        with ChronyConnection() as conn:</span>
-<span class="sd">            tracking = conn.get_tracking()</span>
-<span class="sd">            sources = conn.get_sources()</span>
-<span class="sd">            stats = conn.get_source_stats()</span>
-<span class="sd">            rtc = conn.get_rtc_data()</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     tracking = conn.get_tracking()</span>
+<span class="sd">        ...     sources = conn.get_sources()</span>
+<span class="sd">        ...     stats = conn.get_source_stats()</span>
+<span class="sd">        ...     rtc = conn.get_rtc_data()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1983,17 +2070,17 @@ context, properly managing socket and session lifecycle.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize ChronyConnection with optional address.</span>
 
 <span class="sd">    Args:</span>
@@ -2026,12 +2113,12 @@ context, properly managing socket and session lifecycle.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ChronyConnection&quot;</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ChronyConnection&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Enter context manager, opening connection to chronyd.&quot;&quot;&quot;</span>
     <span class="n">_check_library_available</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">()</span>
@@ -2059,15 +2146,15 @@ context, properly managing socket and session lifecycle.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">exc_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exc_val</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
@@ -2166,20 +2253,7 @@ context, properly managing socket and session lifecycle.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">382</span>
 <span class="normal">383</span>
 <span class="normal">384</span>
 <span class="normal">385</span>
@@ -2222,7 +2296,20 @@ context, properly managing socket and session lifecycle.</p>
 <span class="normal">422</span>
 <span class="normal">423</span>
 <span class="normal">424</span>
-<span class="normal">425</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get current tracking status from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -2371,20 +2458,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">473</span>
 <span class="normal">474</span>
 <span class="normal">475</span>
 <span class="normal">476</span>
@@ -2401,7 +2475,20 @@ Empty list if no sources are configured.</p>
 <span class="normal">487</span>
 <span class="normal">488</span>
 <span class="normal">489</span>
-<span class="normal">490</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get all configured time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -2524,20 +2611,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">567</span>
 <span class="normal">568</span>
 <span class="normal">569</span>
 <span class="normal">570</span>
@@ -2554,7 +2628,20 @@ Empty list if no sources are configured.</p>
 <span class="normal">581</span>
 <span class="normal">582</span>
 <span class="normal">583</span>
-<span class="normal">584</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get statistical data for all time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -2676,20 +2763,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
-<span class="normal">631</span>
-<span class="normal">632</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">632</span>
 <span class="normal">633</span>
 <span class="normal">634</span>
 <span class="normal">635</span>
@@ -2714,7 +2788,20 @@ Empty list if no sources are configured.</p>
 <span class="normal">654</span>
 <span class="normal">655</span>
 <span class="normal">656</span>
-<span class="normal">657</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get Real-Time Clock tracking data from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -2810,7 +2897,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>NTP reference identifier (uint32 as hex IP or name)</p>
+                <p>NTP reference identifier (uint32 as hex IP or name).</p>
               </div>
             </td>
           </tr>
@@ -2821,7 +2908,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Human-readable reference source name</p>
+                <p>Human-readable reference source name.</p>
               </div>
             </td>
           </tr>
@@ -2832,7 +2919,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>IP address of reference source (IPv4, IPv6, or ID#)</p>
+                <p>IP address of reference source (IPv4, IPv6, or ID#).</p>
               </div>
             </td>
           </tr>
@@ -2843,7 +2930,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>NTP stratum level (0=reference clock, 1-15=downstream)</p>
+                <p>NTP stratum level (0=reference clock, 1-15=downstream).</p>
               </div>
             </td>
           </tr>
@@ -2854,7 +2941,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Leap second status as LeapStatus enum</p>
+                <p>Leap second status (see <code>LeapStatus</code>).</p>
               </div>
             </td>
           </tr>
@@ -2865,7 +2952,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Timestamp of last measurement (seconds since epoch)</p>
+                <p>Timestamp of last measurement (seconds since epoch).</p>
               </div>
             </td>
           </tr>
@@ -2876,7 +2963,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Current offset from reference in seconds (can be negative)</p>
+                <p>Current offset from reference (seconds, can be negative).</p>
               </div>
             </td>
           </tr>
@@ -2887,7 +2974,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Offset at last measurement in seconds</p>
+                <p>Offset at last measurement (seconds).</p>
               </div>
             </td>
           </tr>
@@ -2898,7 +2985,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Root mean square of recent offsets in seconds</p>
+                <p>Root mean square of recent offsets (seconds).</p>
               </div>
             </td>
           </tr>
@@ -2909,7 +2996,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Clock frequency error in parts per million</p>
+                <p>Clock frequency error (parts per million).</p>
               </div>
             </td>
           </tr>
@@ -2920,7 +3007,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Residual frequency for current source in ppm</p>
+                <p>Residual frequency for current source (ppm).</p>
               </div>
             </td>
           </tr>
@@ -2931,7 +3018,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Estimated error bound on frequency in ppm</p>
+                <p>Estimated error bound on frequency (ppm).</p>
               </div>
             </td>
           </tr>
@@ -2942,7 +3029,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Total roundtrip delay to stratum-1 source in seconds</p>
+                <p>Total roundtrip delay to stratum-1 source (seconds).</p>
               </div>
             </td>
           </tr>
@@ -2953,7 +3040,7 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Total dispersion to reference in seconds</p>
+                <p>Total dispersion to reference (seconds).</p>
               </div>
             </td>
           </tr>
@@ -2964,13 +3051,19 @@ including offset, frequency, and accuracy metrics.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Seconds since last successful update</p>
+                <p>Seconds since last successful update.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p><code>LeapStatus</code>: Enum for leap second status values.
+<code>ChronyConnection.get_tracking</code>: Method to retrieve this data.</p>
+</details>
 
 
 
@@ -2980,34 +3073,7 @@ including offset, frequency, and accuracy metrics.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
@@ -3037,7 +3103,50 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
-<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Chrony tracking status information.</span>
 
@@ -3045,21 +3154,25 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">    including offset, frequency, and accuracy metrics.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        reference_id: NTP reference identifier (uint32 as hex IP or name)</span>
-<span class="sd">        reference_id_name: Human-readable reference source name</span>
-<span class="sd">        reference_ip: IP address of reference source (IPv4, IPv6, or ID#)</span>
-<span class="sd">        stratum: NTP stratum level (0=reference clock, 1-15=downstream)</span>
-<span class="sd">        leap_status: Leap second status as LeapStatus enum</span>
-<span class="sd">        ref_time: Timestamp of last measurement (seconds since epoch)</span>
-<span class="sd">        offset: Current offset from reference in seconds (can be negative)</span>
-<span class="sd">        last_offset: Offset at last measurement in seconds</span>
-<span class="sd">        rms_offset: Root mean square of recent offsets in seconds</span>
-<span class="sd">        frequency: Clock frequency error in parts per million</span>
-<span class="sd">        residual_freq: Residual frequency for current source in ppm</span>
-<span class="sd">        skew: Estimated error bound on frequency in ppm</span>
-<span class="sd">        root_delay: Total roundtrip delay to stratum-1 source in seconds</span>
-<span class="sd">        root_dispersion: Total dispersion to reference in seconds</span>
-<span class="sd">        update_interval: Seconds since last successful update</span>
+<span class="sd">        reference_id: NTP reference identifier (uint32 as hex IP or name).</span>
+<span class="sd">        reference_id_name: Human-readable reference source name.</span>
+<span class="sd">        reference_ip: IP address of reference source (IPv4, IPv6, or ID#).</span>
+<span class="sd">        stratum: NTP stratum level (0=reference clock, 1-15=downstream).</span>
+<span class="sd">        leap_status: Leap second status (see `LeapStatus`).</span>
+<span class="sd">        ref_time: Timestamp of last measurement (seconds since epoch).</span>
+<span class="sd">        offset: Current offset from reference (seconds, can be negative).</span>
+<span class="sd">        last_offset: Offset at last measurement (seconds).</span>
+<span class="sd">        rms_offset: Root mean square of recent offsets (seconds).</span>
+<span class="sd">        frequency: Clock frequency error (parts per million).</span>
+<span class="sd">        residual_freq: Residual frequency for current source (ppm).</span>
+<span class="sd">        skew: Estimated error bound on frequency (ppm).</span>
+<span class="sd">        root_delay: Total roundtrip delay to stratum-1 source (seconds).</span>
+<span class="sd">        root_dispersion: Total dispersion to reference (seconds).</span>
+<span class="sd">        update_interval: Seconds since last successful update.</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        `LeapStatus`: Enum for leap second status values.</span>
+<span class="sd">        `ChronyConnection.get_tracking`: Method to retrieve this data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">reference_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -3084,6 +3197,12 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if synchronized (reference_id != 0 and stratum &lt; 16),</span>
 <span class="sd">            False otherwise.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     status = conn.get_tracking()</span>
+<span class="sd">            ...     if status.is_synchronized():</span>
+<span class="sd">            ...         print(f&quot;Synced to {status.reference_ip}&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_id</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stratum</span> <span class="o">&lt;</span> <span class="mi">16</span>
 
@@ -3093,6 +3212,12 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if leap_status is INSERT or DELETE,</span>
 <span class="sd">            False otherwise.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     status = conn.get_tracking()</span>
+<span class="sd">            ...     if status.is_leap_pending():</span>
+<span class="sd">            ...         print(f&quot;Leap second pending: {status.leap_status.name}&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leap_status</span> <span class="ow">in</span> <span class="p">(</span><span class="n">LeapStatus</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">LeapStatus</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -3158,21 +3283,47 @@ including offset, frequency, and accuracy metrics.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     status = conn.get_tracking()
+...     if status.is_synchronized():
+...         print(f"Synced to {status.reference_ip}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_synchronized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_synchronized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if chronyd is synchronized to a source.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if synchronized (reference_id != 0 and stratum &lt; 16),</span>
 <span class="sd">        False otherwise.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     status = conn.get_tracking()</span>
+<span class="sd">        ...     if status.is_synchronized():</span>
+<span class="sd">        ...         print(f&quot;Synced to {status.reference_ip}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_id</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stratum</span> <span class="o">&lt;</span> <span class="mi">16</span>
 </code></pre></div></td></tr></table></div>
@@ -3228,21 +3379,47 @@ including offset, frequency, and accuracy metrics.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     status = conn.get_tracking()
+...     if status.is_leap_pending():
+...         print(f"Leap second pending: {status.leap_status.name}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_leap_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_leap_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a leap second adjustment is pending.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if leap_status is INSERT or DELETE,</span>
 <span class="sd">        False otherwise.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     status = conn.get_tracking()</span>
+<span class="sd">        ...     if status.is_leap_pending():</span>
+<span class="sd">        ...         print(f&quot;Leap second pending: {status.leap_status.name}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">leap_status</span> <span class="ow">in</span> <span class="p">(</span><span class="n">LeapStatus</span><span class="o">.</span><span class="n">INSERT</span><span class="p">,</span> <span class="n">LeapStatus</span><span class="o">.</span><span class="n">DELETE</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -3300,7 +3477,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>IP address or reference ID of the source (IPv4, IPv6, or refclock ID)</p>
+                <p>IP address or reference ID of the source (IPv4, IPv6, or refclock ID).</p>
               </div>
             </td>
           </tr>
@@ -3311,7 +3488,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Polling interval as log2 seconds (e.g., 6 means 64 seconds)</p>
+                <p>Polling interval as log2 seconds (e.g., 6 means 64 seconds).</p>
               </div>
             </td>
           </tr>
@@ -3322,7 +3499,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>NTP stratum level of the source (0-15)</p>
+                <p>NTP stratum level of the source (0-15).</p>
               </div>
             </td>
           </tr>
@@ -3333,7 +3510,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Selection state as SourceState enum</p>
+                <p>Selection state (see <code>SourceState</code>).</p>
               </div>
             </td>
           </tr>
@@ -3344,7 +3521,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Source mode as SourceMode enum</p>
+                <p>Source mode (see <code>SourceMode</code>).</p>
               </div>
             </td>
           </tr>
@@ -3355,7 +3532,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Source flags (bitfield)</p>
+                <p>Source flags (bitfield).</p>
               </div>
             </td>
           </tr>
@@ -3366,7 +3543,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Reachability register (8-bit, 377 octal = all recent polls succeeded)</p>
+                <p>Reachability register (8-bit, 377 octal = all recent polls succeeded).</p>
               </div>
             </td>
           </tr>
@@ -3377,7 +3554,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Seconds since last valid sample was received</p>
+                <p>Seconds since last valid sample was received.</p>
               </div>
             </td>
           </tr>
@@ -3388,7 +3565,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Original last sample offset in seconds</p>
+                <p>Original last sample offset (seconds).</p>
               </div>
             </td>
           </tr>
@@ -3399,7 +3576,7 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Adjusted last sample offset in seconds</p>
+                <p>Adjusted last sample offset (seconds).</p>
               </div>
             </td>
           </tr>
@@ -3410,13 +3587,20 @@ as a time source by chronyd.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Last sample error bound in seconds</p>
+                <p>Last sample error bound (seconds).</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p><code>SourceState</code>: Enum for source selection states.
+<code>SourceMode</code>: Enum for source operational modes.
+<code>ChronyConnection.get_sources</code>: Method to retrieve source list.</p>
+</details>
 
 
 
@@ -3426,54 +3610,71 @@ as a time source by chronyd.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span>
-<span class="normal">174</span>
-<span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
 <span class="normal">190</span>
-<span class="normal">191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Source</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Chrony source information.</span>
 
@@ -3481,17 +3682,22 @@ as a time source by chronyd.</p>
 <span class="sd">    as a time source by chronyd.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID)</span>
-<span class="sd">        poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds)</span>
-<span class="sd">        stratum: NTP stratum level of the source (0-15)</span>
-<span class="sd">        state: Selection state as SourceState enum</span>
-<span class="sd">        mode: Source mode as SourceMode enum</span>
-<span class="sd">        flags: Source flags (bitfield)</span>
-<span class="sd">        reachability: Reachability register (8-bit, 377 octal = all recent polls succeeded)</span>
-<span class="sd">        last_sample_ago: Seconds since last valid sample was received</span>
-<span class="sd">        orig_latest_meas: Original last sample offset in seconds</span>
-<span class="sd">        latest_meas: Adjusted last sample offset in seconds</span>
-<span class="sd">        latest_meas_err: Last sample error bound in seconds</span>
+<span class="sd">        address: IP address or reference ID of the source (IPv4, IPv6, or refclock ID).</span>
+<span class="sd">        poll: Polling interval as log2 seconds (e.g., 6 means 64 seconds).</span>
+<span class="sd">        stratum: NTP stratum level of the source (0-15).</span>
+<span class="sd">        state: Selection state (see `SourceState`).</span>
+<span class="sd">        mode: Source mode (see `SourceMode`).</span>
+<span class="sd">        flags: Source flags (bitfield).</span>
+<span class="sd">        reachability: Reachability register (8-bit, 377 octal = all recent polls succeeded).</span>
+<span class="sd">        last_sample_ago: Seconds since last valid sample was received.</span>
+<span class="sd">        orig_latest_meas: Original last sample offset (seconds).</span>
+<span class="sd">        latest_meas: Adjusted last sample offset (seconds).</span>
+<span class="sd">        latest_meas_err: Last sample error bound (seconds).</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        `SourceState`: Enum for source selection states.</span>
+<span class="sd">        `SourceMode`: Enum for source operational modes.</span>
+<span class="sd">        `ChronyConnection.get_sources`: Method to retrieve source list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">address</span><span class="p">:</span> <span class="nb">str</span>
@@ -3511,6 +3717,12 @@ as a time source by chronyd.</p>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if reachability register is non-zero (at least one successful poll).</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     for src in conn.get_sources():</span>
+<span class="sd">            ...         if not src.is_reachable():</span>
+<span class="sd">            ...             print(f&quot;Source {src.address} is unreachable&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachability</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
@@ -3519,6 +3731,12 @@ as a time source by chronyd.</p>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if state is SELECTED.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     for src in conn.get_sources():</span>
+<span class="sd">            ...         if src.is_selected():</span>
+<span class="sd">            ...             print(f&quot;Currently using {src.address}&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">SourceState</span><span class="o">.</span><span class="n">SELECTED</span>
 </code></pre></div></td></tr></table></div>
@@ -3574,19 +3792,45 @@ as a time source by chronyd.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     for src in conn.get_sources():
+...         if not src.is_reachable():
+...             print(f"Source {src.address} is unreachable")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_reachable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_reachable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the source has been reachable recently.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if reachability register is non-zero (at least one successful poll).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     for src in conn.get_sources():</span>
+<span class="sd">        ...         if not src.is_reachable():</span>
+<span class="sd">        ...             print(f&quot;Source {src.address} is unreachable&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reachability</span> <span class="o">&gt;</span> <span class="mi">0</span>
 </code></pre></div></td></tr></table></div>
@@ -3632,19 +3876,45 @@ as a time source by chronyd.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     for src in conn.get_sources():
+...         if src.is_selected():
+...             print(f"Currently using {src.address}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_selected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if this source is currently selected for synchronization.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if state is SELECTED.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     for src in conn.get_sources():</span>
+<span class="sd">        ...         if src.is_selected():</span>
+<span class="sd">        ...             print(f&quot;Currently using {src.address}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">SourceState</span><span class="o">.</span><span class="n">SELECTED</span>
 </code></pre></div></td></tr></table></div>
@@ -3702,7 +3972,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>32-bit NTP reference identifier</p>
+                <p>32-bit NTP reference identifier.</p>
               </div>
             </td>
           </tr>
@@ -3713,7 +3983,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>IP address of the source (empty for reference clocks)</p>
+                <p>IP address of the source (empty for reference clocks).</p>
               </div>
             </td>
           </tr>
@@ -3724,7 +3994,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of sample points currently retained</p>
+                <p>Number of sample points currently retained.</p>
               </div>
             </td>
           </tr>
@@ -3735,7 +4005,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of runs of residuals with same sign</p>
+                <p>Number of runs of residuals with same sign.</p>
               </div>
             </td>
           </tr>
@@ -3746,7 +4016,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time interval between oldest and newest samples in seconds</p>
+                <p>Time interval between oldest and newest samples (seconds).</p>
               </div>
             </td>
           </tr>
@@ -3757,7 +4027,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Estimated sample standard deviation in seconds</p>
+                <p>Estimated sample standard deviation (seconds).</p>
               </div>
             </td>
           </tr>
@@ -3768,7 +4038,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Residual frequency in parts per million</p>
+                <p>Residual frequency (parts per million).</p>
               </div>
             </td>
           </tr>
@@ -3779,7 +4049,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Frequency skew (error bound) in ppm</p>
+                <p>Frequency skew (error bound) in ppm.</p>
               </div>
             </td>
           </tr>
@@ -3790,7 +4060,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Estimated offset of the source in seconds</p>
+                <p>Estimated offset of the source (seconds).</p>
               </div>
             </td>
           </tr>
@@ -3801,13 +4071,18 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Offset error bound in seconds</p>
+                <p>Offset error bound (seconds).</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p><code>ChronyConnection.get_source_stats</code>: Method to retrieve statistics.</p>
+</details>
 
 
 
@@ -3817,47 +4092,56 @@ used for drift and offset estimation.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">SourceStats</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Chrony source statistics.</span>
 
@@ -3865,16 +4149,19 @@ used for drift and offset estimation.</p>
 <span class="sd">    used for drift and offset estimation.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        reference_id: 32-bit NTP reference identifier</span>
-<span class="sd">        address: IP address of the source (empty for reference clocks)</span>
-<span class="sd">        samples: Number of sample points currently retained</span>
-<span class="sd">        runs: Number of runs of residuals with same sign</span>
-<span class="sd">        span: Time interval between oldest and newest samples in seconds</span>
-<span class="sd">        std_dev: Estimated sample standard deviation in seconds</span>
-<span class="sd">        resid_freq: Residual frequency in parts per million</span>
-<span class="sd">        skew: Frequency skew (error bound) in ppm</span>
-<span class="sd">        offset: Estimated offset of the source in seconds</span>
-<span class="sd">        offset_err: Offset error bound in seconds</span>
+<span class="sd">        reference_id: 32-bit NTP reference identifier.</span>
+<span class="sd">        address: IP address of the source (empty for reference clocks).</span>
+<span class="sd">        samples: Number of sample points currently retained.</span>
+<span class="sd">        runs: Number of runs of residuals with same sign.</span>
+<span class="sd">        span: Time interval between oldest and newest samples (seconds).</span>
+<span class="sd">        std_dev: Estimated sample standard deviation (seconds).</span>
+<span class="sd">        resid_freq: Residual frequency (parts per million).</span>
+<span class="sd">        skew: Frequency skew (error bound) in ppm.</span>
+<span class="sd">        offset: Estimated offset of the source (seconds).</span>
+<span class="sd">        offset_err: Offset error bound (seconds).</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        `ChronyConnection.get_source_stats`: Method to retrieve statistics.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">reference_id</span><span class="p">:</span> <span class="nb">int</span>
@@ -3892,10 +4179,16 @@ used for drift and offset estimation.</p>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if enough samples exist for reliable statistics.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            minimum: Minimum number of samples required (default 4)</span>
+<span class="sd">            minimum: Minimum number of samples required (default 4).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if samples &gt;= minimum.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     for stats in conn.get_source_stats():</span>
+<span class="sd">            ...         if stats.has_sufficient_samples(8):</span>
+<span class="sd">            ...             print(f&quot;{stats.address}: offset={stats.offset:.6f}s&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">&gt;=</span> <span class="n">minimum</span>
 </code></pre></div></td></tr></table></div>
@@ -3948,7 +4241,7 @@ used for drift and offset estimation.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Minimum number of samples required (default 4)</p>
+                <p>Minimum number of samples required (default 4).</p>
               </div>
             </td>
             <td>
@@ -3982,25 +4275,51 @@ used for drift and offset estimation.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     for stats in conn.get_source_stats():
+...         if stats.has_sufficient_samples(8):
+...             print(f"{stats.address}: offset={stats.offset:.6f}s")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_sufficient_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">has_sufficient_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if enough samples exist for reliable statistics.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        minimum: Minimum number of samples required (default 4)</span>
+<span class="sd">        minimum: Minimum number of samples required (default 4).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if samples &gt;= minimum.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     for stats in conn.get_source_stats():</span>
+<span class="sd">        ...         if stats.has_sufficient_samples(8):</span>
+<span class="sd">        ...             print(f&quot;{stats.address}: offset={stats.offset:.6f}s&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">&gt;=</span> <span class="n">minimum</span>
 </code></pre></div></td></tr></table></div>
@@ -4040,7 +4359,7 @@ used for drift and offset estimation.</p>
 <p>Represents information about the hardware RTC and its relationship
 to system time, as tracked by chronyd.</p>
 <p>Note: RTC tracking must be enabled in chronyd configuration.
-If not enabled, get_rtc_data() raises ChronyDataError.</p>
+If not enabled, <code>get_rtc_data()</code> returns <code>None</code>.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -4060,7 +4379,7 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>RTC reading at last error measurement (seconds since epoch)</p>
+                <p>RTC reading at last error measurement (seconds since epoch).</p>
               </div>
             </td>
           </tr>
@@ -4071,7 +4390,7 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of previous measurements used for calibration</p>
+                <p>Number of previous measurements used for calibration.</p>
               </div>
             </td>
           </tr>
@@ -4082,7 +4401,7 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Number of runs of residuals (indicates linear model fit quality)</p>
+                <p>Number of runs of residuals (indicates linear model fit quality).</p>
               </div>
             </td>
           </tr>
@@ -4093,7 +4412,7 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Time period covered by measurements in seconds</p>
+                <p>Time period covered by measurements (seconds).</p>
               </div>
             </td>
           </tr>
@@ -4104,7 +4423,7 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Estimated RTC offset (fast by) in seconds</p>
+                <p>Estimated RTC offset (fast by) in seconds.</p>
               </div>
             </td>
           </tr>
@@ -4115,13 +4434,18 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>RTC frequency offset (drift rate) in parts per million</p>
+                <p>RTC frequency offset (drift rate) in parts per million.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="see-also" open>
+  <summary>See Also</summary>
+  <p><code>ChronyConnection.get_rtc_data</code>: Method to retrieve RTC data.</p>
+</details>
 
 
 
@@ -4131,39 +4455,48 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RTCData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Chrony RTC (Real-Time Clock) data.</span>
 
@@ -4171,15 +4504,18 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
 <span class="sd">    to system time, as tracked by chronyd.</span>
 
 <span class="sd">    Note: RTC tracking must be enabled in chronyd configuration.</span>
-<span class="sd">    If not enabled, get_rtc_data() raises ChronyDataError.</span>
+<span class="sd">    If not enabled, `get_rtc_data()` returns ``None``.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        ref_time: RTC reading at last error measurement (seconds since epoch)</span>
-<span class="sd">        samples: Number of previous measurements used for calibration</span>
-<span class="sd">        runs: Number of runs of residuals (indicates linear model fit quality)</span>
-<span class="sd">        span: Time period covered by measurements in seconds</span>
-<span class="sd">        offset: Estimated RTC offset (fast by) in seconds</span>
-<span class="sd">        freq_offset: RTC frequency offset (drift rate) in parts per million</span>
+<span class="sd">        ref_time: RTC reading at last error measurement (seconds since epoch).</span>
+<span class="sd">        samples: Number of previous measurements used for calibration.</span>
+<span class="sd">        runs: Number of runs of residuals (indicates linear model fit quality).</span>
+<span class="sd">        span: Time period covered by measurements (seconds).</span>
+<span class="sd">        offset: Estimated RTC offset (fast by) in seconds.</span>
+<span class="sd">        freq_offset: RTC frequency offset (drift rate) in parts per million.</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        `ChronyConnection.get_rtc_data`: Method to retrieve RTC data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">ref_time</span><span class="p">:</span> <span class="nb">float</span>
@@ -4194,6 +4530,12 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if samples &gt; 0 (some calibration exists).</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     rtc = conn.get_rtc_data()</span>
+<span class="sd">            ...     if rtc and rtc.is_calibrated():</span>
+<span class="sd">            ...         print(f&quot;RTC drift: {rtc.freq_offset:.2f} ppm&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">&gt;</span> <span class="mi">0</span>
 </code></pre></div></td></tr></table></div>
@@ -4249,19 +4591,45 @@ If not enabled, get_rtc_data() raises ChronyDataError.</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>with ChronyConnection() as conn:
+...     rtc = conn.get_rtc_data()
+...     if rtc and rtc.is_calibrated():
+...         print(f"RTC drift: {rtc.freq_offset:.2f} ppm")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_calibrated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">is_calibrated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if RTC has enough calibration data.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        True if samples &gt; 0 (some calibration exists).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     rtc = conn.get_rtc_data()</span>
+<span class="sd">        ...     if rtc and rtc.is_calibrated():</span>
+<span class="sd">        ...         print(f&quot;RTC drift: {rtc.freq_offset:.2f} ppm&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">&gt;</span> <span class="mi">0</span>
 </code></pre></div></td></tr></table></div>
@@ -4318,7 +4686,7 @@ is scheduled at the next midnight UTC.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>No leap second pending</p>
+                <p>No leap second pending.</p>
               </div>
             </td>
           </tr>
@@ -4328,7 +4696,7 @@ is scheduled at the next midnight UTC.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Leap second will be inserted at midnight (23:59:60)</p>
+                <p>Leap second will be inserted at midnight (23:59:60).</p>
               </div>
             </td>
           </tr>
@@ -4338,7 +4706,7 @@ is scheduled at the next midnight UTC.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Leap second will be deleted at midnight (skip 23:59:59)</p>
+                <p>Leap second will be deleted at midnight (skip 23:59:59).</p>
               </div>
             </td>
           </tr>
@@ -4348,13 +4716,30 @@ is scheduled at the next midnight UTC.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Clock is unsynchronized</p>
+                <p>Clock is unsynchronized.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, LeapStatus
+with ChronyConnection() as conn:
+...     status = conn.get_tracking()
+...     if status.leap_status == LeapStatus.INSERT:
+...         print("Leap second insertion scheduled")
+...     elif status.leap_status == LeapStatus.UNSYNC:
+...         print("Clock not synchronized")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -4380,17 +4765,35 @@ is scheduled at the next midnight UTC.</p>
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
-<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LeapStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LeapStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Leap second status for NTP synchronization.</span>
 
 <span class="sd">    Indicates whether time is normal or if a leap second adjustment</span>
 <span class="sd">    is scheduled at the next midnight UTC.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        NORMAL: No leap second pending</span>
-<span class="sd">        INSERT: Leap second will be inserted at midnight (23:59:60)</span>
-<span class="sd">        DELETE: Leap second will be deleted at midnight (skip 23:59:59)</span>
-<span class="sd">        UNSYNC: Clock is unsynchronized</span>
+<span class="sd">        NORMAL: No leap second pending.</span>
+<span class="sd">        INSERT: Leap second will be inserted at midnight (23:59:60).</span>
+<span class="sd">        DELETE: Leap second will be deleted at midnight (skip 23:59:59).</span>
+<span class="sd">        UNSYNC: Clock is unsynchronized.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, LeapStatus</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     status = conn.get_tracking()</span>
+<span class="sd">        ...     if status.leap_status == LeapStatus.INSERT:</span>
+<span class="sd">        ...         print(&quot;Leap second insertion scheduled&quot;)</span>
+<span class="sd">        ...     elif status.leap_status == LeapStatus.UNSYNC:</span>
+<span class="sd">        ...         print(&quot;Clock not synchronized&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">NORMAL</span> <span class="o">=</span> <span class="mi">0</span>
@@ -4459,7 +4862,7 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Currently selected for synchronization</p>
+                <p>Currently selected for synchronization.</p>
               </div>
             </td>
           </tr>
@@ -4469,7 +4872,7 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Cannot be selected (bad measurements)</p>
+                <p>Cannot be selected (bad measurements).</p>
               </div>
             </td>
           </tr>
@@ -4479,7 +4882,7 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Detected as providing incorrect time</p>
+                <p>Detected as providing incorrect time.</p>
               </div>
             </td>
           </tr>
@@ -4489,7 +4892,7 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Measurements have excessive jitter</p>
+                <p>Measurements have excessive jitter.</p>
               </div>
             </td>
           </tr>
@@ -4499,7 +4902,7 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Valid but not currently selected</p>
+                <p>Valid but not currently selected.</p>
               </div>
             </td>
           </tr>
@@ -4509,13 +4912,30 @@ considering this source for time synchronization.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Candidate for selection</p>
+                <p>Candidate for selection.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, SourceState
+with ChronyConnection() as conn:
+...     for src in conn.get_sources():
+...         if src.state == SourceState.FALSETICKER:
+...             print(f"Warning: {src.address} detected as falseticker")
+...         elif src.state == SourceState.SELECTED:
+...             print(f"Active source: {src.address}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -4525,16 +4945,7 @@ considering this source for time synchronization.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
 <span class="normal">56</span>
@@ -4545,19 +4956,46 @@ considering this source for time synchronization.</p>
 <span class="normal">61</span>
 <span class="normal">62</span>
 <span class="normal">63</span>
-<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SourceState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SourceState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Selection state of a chrony time source.</span>
 
 <span class="sd">    Indicates whether chrony has selected, rejected, or is</span>
 <span class="sd">    considering this source for time synchronization.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        SELECTED: Currently selected for synchronization</span>
-<span class="sd">        NONSELECTABLE: Cannot be selected (bad measurements)</span>
-<span class="sd">        FALSETICKER: Detected as providing incorrect time</span>
-<span class="sd">        JITTERY: Measurements have excessive jitter</span>
-<span class="sd">        UNSELECTED: Valid but not currently selected</span>
-<span class="sd">        SELECTABLE: Candidate for selection</span>
+<span class="sd">        SELECTED: Currently selected for synchronization.</span>
+<span class="sd">        NONSELECTABLE: Cannot be selected (bad measurements).</span>
+<span class="sd">        FALSETICKER: Detected as providing incorrect time.</span>
+<span class="sd">        JITTERY: Measurements have excessive jitter.</span>
+<span class="sd">        UNSELECTED: Valid but not currently selected.</span>
+<span class="sd">        SELECTABLE: Candidate for selection.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, SourceState</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     for src in conn.get_sources():</span>
+<span class="sd">        ...         if src.state == SourceState.FALSETICKER:</span>
+<span class="sd">        ...             print(f&quot;Warning: {src.address} detected as falseticker&quot;)</span>
+<span class="sd">        ...         elif src.state == SourceState.SELECTED:</span>
+<span class="sd">        ...             print(f&quot;Active source: {src.address}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">SELECTED</span> <span class="o">=</span> <span class="mi">0</span>
@@ -4628,7 +5066,7 @@ relationships, and local reference clocks.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>NTP client polling a server</p>
+                <p>NTP client polling a server.</p>
               </div>
             </td>
           </tr>
@@ -4638,7 +5076,7 @@ relationships, and local reference clocks.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>NTP peer relationship (bidirectional)</p>
+                <p>NTP peer relationship (bidirectional).</p>
               </div>
             </td>
           </tr>
@@ -4648,13 +5086,30 @@ relationships, and local reference clocks.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Local reference clock (GPS, PPS, etc.)</p>
+                <p>Local reference clock (GPS, PPS, etc.).</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, SourceMode
+with ChronyConnection() as conn:
+...     for src in conn.get_sources():
+...         if src.mode == SourceMode.REFCLOCK:
+...             print(f"Reference clock: {src.address}")
+...         elif src.mode == SourceMode.CLIENT:
+...             print(f"NTP server: {src.address}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -4664,30 +5119,48 @@ relationships, and local reference clocks.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/models.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span>
-<span class="normal">78</span>
-<span class="normal">79</span>
-<span class="normal">80</span>
-<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SourceMode</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">SourceMode</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Operational mode of a chrony time source.</span>
 
 <span class="sd">    Distinguishes between NTP client connections, peer</span>
 <span class="sd">    relationships, and local reference clocks.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        CLIENT: NTP client polling a server</span>
-<span class="sd">        PEER: NTP peer relationship (bidirectional)</span>
-<span class="sd">        REFCLOCK: Local reference clock (GPS, PPS, etc.)</span>
+<span class="sd">        CLIENT: NTP client polling a server.</span>
+<span class="sd">        PEER: NTP peer relationship (bidirectional).</span>
+<span class="sd">        REFCLOCK: Local reference clock (GPS, PPS, etc.).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, SourceMode</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     for src in conn.get_sources():</span>
+<span class="sd">        ...         if src.mode == SourceMode.REFCLOCK:</span>
+<span class="sd">        ...             print(f&quot;Reference clock: {src.address}&quot;)</span>
+<span class="sd">        ...         elif src.mode == SourceMode.CLIENT:</span>
+<span class="sd">        ...             print(f&quot;NTP server: {src.address}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">CLIENT</span> <span class="o">=</span> <span class="mi">0</span>
@@ -4856,12 +5329,30 @@ relationships, and local reference clocks.</p>
 
 
         <p>Raised when connection to chronyd fails.</p>
-<p>Common causes:
-- chronyd is not running
-- Socket path does not exist
-- chrony_open_socket() returns &lt; 0
-- chrony_init_session() returns error</p>
+<p>Common causes:</p>
+<ul>
+<li>chronyd is not running</li>
+<li>Socket path does not exist</li>
+<li><code>chrony_open_socket()</code> returns &lt; 0</li>
+<li><code>chrony_init_session()</code> returns error</li>
+</ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, ChronyConnectionError
+try:
+...     with ChronyConnection() as conn:
+...         status = conn.get_tracking()
+... except ChronyConnectionError as e:
+...     print(f"Connection failed: {e}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -4881,14 +5372,32 @@ relationships, and local reference clocks.</p>
 <span class="normal">36</span>
 <span class="normal">37</span>
 <span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnectionError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnectionError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when connection to chronyd fails.</span>
 
 <span class="sd">    Common causes:</span>
+
 <span class="sd">    - chronyd is not running</span>
 <span class="sd">    - Socket path does not exist</span>
-<span class="sd">    - chrony_open_socket() returns &lt; 0</span>
-<span class="sd">    - chrony_init_session() returns error</span>
+<span class="sd">    - ``chrony_open_socket()`` returns &lt; 0</span>
+<span class="sd">    - ``chrony_init_session()`` returns error</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyConnectionError</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     with ChronyConnection() as conn:</span>
+<span class="sd">        ...         status = conn.get_tracking()</span>
+<span class="sd">        ... except ChronyConnectionError as e:</span>
+<span class="sd">        ...     print(f&quot;Connection failed: {e}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">pass</span>
@@ -4934,11 +5443,30 @@ relationships, and local reference clocks.</p>
 
 
         <p>Raised when access to chronyd is denied.</p>
-<p>Common causes:
-- User not in chrony group
-- Running as unprivileged user
-- SELinux/AppArmor restrictions</p>
+<p>Common causes:</p>
+<ul>
+<li>User not in chrony group</li>
+<li>Running as unprivileged user</li>
+<li>SELinux/AppArmor restrictions</li>
+</ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, ChronyPermissionError
+try:
+...     with ChronyConnection() as conn:
+...         status = conn.get_tracking()
+... except ChronyPermissionError as e:
+...     print(f"Permission denied: {e}")
+...     print("Add user to chrony group or run as root")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -4948,22 +5476,42 @@ relationships, and local reference clocks.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/exceptions.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyPermissionError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyPermissionError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when access to chronyd is denied.</span>
 
 <span class="sd">    Common causes:</span>
+
 <span class="sd">    - User not in chrony group</span>
 <span class="sd">    - Running as unprivileged user</span>
 <span class="sd">    - SELinux/AppArmor restrictions</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyPermissionError</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     with ChronyConnection() as conn:</span>
+<span class="sd">        ...         status = conn.get_tracking()</span>
+<span class="sd">        ... except ChronyPermissionError as e:</span>
+<span class="sd">        ...     print(f&quot;Permission denied: {e}&quot;)</span>
+<span class="sd">        ...     print(&quot;Add user to chrony group or run as root&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">pass</span>
@@ -5009,12 +5557,30 @@ relationships, and local reference clocks.</p>
 
 
         <p>Raised when tracking data is invalid or incomplete.</p>
-<p>Common causes:
-- chrony_get_field_index() returns &lt; 0 (field not found)
-- chrony_process_response() returns error
-- Field validation fails (NaN, out of range)
-- Protocol version mismatch</p>
+<p>Common causes:</p>
+<ul>
+<li><code>chrony_get_field_index()</code> returns &lt; 0 (field not found)</li>
+<li><code>chrony_process_response()</code> returns error</li>
+<li>Field validation fails (NaN, out of range)</li>
+<li>Protocol version mismatch</li>
+</ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, ChronyDataError
+with ChronyConnection() as conn:
+...     try:
+...         status = conn.get_tracking()
+...     except ChronyDataError as e:
+...         print(f"Invalid data: {e}")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -5024,24 +5590,42 @@ relationships, and local reference clocks.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/exceptions.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyDataError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyDataError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when tracking data is invalid or incomplete.</span>
 
 <span class="sd">    Common causes:</span>
-<span class="sd">    - chrony_get_field_index() returns &lt; 0 (field not found)</span>
-<span class="sd">    - chrony_process_response() returns error</span>
+
+<span class="sd">    - ``chrony_get_field_index()`` returns &lt; 0 (field not found)</span>
+<span class="sd">    - ``chrony_process_response()`` returns error</span>
 <span class="sd">    - Field validation fails (NaN, out of range)</span>
 <span class="sd">    - Protocol version mismatch</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyDataError</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     try:</span>
+<span class="sd">        ...         status = conn.get_tracking()</span>
+<span class="sd">        ...     except ChronyDataError as e:</span>
+<span class="sd">        ...         print(f&quot;Invalid data: {e}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">pass</span>
@@ -5087,11 +5671,30 @@ relationships, and local reference clocks.</p>
 
 
         <p>Raised when libchrony is not available.</p>
-<p>Common causes:
-- libchrony not installed at runtime
-- CFFI bindings not compiled (missing libchrony-devel at build time)
-- Library version incompatible</p>
+<p>Common causes:</p>
+<ul>
+<li>libchrony not installed at runtime</li>
+<li>CFFI bindings not compiled (missing libchrony-devel at build time)</li>
+<li>Library version incompatible</li>
+</ul>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>from pychrony import ChronyConnection, ChronyLibraryError
+try:
+...     with ChronyConnection() as conn:
+...         status = conn.get_tracking()
+... except ChronyLibraryError as e:
+...     print(f"Library not available: {e}")
+...     print("Install libchrony-devel and rebuild")</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
 
 
@@ -5101,23 +5704,43 @@ relationships, and local reference clocks.</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/exceptions.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span>
-<span class="normal">71</span>
-<span class="normal">72</span>
-<span class="normal">73</span>
-<span class="normal">74</span>
-<span class="normal">75</span>
-<span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyLibraryError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyLibraryError</span><span class="p">(</span><span class="n">ChronyError</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when libchrony is not available.</span>
 
 <span class="sd">    Common causes:</span>
+
 <span class="sd">    - libchrony not installed at runtime</span>
 <span class="sd">    - CFFI bindings not compiled (missing libchrony-devel at build time)</span>
 <span class="sd">    - Library version incompatible</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyLibraryError</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     with ChronyConnection() as conn:</span>
+<span class="sd">        ...         status = conn.get_tracking()</span>
+<span class="sd">        ... except ChronyLibraryError as e:</span>
+<span class="sd">        ...     print(f&quot;Library not available: {e}&quot;)</span>
+<span class="sd">        ...     print(&quot;Install libchrony-devel and rebuild&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -5353,7 +5976,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Field values to override defaults</p>
+                <p>Field values to override defaults.</p>
               </div>
             </td>
             <td>
@@ -5384,13 +6007,26 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Source instance</p>
+                <p>Source instance.</p>
               </div>
             </td>
           </tr>
       </tbody>
     </table>
 
+
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>make_source()  # Selected, reachable source
+make_source(state=SourceState.FALSETICKER)  # Falseticker
+make_source(reachability=0)  # Unreachable source</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
@@ -5405,16 +6041,26 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
-<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a Source instance with sensible defaults.</span>
 
 <span class="sd">    Default state is selected and reachable.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        **overrides: Field values to override defaults</span>
+<span class="sd">        **overrides: Field values to override defaults.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Source instance</span>
+<span class="sd">        Source instance.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; make_source()  # Selected, reachable source</span>
+<span class="sd">        &gt;&gt;&gt; make_source(state=SourceState.FALSETICKER)  # Falseticker</span>
+<span class="sd">        &gt;&gt;&gt; make_source(reachability=0)  # Unreachable source</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Source</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">SOURCE_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
@@ -5458,7 +6104,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Field values to override defaults</p>
+                <p>Field values to override defaults.</p>
               </div>
             </td>
             <td>
@@ -5489,7 +6135,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>SourceStats instance</p>
+                <p>SourceStats instance.</p>
               </div>
             </td>
           </tr>
@@ -5497,29 +6143,52 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>make_source_stats()  # Stats with 8 samples
+make_source_stats(samples=2)  # Insufficient samples
+make_source_stats(offset=0.001)  # Custom offset</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
-<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source_stats</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source_stats</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a SourceStats instance with sensible defaults.</span>
 
 <span class="sd">    Default has 8 samples (sufficient for statistics).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        **overrides: Field values to override defaults</span>
+<span class="sd">        **overrides: Field values to override defaults.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        SourceStats instance</span>
+<span class="sd">        SourceStats instance.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; make_source_stats()  # Stats with 8 samples</span>
+<span class="sd">        &gt;&gt;&gt; make_source_stats(samples=2)  # Insufficient samples</span>
+<span class="sd">        &gt;&gt;&gt; make_source_stats(offset=0.001)  # Custom offset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">SourceStats</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">SOURCESTATS_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
@@ -5563,7 +6232,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Field values to override defaults</p>
+                <p>Field values to override defaults.</p>
               </div>
             </td>
             <td>
@@ -5594,7 +6263,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>RTCData instance</p>
+                <p>RTCData instance.</p>
               </div>
             </td>
           </tr>
@@ -5602,29 +6271,52 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
     </table>
 
 
+<details class="example" open>
+  <summary>Example</summary>
+  <blockquote>
+<blockquote>
+<blockquote>
+<p>make_rtc_data()  # Calibrated RTC
+make_rtc_data(samples=0)  # Uncalibrated RTC
+make_rtc_data(freq_offset=-5.0)  # Custom drift rate</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</details>
+
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_rtc_data</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_rtc_data</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an RTCData instance with sensible defaults.</span>
 
 <span class="sd">    Default is calibrated (samples &gt; 0).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        **overrides: Field values to override defaults</span>
+<span class="sd">        **overrides: Field values to override defaults.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        RTCData instance</span>
+<span class="sd">        RTCData instance.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; make_rtc_data()  # Calibrated RTC</span>
+<span class="sd">        &gt;&gt;&gt; make_rtc_data(samples=0)  # Uncalibrated RTC</span>
+<span class="sd">        &gt;&gt;&gt; make_rtc_data(freq_offset=-5.0)  # Custom drift rate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">RTCData</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">RTCDATA_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">})</span>
 </code></pre></div></td></tr></table></div>
@@ -5649,10 +6341,10 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tracking_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a synchronized TrackingStatus with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_tracking</span><span class="p">()</span>
@@ -5678,10 +6370,10 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a selected, reachable Source with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_source</span><span class="p">()</span>
@@ -5707,10 +6399,10 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span>
-<span class="normal">173</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">source_stats</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a SourceStats with sufficient samples.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_source_stats</span><span class="p">()</span>
@@ -5736,10 +6428,10 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">rtc_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a calibrated RTCData with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_rtc_data</span><span class="p">()</span>
