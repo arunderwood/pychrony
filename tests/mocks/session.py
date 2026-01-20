@@ -215,6 +215,19 @@ class MockLib:
             fields = TRACKING_FIELDS
         elif report == "sources":
             fields = SOURCE_FIELDS
+            # Simulate libchrony 0.2's combined address/reference ID field behavior:
+            # In real libchrony, the sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
+            # which dynamically resolves to "address" (mode != 2) or "reference ID" (mode == 2)
+            if name == "address":
+                record_idx = self._session.current_record_index
+                if record_idx < len(self._session.config.sources):
+                    source = self._session.config.sources[record_idx]
+                    # Import SourceMode here to avoid circular import
+                    from pychrony.models import SourceMode
+
+                    if source.mode == SourceMode.REFCLOCK:
+                        # For refclock sources, "address" field doesn't exist
+                        return -1
         elif report == "sourcestats":
             fields = SOURCESTATS_FIELDS
         elif report == "rtcdata":
