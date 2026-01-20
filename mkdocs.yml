@@ -6,6 +6,23 @@ site_description: Python bindings for libchrony - read-only monitoring of chrony
 
 theme:
   name: material
+  palette:
+    # Automatic light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Automatic dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - search.highlight
     - content.code.copy
