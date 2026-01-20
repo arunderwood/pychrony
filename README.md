@@ -6,13 +6,13 @@
 [![Documentation](https://img.shields.io/badge/docs-pychrony.org-blue)](https://pychrony.org/)
 [![License](https://img.shields.io/pypi/l/pychrony)](https://github.com/arunderwood/pychrony/blob/main/LICENSE)
 
-PyChrony provides Python bindings for [chrony](https://chrony.tuxfamily.org/) NTP client, allowing monitoring of chrony via native Python code.
+Query your system's time synchronization status from Python. PyChrony provides bindings for [chrony](https://chrony.tuxfamily.org/), the default NTP (Network Time Protocol) client on most Linux distributions, letting you monitor clock accuracy, sync status, and time sources programmatically.
 
 ## Features
 
-- **Read-only monitoring**: Access chrony status and tracking information
+- **Read-only monitoring**: Access tracking (offset, drift, stratum), sources (NTP servers, peers), statistics (samples, deviation), and RTC data
 - **Pythonic API**: Clean, typed interface following Python conventions
-- **CFFI binding**: Efficient interface to system libchrony library
+- **[CFFI](https://cffi.readthedocs.io/) binding**: Efficient interface to [libchrony](https://gitlab.com/chrony/libchrony)
 - **Linux-first**: Optimized for Linux environments with libchrony
 - **Type hints**: Full type annotation support for better IDE integration
 
@@ -75,12 +75,14 @@ uv pip install -e .
 ## Usage
 
 ```python
-from pychrony import get_tracking
+from pychrony import ChronyConnection
 
-status = get_tracking()
-print(f"Stratum: {status.stratum}")
-print(f"Offset: {status.offset:.9f} seconds")
-print(f"Synchronized: {status.is_synchronized()}")
+with ChronyConnection() as conn:
+    status = conn.get_tracking()
+    print(f"Reference: {status.reference_id_name}")
+    print(f"Stratum: {status.stratum}")
+    print(f"Offset: {status.offset:.9f} seconds")
+    print(f"Synchronized: {status.is_synchronized()}")
 ```
 
 ## Compatibility
@@ -88,6 +90,12 @@ print(f"Synchronized: {status.is_synchronized()}")
 - **Python**: 3.10, 3.11, 3.12, 3.13, 3.14
 - **Platform**: Linux (primary), other platforms where libchrony is available
 - **chrony**: 4.x and later
+
+## Resources
+
+- [Documentation](https://pychrony.org/) — Full API reference and guides
+- [GitHub Issues](https://github.com/arunderwood/pychrony/issues) — Report bugs or request features
+- [chrony documentation](https://chrony.tuxfamily.org/documentation.html) — Understanding NTP and chrony
 
 ## License
 
