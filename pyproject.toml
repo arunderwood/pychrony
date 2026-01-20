@@ -32,6 +32,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/arunderwood/pychrony"
+Documentation = "https://pychrony.org/"
 Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
 
@@ -99,4 +100,5 @@ dev = [
 docs = [
     "mkdocs-material>=9.0.0",
     "mkdocstrings[python]>=0.24.0",
+    "mike>=2.0.0",
 ]

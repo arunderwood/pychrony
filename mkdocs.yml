@@ -1,0 +1,35 @@
+site_name: pychrony
+site_url: https://pychrony.org
+repo_url: https://github.com/arunderwood/pychrony
+repo_name: arunderwood/pychrony
+site_description: Python bindings for libchrony - read-only monitoring of chronyd NTP daemon
+
+theme:
+  name: material
+  features:
+    - search.highlight
+    - content.code.copy
+    - navigation.sections
+    - navigation.expand
+    - navigation.instant
+    - toc.integrate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            members_order: source
+            show_root_heading: true
+            show_root_full_path: false
+
+extra:
+  version:
+    provider: mike
+
+nav:
+  - Home: index.md
+  - API Reference: api/index.md
