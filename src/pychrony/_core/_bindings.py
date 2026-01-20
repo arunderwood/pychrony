@@ -177,20 +177,33 @@ class ChronyConnection:
 
     Args:
         address: Connection address. Supports:
-            - Unix socket path: "/run/chrony/chronyd.sock"
-            - IPv4: "192.168.1.1" or "192.168.1.1:323"
-            - IPv6: "2001:db8::1" or "[2001:db8::1]:323"
-            - None: Auto-detect (tries Unix socket paths, then localhost)
+
+            - Unix socket path: ``"/run/chrony/chronyd.sock"``
+            - IPv4: ``"192.168.1.1"`` or ``"192.168.1.1:323"``
+            - IPv6: ``"2001:db8::1"`` or ``"[2001:db8::1]:323"``
+            - ``None``: Auto-detect (tries Unix socket paths, then localhost)
+
+    Methods:
+        get_tracking: Get current NTP tracking status (returns `TrackingStatus`).
+        get_sources: Get configured time sources (returns ``list[Source]``).
+        get_source_stats: Get source statistics (returns ``list[SourceStats]``).
+        get_rtc_data: Get RTC tracking data (returns `RTCData` or ``None``).
 
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
 
+    See Also:
+        `TrackingStatus`: Tracking data model.
+        `Source`: Time source data model.
+        `SourceStats`: Source statistics data model.
+        `RTCData`: RTC tracking data model.
+
     Example:
-        with ChronyConnection() as conn:
-            tracking = conn.get_tracking()
-            sources = conn.get_sources()
-            stats = conn.get_source_stats()
-            rtc = conn.get_rtc_data()
+        >>> with ChronyConnection() as conn:
+        ...     tracking = conn.get_tracking()
+        ...     sources = conn.get_sources()
+        ...     stats = conn.get_source_stats()
+        ...     rtc = conn.get_rtc_data()
     """
 
     def __init__(self, address: str | None = None) -> None:
