@@ -977,20 +977,14 @@ context, properly managing socket and session lifecycle.</p>
 <code>RTCData</code>: RTC tracking data model.</p>
 </details>
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     tracking = conn.get_tracking()
-...     sources = conn.get_sources()
-...     stats = conn.get_source_stats()
-...     rtc = conn.get_rtc_data()</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">tracking</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">sources</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">stats</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_source_stats</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">rtc</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_rtc_data</span><span class="p">()</span>
+</code></pre></div>
+
 
 
 
@@ -1550,7 +1544,7 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">        `SourceStats`: Source statistics data model.</span>
 <span class="sd">        `RTCData`: RTC tracking data model.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     tracking = conn.get_tracking()</span>
 <span class="sd">        ...     sources = conn.get_sources()</span>
@@ -1741,10 +1735,10 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">            RuntimeError: If called outside context manager</span>
 <span class="sd">            ChronyDataError: If tracking data is invalid or incomplete.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            with ChronyConnection() as conn:</span>
-<span class="sd">                status = conn.get_tracking()</span>
-<span class="sd">                print(f&quot;Offset: {status.offset:.6f} seconds&quot;)</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     status = conn.get_tracking()</span>
+<span class="sd">            ...     print(f&quot;Offset: {status.offset:.6f} seconds&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -1833,11 +1827,11 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">            RuntimeError: If called outside context manager</span>
 <span class="sd">            ChronyDataError: If source data is invalid or incomplete.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            with ChronyConnection() as conn:</span>
-<span class="sd">                sources = conn.get_sources()</span>
-<span class="sd">                for src in sources:</span>
-<span class="sd">                    print(f&quot;{src.address}: stratum {src.stratum}&quot;)</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     sources = conn.get_sources()</span>
+<span class="sd">            ...     for src in sources:</span>
+<span class="sd">            ...         print(f&quot;{src.address}: stratum {src.stratum}&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -1927,11 +1921,11 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">            RuntimeError: If called outside context manager</span>
 <span class="sd">            ChronyDataError: If statistics data is invalid or incomplete.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            with ChronyConnection() as conn:</span>
-<span class="sd">                stats = conn.get_source_stats()</span>
-<span class="sd">                for s in stats:</span>
-<span class="sd">                    print(f&quot;{s.address}: {s.samples} samples&quot;)</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     stats = conn.get_source_stats()</span>
+<span class="sd">            ...     for s in stats:</span>
+<span class="sd">            ...         print(f&quot;{s.address}: {s.samples} samples&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -1991,11 +1985,11 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">            RuntimeError: If called outside context manager</span>
 <span class="sd">            ChronyDataError: If RTC data is invalid or malformed.</span>
 
-<span class="sd">        Example:</span>
-<span class="sd">            with ChronyConnection() as conn:</span>
-<span class="sd">                rtc = conn.get_rtc_data()</span>
-<span class="sd">                if rtc:</span>
-<span class="sd">                    print(f&quot;RTC offset: {rtc.offset:.6f}s&quot;)</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">            ...     rtc = conn.get_rtc_data()</span>
+<span class="sd">            ...     if rtc:</span>
+<span class="sd">            ...         print(f&quot;RTC offset: {rtc.offset:.6f}s&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -2280,12 +2274,12 @@ context, properly managing socket and session lifecycle.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <p>with ChronyConnection() as conn:
-    status = conn.get_tracking()
-    print(f"Offset: {status.offset:.6f} seconds")</p>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Offset: </span><span class="si">{</span><span class="n">status</span><span class="o">.</span><span class="n">offset</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
@@ -2355,10 +2349,10 @@ context, properly managing socket and session lifecycle.</p>
 <span class="sd">        RuntimeError: If called outside context manager</span>
 <span class="sd">        ChronyDataError: If tracking data is invalid or incomplete.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">        with ChronyConnection() as conn:</span>
-<span class="sd">            status = conn.get_tracking()</span>
-<span class="sd">            print(f&quot;Offset: {status.offset:.6f} seconds&quot;)</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     status = conn.get_tracking()</span>
+<span class="sd">        ...     print(f&quot;Offset: {status.offset:.6f} seconds&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -2484,13 +2478,13 @@ Empty list if no sources are configured.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <p>with ChronyConnection() as conn:
-    sources = conn.get_sources()
-    for src in sources:
-        print(f"{src.address}: stratum {src.stratum}")</p>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">sources</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">: stratum </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">stratum</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
@@ -2535,11 +2529,11 @@ Empty list if no sources are configured.</p>
 <span class="sd">        RuntimeError: If called outside context manager</span>
 <span class="sd">        ChronyDataError: If source data is invalid or incomplete.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">        with ChronyConnection() as conn:</span>
-<span class="sd">            sources = conn.get_sources()</span>
-<span class="sd">            for src in sources:</span>
-<span class="sd">                print(f&quot;{src.address}: stratum {src.stratum}&quot;)</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     sources = conn.get_sources()</span>
+<span class="sd">        ...     for src in sources:</span>
+<span class="sd">        ...         print(f&quot;{src.address}: stratum {src.stratum}&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -2637,13 +2631,13 @@ Empty list if no sources are configured.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <p>with ChronyConnection() as conn:
-    stats = conn.get_source_stats()
-    for s in stats:
-        print(f"{s.address}: {s.samples} samples")</p>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">stats</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_source_stats</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">s</span><span class="o">.</span><span class="n">samples</span><span class="si">}</span><span class="s2"> samples&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
@@ -2688,11 +2682,11 @@ Empty list if no sources are configured.</p>
 <span class="sd">        RuntimeError: If called outside context manager</span>
 <span class="sd">        ChronyDataError: If statistics data is invalid or incomplete.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">        with ChronyConnection() as conn:</span>
-<span class="sd">            stats = conn.get_source_stats()</span>
-<span class="sd">            for s in stats:</span>
-<span class="sd">                print(f&quot;{s.address}: {s.samples} samples&quot;)</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     stats = conn.get_source_stats()</span>
+<span class="sd">        ...     for s in stats:</span>
+<span class="sd">        ...         print(f&quot;{s.address}: {s.samples} samples&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -2789,13 +2783,13 @@ Empty list if no sources are configured.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <p>with ChronyConnection() as conn:
-    rtc = conn.get_rtc_data()
-    if rtc:
-        print(f"RTC offset: {rtc.offset:.6f}s")</p>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">rtc</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_rtc_data</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">rtc</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RTC offset: </span><span class="si">{</span><span class="n">rtc</span><span class="o">.</span><span class="n">offset</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
@@ -2847,11 +2841,11 @@ Empty list if no sources are configured.</p>
 <span class="sd">        RuntimeError: If called outside context manager</span>
 <span class="sd">        ChronyDataError: If RTC data is invalid or malformed.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">        with ChronyConnection() as conn:</span>
-<span class="sd">            rtc = conn.get_rtc_data()</span>
-<span class="sd">            if rtc:</span>
-<span class="sd">                print(f&quot;RTC offset: {rtc.offset:.6f}s&quot;)</span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
+<span class="sd">        ...     rtc = conn.get_rtc_data()</span>
+<span class="sd">        ...     if rtc:</span>
+<span class="sd">        ...         print(f&quot;RTC offset: {rtc.offset:.6f}s&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
@@ -3234,7 +3228,7 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">            True if synchronized (reference_id != 0 and stratum &lt; 16),</span>
 <span class="sd">            False otherwise.</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     status = conn.get_tracking()</span>
 <span class="sd">            ...     if status.is_synchronized():</span>
@@ -3249,7 +3243,7 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">            True if leap_status is INSERT or DELETE,</span>
 <span class="sd">            False otherwise.</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     status = conn.get_tracking()</span>
 <span class="sd">            ...     if status.is_leap_pending():</span>
@@ -3319,19 +3313,13 @@ including offset, frequency, and accuracy metrics.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     status = conn.get_tracking()
-...     if status.is_synchronized():
-...         print(f"Synced to {status.reference_ip}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">is_synchronized</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Synced to </span><span class="si">{</span><span class="n">status</span><span class="o">.</span><span class="n">reference_ip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -3355,7 +3343,7 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">        True if synchronized (reference_id != 0 and stratum &lt; 16),</span>
 <span class="sd">        False otherwise.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     status = conn.get_tracking()</span>
 <span class="sd">        ...     if status.is_synchronized():</span>
@@ -3415,19 +3403,13 @@ including offset, frequency, and accuracy metrics.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     status = conn.get_tracking()
-...     if status.is_leap_pending():
-...         print(f"Leap second pending: {status.leap_status.name}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">is_leap_pending</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leap second pending: </span><span class="si">{</span><span class="n">status</span><span class="o">.</span><span class="n">leap_status</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -3451,7 +3433,7 @@ including offset, frequency, and accuracy metrics.</p>
 <span class="sd">        True if leap_status is INSERT or DELETE,</span>
 <span class="sd">        False otherwise.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     status = conn.get_tracking()</span>
 <span class="sd">        ...     if status.is_leap_pending():</span>
@@ -3754,7 +3736,7 @@ as a time source by chronyd.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if reachability register is non-zero (at least one successful poll).</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     for src in conn.get_sources():</span>
 <span class="sd">            ...         if not src.is_reachable():</span>
@@ -3768,7 +3750,7 @@ as a time source by chronyd.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if state is SELECTED.</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     for src in conn.get_sources():</span>
 <span class="sd">            ...         if src.is_selected():</span>
@@ -3828,19 +3810,13 @@ as a time source by chronyd.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     for src in conn.get_sources():
-...         if not src.is_reachable():
-...             print(f"Source {src.address} is unreachable")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">is_reachable</span><span class="p">():</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Source </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2"> is unreachable&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -3862,7 +3838,7 @@ as a time source by chronyd.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        True if reachability register is non-zero (at least one successful poll).</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     for src in conn.get_sources():</span>
 <span class="sd">        ...         if not src.is_reachable():</span>
@@ -3912,19 +3888,13 @@ as a time source by chronyd.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     for src in conn.get_sources():
-...         if src.is_selected():
-...             print(f"Currently using {src.address}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">is_selected</span><span class="p">():</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Currently using </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -3946,7 +3916,7 @@ as a time source by chronyd.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        True if state is SELECTED.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     for src in conn.get_sources():</span>
 <span class="sd">        ...         if src.is_selected():</span>
@@ -4220,7 +4190,7 @@ used for drift and offset estimation.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if samples &gt;= minimum.</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     for stats in conn.get_source_stats():</span>
 <span class="sd">            ...         if stats.has_sufficient_samples(8):</span>
@@ -4311,19 +4281,13 @@ used for drift and offset estimation.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     for stats in conn.get_source_stats():
-...         if stats.has_sufficient_samples(8):
-...             print(f"{stats.address}: offset={stats.offset:.6f}s")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_source_stats</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">stats</span><span class="o">.</span><span class="n">has_sufficient_samples</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stats</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">: offset=</span><span class="si">{</span><span class="n">stats</span><span class="o">.</span><span class="n">offset</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -4351,7 +4315,7 @@ used for drift and offset estimation.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        True if samples &gt;= minimum.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     for stats in conn.get_source_stats():</span>
 <span class="sd">        ...         if stats.has_sufficient_samples(8):</span>
@@ -4567,7 +4531,7 @@ If not enabled, <code>get_rtc_data()</code> returns <code>None</code>.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            True if samples &gt; 0 (some calibration exists).</span>
 
-<span class="sd">        Example:</span>
+<span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">            ...     rtc = conn.get_rtc_data()</span>
 <span class="sd">            ...     if rtc and rtc.is_calibrated():</span>
@@ -4627,19 +4591,13 @@ If not enabled, <code>get_rtc_data()</code> returns <code>None</code>.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>with ChronyConnection() as conn:
-...     rtc = conn.get_rtc_data()
-...     if rtc and rtc.is_calibrated():
-...         print(f"RTC drift: {rtc.freq_offset:.2f} ppm")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">rtc</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_rtc_data</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">rtc</span> <span class="ow">and</span> <span class="n">rtc</span><span class="o">.</span><span class="n">is_calibrated</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RTC drift: </span><span class="si">{</span><span class="n">rtc</span><span class="o">.</span><span class="n">freq_offset</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ppm&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/models.py</code></summary>
@@ -4661,7 +4619,7 @@ If not enabled, <code>get_rtc_data()</code> returns <code>None</code>.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        True if samples &gt; 0 (some calibration exists).</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     rtc = conn.get_rtc_data()</span>
 <span class="sd">        ...     if rtc and rtc.is_calibrated():</span>
@@ -4760,22 +4718,16 @@ is scheduled at the next midnight UTC.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, LeapStatus
-with ChronyConnection() as conn:
-...     status = conn.get_tracking()
-...     if status.leap_status == LeapStatus.INSERT:
-...         print("Leap second insertion scheduled")
-...     elif status.leap_status == LeapStatus.UNSYNC:
-...         print("Clock not synchronized")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">LeapStatus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">leap_status</span> <span class="o">==</span> <span class="n">LeapStatus</span><span class="o">.</span><span class="n">INSERT</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Leap second insertion scheduled&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">elif</span> <span class="n">status</span><span class="o">.</span><span class="n">leap_status</span> <span class="o">==</span> <span class="n">LeapStatus</span><span class="o">.</span><span class="n">UNSYNC</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Clock not synchronized&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -4822,7 +4774,7 @@ with ChronyConnection() as conn:
 <span class="sd">        DELETE: Leap second will be deleted at midnight (skip 23:59:59).</span>
 <span class="sd">        UNSYNC: Clock is unsynchronized.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, LeapStatus</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     status = conn.get_tracking()</span>
@@ -4956,22 +4908,16 @@ considering this source for time synchronization.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, SourceState
-with ChronyConnection() as conn:
-...     for src in conn.get_sources():
-...         if src.state == SourceState.FALSETICKER:
-...             print(f"Warning: {src.address} detected as falseticker")
-...         elif src.state == SourceState.SELECTED:
-...             print(f"Active source: {src.address}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">SourceState</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">SourceState</span><span class="o">.</span><span class="n">FALSETICKER</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2"> detected as falseticker&quot;</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">elif</span> <span class="n">src</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">SourceState</span><span class="o">.</span><span class="n">SELECTED</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Active source: </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5024,7 +4970,7 @@ with ChronyConnection() as conn:
 <span class="sd">        UNSELECTED: Valid but not currently selected.</span>
 <span class="sd">        SELECTABLE: Candidate for selection.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, SourceState</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     for src in conn.get_sources():</span>
@@ -5130,22 +5076,16 @@ relationships, and local reference clocks.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, SourceMode
-with ChronyConnection() as conn:
-...     for src in conn.get_sources():
-...         if src.mode == SourceMode.REFCLOCK:
-...             print(f"Reference clock: {src.address}")
-...         elif src.mode == SourceMode.CLIENT:
-...             print(f"NTP server: {src.address}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">SourceMode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_sources</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="n">SourceMode</span><span class="o">.</span><span class="n">REFCLOCK</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference clock: </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">elif</span> <span class="n">src</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="n">SourceMode</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NTP server: </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5189,7 +5129,7 @@ with ChronyConnection() as conn:
 <span class="sd">        PEER: NTP peer relationship (bidirectional).</span>
 <span class="sd">        REFCLOCK: Local reference clock (GPS, PPS, etc.).</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, SourceMode</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     for src in conn.get_sources():</span>
@@ -5374,21 +5314,15 @@ with ChronyConnection() as conn:
 </ul>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, ChronyConnectionError
-try:
-...     with ChronyConnection() as conn:
-...         status = conn.get_tracking()
-... except ChronyConnectionError as e:
-...     print(f"Connection failed: {e}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">ChronyConnectionError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">ChronyConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connection failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5427,7 +5361,7 @@ try:
 <span class="sd">    - ``chrony_open_socket()`` returns &lt; 0</span>
 <span class="sd">    - ``chrony_init_session()`` returns error</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyConnectionError</span>
 <span class="sd">        &gt;&gt;&gt; try:</span>
 <span class="sd">        ...     with ChronyConnection() as conn:</span>
@@ -5487,22 +5421,16 @@ try:
 </ul>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, ChronyPermissionError
-try:
-...     with ChronyConnection() as conn:
-...         status = conn.get_tracking()
-... except ChronyPermissionError as e:
-...     print(f"Permission denied: {e}")
-...     print("Add user to chrony group or run as root")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">ChronyPermissionError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">ChronyPermissionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Permission denied: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Add user to chrony group or run as root&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5540,7 +5468,7 @@ try:
 <span class="sd">    - Running as unprivileged user</span>
 <span class="sd">    - SELinux/AppArmor restrictions</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyPermissionError</span>
 <span class="sd">        &gt;&gt;&gt; try:</span>
 <span class="sd">        ...     with ChronyConnection() as conn:</span>
@@ -5602,21 +5530,15 @@ try:
 </ul>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, ChronyDataError
-with ChronyConnection() as conn:
-...     try:
-...         status = conn.get_tracking()
-...     except ChronyDataError as e:
-...         print(f"Invalid data: {e}")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">ChronyDataError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">except</span> <span class="n">ChronyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid data: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5655,7 +5577,7 @@ with ChronyConnection() as conn:
 <span class="sd">    - Field validation fails (NaN, out of range)</span>
 <span class="sd">    - Protocol version mismatch</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyDataError</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
 <span class="sd">        ...     try:</span>
@@ -5715,22 +5637,16 @@ with ChronyConnection() as conn:
 </ul>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>from pychrony import ChronyConnection, ChronyLibraryError
-try:
-...     with ChronyConnection() as conn:
-...         status = conn.get_tracking()
-... except ChronyLibraryError as e:
-...     print(f"Library not available: {e}")
-...     print("Install libchrony-devel and rebuild")</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pychrony</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronyConnection</span><span class="p">,</span> <span class="n">ChronyLibraryError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">with</span> <span class="n">ChronyConnection</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">status</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_tracking</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">ChronyLibraryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Library not available: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Install libchrony-devel and rebuild&quot;</span><span class="p">)</span>
+</code></pre></div>
+
 
 
 
@@ -5769,7 +5685,7 @@ try:
 <span class="sd">    - CFFI bindings not compiled (missing libchrony-devel at build time)</span>
 <span class="sd">    - Library version incompatible</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from pychrony import ChronyConnection, ChronyLibraryError</span>
 <span class="sd">        &gt;&gt;&gt; try:</span>
 <span class="sd">        ...     with ChronyConnection() as conn:</span>
@@ -5923,18 +5839,12 @@ test instances of pychrony dataclasses with sensible defaults.</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>make_tracking()  # Synchronized status
-make_tracking(stratum=16, reference_id=0)  # Unsynchronized
-make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">make_tracking</span><span class="p">()</span>  <span class="c1"># Synchronized status</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_tracking</span><span class="p">(</span><span class="n">stratum</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">reference_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Unsynchronized</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_tracking</span><span class="p">(</span><span class="n">leap_status</span><span class="o">=</span><span class="n">LeapStatus</span><span class="o">.</span><span class="n">INSERT</span><span class="p">)</span>  <span class="c1"># Leap pending</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
@@ -5965,7 +5875,7 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        TrackingStatus instance</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; make_tracking()  # Synchronized status</span>
 <span class="sd">        &gt;&gt;&gt; make_tracking(stratum=16, reference_id=0)  # Unsynchronized</span>
 <span class="sd">        &gt;&gt;&gt; make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</span>
@@ -6051,18 +5961,12 @@ make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>make_source()  # Selected, reachable source
-make_source(state=SourceState.FALSETICKER)  # Falseticker
-make_source(reachability=0)  # Unreachable source</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">make_source</span><span class="p">()</span>  <span class="c1"># Selected, reachable source</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_source</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="n">SourceState</span><span class="o">.</span><span class="n">FALSETICKER</span><span class="p">)</span>  <span class="c1"># Falseticker</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_source</span><span class="p">(</span><span class="n">reachability</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Unreachable source</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
@@ -6093,7 +5997,7 @@ make_source(reachability=0)  # Unreachable source</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Source instance.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; make_source()  # Selected, reachable source</span>
 <span class="sd">        &gt;&gt;&gt; make_source(state=SourceState.FALSETICKER)  # Falseticker</span>
 <span class="sd">        &gt;&gt;&gt; make_source(reachability=0)  # Unreachable source</span>
@@ -6179,18 +6083,12 @@ make_source(reachability=0)  # Unreachable source</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>make_source_stats()  # Stats with 8 samples
-make_source_stats(samples=2)  # Insufficient samples
-make_source_stats(offset=0.001)  # Custom offset</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">make_source_stats</span><span class="p">()</span>  <span class="c1"># Stats with 8 samples</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_source_stats</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Insufficient samples</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_source_stats</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>  <span class="c1"># Custom offset</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
@@ -6221,7 +6119,7 @@ make_source_stats(offset=0.001)  # Custom offset</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        SourceStats instance.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; make_source_stats()  # Stats with 8 samples</span>
 <span class="sd">        &gt;&gt;&gt; make_source_stats(samples=2)  # Insufficient samples</span>
 <span class="sd">        &gt;&gt;&gt; make_source_stats(offset=0.001)  # Custom offset</span>
@@ -6307,18 +6205,12 @@ make_source_stats(offset=0.001)  # Custom offset</p>
     </table>
 
 
-<details class="example" open>
-  <summary>Example</summary>
-  <blockquote>
-<blockquote>
-<blockquote>
-<p>make_rtc_data()  # Calibrated RTC
-make_rtc_data(samples=0)  # Uncalibrated RTC
-make_rtc_data(freq_offset=-5.0)  # Custom drift rate</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</details>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">make_rtc_data</span><span class="p">()</span>  <span class="c1"># Calibrated RTC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_rtc_data</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Uncalibrated RTC</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">make_rtc_data</span><span class="p">(</span><span class="n">freq_offset</span><span class="o">=-</span><span class="mf">5.0</span><span class="p">)</span>  <span class="c1"># Custom drift rate</span>
+</code></pre></div>
+
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
@@ -6349,7 +6241,7 @@ make_rtc_data(freq_offset=-5.0)  # Custom drift rate</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        RTCData instance.</span>
 
-<span class="sd">    Example:</span>
+<span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; make_rtc_data()  # Calibrated RTC</span>
 <span class="sd">        &gt;&gt;&gt; make_rtc_data(samples=0)  # Uncalibrated RTC</span>
 <span class="sd">        &gt;&gt;&gt; make_rtc_data(freq_offset=-5.0)  # Custom drift rate</span>
