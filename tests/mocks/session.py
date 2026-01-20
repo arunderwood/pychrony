@@ -203,6 +203,10 @@ class MockLib:
 
     def chrony_get_field_index(self, session: Any, field_name: bytes) -> int:
         """Mock chrony_get_field_index."""
+        # Enforce protocol: response must be processed before field access
+        if self._session.pending_responses > 0:
+            return -1
+
         name = field_name.decode("utf-8")
         report = self._session.current_report
 

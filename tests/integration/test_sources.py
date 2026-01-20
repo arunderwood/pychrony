@@ -21,6 +21,22 @@ pytestmark = pytest.mark.skipif(
 class TestGetSourcesIntegration:
     """Integration tests for get_sources() method."""
 
+    def test_get_sources_returns_at_least_one_source(self):
+        """Test that chronyd has at least one source configured.
+
+        This test ensures the Docker container has NTP sources configured,
+        so that other tests actually exercise the get_sources() extraction code.
+        Without sources, tests that iterate over sources never execute.
+        """
+        from pychrony import ChronyConnection
+
+        with ChronyConnection() as conn:
+            sources = conn.get_sources()
+            assert len(sources) >= 1, (
+                "No sources configured - integration tests are not exercising get_sources() "
+                "field extraction. Ensure Dockerfile.test configures NTP sources."
+            )
+
     def test_get_sources_returns_list(self):
         """Test that get_sources returns a list."""
         from pychrony import ChronyConnection

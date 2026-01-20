@@ -42,12 +42,13 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && ldconfig
 # Create chrony socket directory with correct permissions
 RUN mkdir -p /run/chrony && chown chrony:chrony /run/chrony && chmod 750 /run/chrony
 
-# Configure chronyd for testing (local reference clock + Unix socket)
+# Configure chronyd for testing (local reference clock + Unix socket + NTP source)
 RUN echo "local stratum 10" >> /etc/chrony.conf && \
     echo "allow 127.0.0.1" >> /etc/chrony.conf && \
     echo "cmdallow 127.0.0.1" >> /etc/chrony.conf && \
     echo "cmdport 0" >> /etc/chrony.conf && \
-    echo "bindcmdaddress /run/chrony/chronyd.sock" >> /etc/chrony.conf
+    echo "bindcmdaddress /run/chrony/chronyd.sock" >> /etc/chrony.conf && \
+    echo "server pool.ntp.org iburst" >> /etc/chrony.conf
 
 # Install UV for Python package management
 RUN pip3 install uv
