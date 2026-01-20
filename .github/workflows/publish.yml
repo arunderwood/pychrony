@@ -1,6 +1,11 @@
 name: Publish to PyPI
 
 on:
+  # Auto-trigger after successful Release workflow
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  # Manual fallback
   workflow_dispatch:
     inputs:
       release_tag:
@@ -17,9 +22,26 @@ jobs:
     name: Publish to Production PyPI
     runs-on: ubuntu-latest
     environment: pypi
+    # Only run if: workflow_run succeeded, OR manual dispatch
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
 
     steps:
-    - name: Download all release artifacts
+    - name: Download artifacts (from triggering workflow_run)
+      if: github.event_name == 'workflow_run'
+      uses: dawidd6/action-download-artifact@v12
+      with:
+        workflow: release.yml
+        run_id: ${{ github.event.workflow_run.id }}
+        name: ^(wheels-.*|sdist)$
+        name_is_regexp: true
+        path: dist/
+        merge_multiple: true
+        if_no_artifact_found: fail
+
+    - name: Download artifacts (from manual dispatch)
+      if: github.event_name == 'workflow_dispatch'
       uses: dawidd6/action-download-artifact@v12
       with:
         workflow: release.yml
@@ -29,7 +51,7 @@ jobs:
         merge_multiple: true
         search_artifacts: true
         workflow_conclusion: success
-        commit: ${{ github.event.inputs.release_tag }}
+        branch: ${{ github.event.inputs.release_tag }}
         if_no_artifact_found: fail
 
     - name: List artifacts
