@@ -2,12 +2,6 @@ name: Test
 permissions:
   contents: read
 
-permissions:
-  contents: read
-
-permissions:
-  contents: read
-
 on:
   push:
     branches: [main]
