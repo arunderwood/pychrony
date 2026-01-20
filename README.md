@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/pychrony)](https://pypi.org/project/pychrony/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pychrony)](https://pypi.org/project/pychrony/)
 [![CI](https://github.com/arunderwood/pychrony/actions/workflows/ci.yml/badge.svg)](https://github.com/arunderwood/pychrony/actions/workflows/ci.yml)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://arunderwood.github.io/pychrony/)
+[![Documentation](https://img.shields.io/badge/docs-pychrony.org-blue)](https://pychrony.org/)
 [![License](https://img.shields.io/pypi/l/pychrony)](https://github.com/arunderwood/pychrony/blob/main/LICENSE)
 
 PyChrony provides Python bindings for [chrony](https://chrony.tuxfamily.org/) NTP client, allowing monitoring of chrony via native Python code.

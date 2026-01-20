@@ -32,7 +32,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/arunderwood/pychrony"
-Documentation = "https://arunderwood.github.io/pychrony/"
+Documentation = "https://pychrony.org/"
 Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
 

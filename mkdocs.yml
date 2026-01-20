@@ -1,5 +1,5 @@
 site_name: pychrony
-site_url: https://arunderwood.github.io/pychrony
+site_url: https://pychrony.org
 repo_url: https://github.com/arunderwood/pychrony
 repo_name: arunderwood/pychrony
 site_description: Python bindings for libchrony - read-only monitoring of chronyd NTP daemon
