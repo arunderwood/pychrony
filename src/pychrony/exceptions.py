@@ -36,7 +36,7 @@ class ChronyConnectionError(ChronyError):
     - ``chrony_open_socket()`` returns < 0
     - ``chrony_init_session()`` returns error
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, ChronyConnectionError
         >>> try:
         ...     with ChronyConnection() as conn:
@@ -57,7 +57,7 @@ class ChronyPermissionError(ChronyError):
     - Running as unprivileged user
     - SELinux/AppArmor restrictions
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, ChronyPermissionError
         >>> try:
         ...     with ChronyConnection() as conn:
@@ -80,7 +80,7 @@ class ChronyDataError(ChronyError):
     - Field validation fails (NaN, out of range)
     - Protocol version mismatch
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, ChronyDataError
         >>> with ChronyConnection() as conn:
         ...     try:
@@ -101,7 +101,7 @@ class ChronyLibraryError(ChronyError):
     - CFFI bindings not compiled (missing libchrony-devel at build time)
     - Library version incompatible
 
-    Example:
+    Examples:
         >>> from pychrony import ChronyConnection, ChronyLibraryError
         >>> try:
         ...     with ChronyConnection() as conn:
