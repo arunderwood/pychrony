@@ -30,7 +30,7 @@ jobs:
     steps:
     - name: Download artifacts (from triggering workflow_run)
       if: github.event_name == 'workflow_run'
-      uses: dawidd6/action-download-artifact@v14
+      uses: dawidd6/action-download-artifact@v15
       with:
         workflow: release.yml
         run_id: ${{ github.event.workflow_run.id }}
@@ -42,7 +42,7 @@ jobs:
 
     - name: Download artifacts (from manual dispatch)
       if: github.event_name == 'workflow_dispatch'
-      uses: dawidd6/action-download-artifact@v14
+      uses: dawidd6/action-download-artifact@v15
       with:
         workflow: release.yml
         name: ^(wheels-.*|sdist)$
