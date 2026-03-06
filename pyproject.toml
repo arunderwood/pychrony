@@ -67,6 +67,7 @@ python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
 
 [tool.cibuildwheel]
+build-frontend = "build[uv]"
 build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
 
 [tool.cibuildwheel.linux]
