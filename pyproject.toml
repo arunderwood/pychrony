@@ -57,6 +57,7 @@ include = ["src/pychrony/_core/_bindings.py"]
 
 [tool.ty.overrides.rules]
 possibly-missing-attribute = "ignore"
+unresolved-attribute = "ignore"  # ty 0.0.21+ renamed possibly-missing-attribute
 invalid-argument-type = "ignore"  # Dict unpacking uses runtime validation
 
 [tool.pytest.ini_options]
