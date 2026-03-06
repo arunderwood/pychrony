@@ -35,7 +35,7 @@ jobs:
         CIBW_ARCHS_LINUX: ${{ matrix.arch }}
 
     - name: Upload wheel artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: wheels-${{ matrix.arch }}
         path: wheelhouse/*.whl
@@ -58,7 +58,7 @@ jobs:
       run: uv build --sdist
 
     - name: Upload sdist artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: sdist
         path: dist/*.tar.gz
