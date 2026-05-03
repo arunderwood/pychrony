@@ -59,6 +59,7 @@ include = ["src/pychrony/_core/_bindings.py"]
 possibly-missing-attribute = "ignore"
 unresolved-attribute = "ignore"  # ty 0.0.21+ renamed possibly-missing-attribute
 invalid-argument-type = "ignore"  # Dict unpacking uses runtime validation
+unresolved-import = "ignore"  # _cffi_bindings is generated at install time
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
