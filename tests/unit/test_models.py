@@ -1,23 +1,24 @@
 """Unit tests for pychrony data models."""
 
-import pytest
 from dataclasses import FrozenInstanceError
 
+import pytest
+
 from pychrony.models import (
-    _ref_id_to_name,
     LeapStatus,
-    SourceState,
     SourceMode,
+    SourceState,
+    _ref_id_to_name,
 )
 from pychrony.testing import (
-    make_tracking,
-    make_source,
-    make_source_stats,
-    make_rtc_data,
-    TRACKING_DEFAULTS,
+    RTCDATA_DEFAULTS,
     SOURCE_DEFAULTS,
     SOURCESTATS_DEFAULTS,
-    RTCDATA_DEFAULTS,
+    TRACKING_DEFAULTS,
+    make_rtc_data,
+    make_source,
+    make_source_stats,
+    make_tracking,
 )
 
 

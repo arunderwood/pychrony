@@ -8,17 +8,17 @@ from __future__ import annotations
 import pytest
 
 from pychrony import ChronyConnection
-from pychrony.models import LeapStatus, SourceState, SourceMode
+from pychrony.models import LeapStatus, SourceMode, SourceState
 from tests.mocks import (
-    patched_chrony_connection,
-    ChronyStateConfig,
-    SCENARIO_NTP_SYNCED,
-    SCENARIO_UNSYNC,
-    SCENARIO_LEAP_INSERT,
-    SCENARIO_LEAP_DELETE,
     SCENARIO_GPS_REFCLOCK,
-    SCENARIO_PPS_REFCLOCK,
+    SCENARIO_LEAP_DELETE,
+    SCENARIO_LEAP_INSERT,
     SCENARIO_MULTI_SOURCE,
+    SCENARIO_NTP_SYNCED,
+    SCENARIO_PPS_REFCLOCK,
+    SCENARIO_UNSYNC,
+    ChronyStateConfig,
+    patched_chrony_connection,
 )
 
 
@@ -71,9 +71,8 @@ class TestPatchedChronyConnection:
 
         original_lib = _bindings._lib
 
-        with pytest.raises(ValueError):
-            with patched_chrony_connection():
-                raise ValueError("Test exception")
+        with pytest.raises(ValueError), patched_chrony_connection():
+            raise ValueError("Test exception")
 
         assert _bindings._lib is original_lib
 

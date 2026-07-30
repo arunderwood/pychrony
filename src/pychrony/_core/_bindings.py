@@ -19,16 +19,15 @@ from ..exceptions import (
     ChronyPermissionError,
 )
 from ..models import (
-    TrackingStatus,
-    Source,
-    SourceStats,
-    RTCData,
-    _ref_id_to_name,
     LeapStatus,
-    SourceState,
+    RTCData,
+    Source,
     SourceMode,
+    SourceState,
+    SourceStats,
+    TrackingStatus,
+    _ref_id_to_name,
 )
-
 
 # Default socket paths to try (in order)
 DEFAULT_SOCKET_PATHS = [
@@ -45,7 +44,12 @@ _lib: Any = None
 _ffi: Any = None
 
 try:
-    from pychrony._core._cffi_bindings import lib as _lib, ffi as _ffi  # type: ignore[import-not-found]
+    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
+        ffi as _ffi,
+    )
+    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
+        lib as _lib,
+    )
 
     _LIBRARY_AVAILABLE = True
 except ImportError:
@@ -661,7 +665,10 @@ class ChronyConnection:
                 err = _lib.chrony_process_response(self._session)
                 if err != 0:
                     return None
-        except Exception:
+        # Deliberately broad: this is a C-library boundary, and an absent RTC is a
+        # supported outcome reported as None rather than an error. Narrowing the
+        # catch risks surfacing a CFFI failure as a crash for that normal case.
+        except Exception:  # noqa: BLE001
             return None
 
         data = self._extract_rtc()

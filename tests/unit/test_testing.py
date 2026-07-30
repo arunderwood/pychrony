@@ -4,12 +4,12 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from pychrony import TrackingStatus, Source, SourceStats, RTCData, LeapStatus
+from pychrony import LeapStatus, RTCData, Source, SourceStats, TrackingStatus
 from pychrony.testing import (
-    make_tracking,
+    make_rtc_data,
     make_source,
     make_source_stats,
-    make_rtc_data,
+    make_tracking,
 )
 
 

@@ -6,8 +6,9 @@ replaces the real CFFI bindings with mock infrastructure for testing.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 from pychrony import ChronyConnection
@@ -60,6 +61,6 @@ def patched_chrony_connection(
         patch("pychrony._core._bindings._lib", mock_session.lib),
         patch("pychrony._core._bindings._ffi", mock_session.ffi),
         patch("pychrony._core._bindings._LIBRARY_AVAILABLE", True),
+        ChronyConnection() as conn,
     ):
-        with ChronyConnection() as conn:
-            yield conn
+        yield conn

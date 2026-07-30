@@ -6,11 +6,11 @@ Tests for RTC availability and calibration states.
 from __future__ import annotations
 
 from tests.mocks import (
-    patched_chrony_connection,
-    ChronyStateConfig,
-    RTCConfig,
     SCENARIO_RTC_AVAILABLE,
     SCENARIO_RTC_UNAVAILABLE,
+    ChronyStateConfig,
+    RTCConfig,
+    patched_chrony_connection,
 )
 
 

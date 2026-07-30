@@ -4,8 +4,6 @@ This module defines typed exceptions for chrony-specific error conditions.
 All exceptions inherit from ChronyError.
 """
 
-from typing import Optional
-
 
 class ChronyError(Exception):
     """Base exception for all chrony-related errors.
@@ -15,7 +13,7 @@ class ChronyError(Exception):
         error_code: Optional numeric error code from libchrony
     """
 
-    def __init__(self, message: str, error_code: Optional[int] = None):
+    def __init__(self, message: str, error_code: int | None = None):
         super().__init__(message)
         self.message = message
         self.error_code = error_code
@@ -45,8 +43,6 @@ class ChronyConnectionError(ChronyError):
         ...     print(f"Connection failed: {e}")
     """
 
-    pass
-
 
 class ChronyPermissionError(ChronyError):
     """Raised when access to chronyd is denied.
@@ -67,8 +63,6 @@ class ChronyPermissionError(ChronyError):
         ...     print("Add user to chrony group or run as root")
     """
 
-    pass
-
 
 class ChronyDataError(ChronyError):
     """Raised when tracking data is invalid or incomplete.
@@ -88,8 +82,6 @@ class ChronyDataError(ChronyError):
         ...     except ChronyDataError as e:
         ...         print(f"Invalid data: {e}")
     """
-
-    pass
 
 
 class ChronyLibraryError(ChronyError):

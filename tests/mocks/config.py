@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pychrony.models import LeapStatus, SourceState, SourceMode
-
+from pychrony.models import LeapStatus, SourceMode, SourceState
 
 __all__ = [
     "ChronyStateConfig",

@@ -2,7 +2,7 @@
 
 import pytest
 
-from pychrony import LeapStatus, SourceState, SourceMode
+from pychrony import LeapStatus, SourceMode, SourceState
 
 
 class TestSourceStateEnum:
