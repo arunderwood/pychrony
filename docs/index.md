@@ -105,8 +105,9 @@ import threading
 
 _local = threading.local()
 
+
 def get_tracking():
-    if not hasattr(_local, 'conn'):
+    if not hasattr(_local, "conn"):
         _local.conn = ChronyConnection()
     with _local.conn as conn:
         return conn.get_tracking()
