@@ -41,18 +41,18 @@ Example:
             assert status.is_leap_pending()
 """
 
-from tests.mocks.config import ChronyStateConfig, SourceConfig, RTCConfig
+from tests.mocks.config import ChronyStateConfig, RTCConfig, SourceConfig
 from tests.mocks.context import patched_chrony_connection
 from tests.mocks.scenarios import (
-    SCENARIO_NTP_SYNCED,
-    SCENARIO_UNSYNC,
-    SCENARIO_LEAP_INSERT,
-    SCENARIO_LEAP_DELETE,
     SCENARIO_GPS_REFCLOCK,
+    SCENARIO_LEAP_DELETE,
+    SCENARIO_LEAP_INSERT,
+    SCENARIO_MULTI_SOURCE,
+    SCENARIO_NTP_SYNCED,
     SCENARIO_PPS_REFCLOCK,
     SCENARIO_RTC_AVAILABLE,
     SCENARIO_RTC_UNAVAILABLE,
-    SCENARIO_MULTI_SOURCE,
+    SCENARIO_UNSYNC,
 )
 
 __all__ = [

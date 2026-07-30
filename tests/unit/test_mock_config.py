@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from pychrony.models import LeapStatus, SourceState
-from tests.mocks.config import ChronyStateConfig, SourceConfig, RTCConfig
+from tests.mocks.config import ChronyStateConfig, RTCConfig, SourceConfig
 
 
 class TestChronyStateConfigValidation:

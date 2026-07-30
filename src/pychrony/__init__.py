@@ -94,25 +94,25 @@ For more information, see:
 - https://chrony-project.org/
 """
 
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
-from .models import (
-    TrackingStatus,
-    Source,
-    SourceStats,
-    RTCData,
-    LeapStatus,
-    SourceState,
-    SourceMode,
-)
-from .exceptions import (
-    ChronyError,
-    ChronyConnectionError,
-    ChronyPermissionError,
-    ChronyDataError,
-    ChronyLibraryError,
-)
 from ._core._bindings import ChronyConnection
+from .exceptions import (
+    ChronyConnectionError,
+    ChronyDataError,
+    ChronyError,
+    ChronyLibraryError,
+    ChronyPermissionError,
+)
+from .models import (
+    LeapStatus,
+    RTCData,
+    Source,
+    SourceMode,
+    SourceState,
+    SourceStats,
+    TrackingStatus,
+)
 
 try:
     __version__ = version("pychrony")

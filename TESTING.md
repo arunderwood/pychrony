@@ -4,7 +4,7 @@ This document describes pychrony's test infrastructure, including the test pyram
 
 ## Test Pyramid
 
-```
+```text
                     ┌─────────────────────┐
                     │    Integration      │  Requires Docker + chronyd
                     │    (tests/integration/)  │
@@ -40,7 +40,7 @@ This document describes pychrony's test infrastructure, including the test pyram
 
 pychrony provides two distinct testing utilities for different audiences:
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                     User's Application                           │
 └──────────────────────────────────────────────────────────────────┘
@@ -120,7 +120,12 @@ The `pychrony.testing` module provides factory functions for creating test insta
 ### Factory Functions
 
 ```python
-from pychrony.testing import make_tracking, make_source, make_source_stats, make_rtc_data
+from pychrony.testing import (
+    make_tracking,
+    make_source,
+    make_source_stats,
+    make_rtc_data,
+)
 
 # Create with defaults (synchronized state)
 status = make_tracking()
@@ -146,6 +151,7 @@ When using pytest, fixtures are auto-discovered:
 def test_synchronized_check(tracking_status):
     """tracking_status fixture provides synchronized defaults."""
     assert tracking_status.is_synchronized()
+
 
 def test_source_reachable(source):
     """source fixture provides selected, reachable source."""
@@ -183,6 +189,7 @@ The binding mocks replace the CFFI `_lib` and `_ffi` objects, allowing tests to:
 
 ```python
 from tests.mocks import patched_chrony_connection, SCENARIO_NTP_SYNCED
+
 
 def test_tracking_synchronized():
     with patched_chrony_connection(SCENARIO_NTP_SYNCED) as conn:
@@ -283,6 +290,7 @@ config = ChronyStateConfig(
     }
 )
 
+
 def test_permission_error():
     with pytest.raises(ChronyPermissionError):
         with patched_chrony_connection(config) as conn:
@@ -331,6 +339,7 @@ custom_config = ChronyStateConfig(
     ],
     rtc=RTCConfig(available=True, samples=10),
 )
+
 
 def test_gps_with_ntp_fallback():
     with patched_chrony_connection(custom_config) as conn:

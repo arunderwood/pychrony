@@ -2,12 +2,12 @@
 
 import pytest
 
-from pychrony.exceptions import ChronyDataError
 from pychrony._core._bindings import (
-    _validate_finite_float,
     _validate_bounded_int,
+    _validate_finite_float,
     _validate_non_negative_int,
 )
+from pychrony.exceptions import ChronyDataError
 
 
 class TestValidateFiniteFloat:

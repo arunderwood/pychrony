@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from pychrony.models import LeapStatus
 from tests.mocks import (
-    patched_chrony_connection,
-    ChronyStateConfig,
-    SCENARIO_LEAP_INSERT,
     SCENARIO_LEAP_DELETE,
+    SCENARIO_LEAP_INSERT,
     SCENARIO_NTP_SYNCED,
+    ChronyStateConfig,
+    patched_chrony_connection,
 )
 
 

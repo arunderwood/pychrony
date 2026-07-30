@@ -17,13 +17,13 @@ from typing import Any
 import pytest
 
 from pychrony import (
-    TrackingStatus,
-    Source,
-    SourceStats,
-    RTCData,
     LeapStatus,
-    SourceState,
+    RTCData,
+    Source,
     SourceMode,
+    SourceState,
+    SourceStats,
+    TrackingStatus,
 )
 
 __all__ = [

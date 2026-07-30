@@ -48,6 +48,19 @@ where = ["src"]
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+# specs/ holds frozen spec-kit design documents; they are historical records and
+# are not kept in sync with the code, so exclude them from linting/formatting.
+extend-exclude = ["specs/"]
+
+[tool.ruff.lint]
+ignore = [
+    # __all__ entries are grouped by category (enums, models, exceptions) with
+    # explanatory comments; alphabetical sorting would destroy that structure.
+    "RUF022",
+    # Wants __enter__ to return `Self`, which is only in typing from 3.11 on.
+    # This package supports 3.10 and has no typing_extensions dependency.
+    "PYI034",
+]
 
 [tool.ty]
 # Ignore warnings for CFFI bindings file - _lib and _ffi are dynamically imported

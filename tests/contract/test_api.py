@@ -3,7 +3,7 @@
 import inspect
 from dataclasses import fields, is_dataclass
 
-from pychrony import LeapStatus, SourceState, SourceMode
+from pychrony import LeapStatus, SourceMode, SourceState
 
 
 class TestPublicExports:
@@ -36,11 +36,11 @@ class TestPublicExports:
     def test_exceptions_importable(self):
         """Test that all exceptions can be imported."""
         from pychrony import (
-            ChronyError,
             ChronyConnectionError,
-            ChronyPermissionError,
             ChronyDataError,
+            ChronyError,
             ChronyLibraryError,
+            ChronyPermissionError,
         )
 
         assert issubclass(ChronyConnectionError, ChronyError)
@@ -58,36 +58,36 @@ class TestChronyConnectionContract:
 
         assert hasattr(ChronyConnection, "__enter__")
         assert hasattr(ChronyConnection, "__exit__")
-        assert callable(getattr(ChronyConnection, "__enter__"))
-        assert callable(getattr(ChronyConnection, "__exit__"))
+        assert callable(ChronyConnection.__enter__)
+        assert callable(ChronyConnection.__exit__)
 
     def test_has_get_tracking_method(self):
         """Test that ChronyConnection has get_tracking method."""
         from pychrony import ChronyConnection
 
         assert hasattr(ChronyConnection, "get_tracking")
-        assert callable(getattr(ChronyConnection, "get_tracking"))
+        assert callable(ChronyConnection.get_tracking)
 
     def test_has_get_sources_method(self):
         """Test that ChronyConnection has get_sources method."""
         from pychrony import ChronyConnection
 
         assert hasattr(ChronyConnection, "get_sources")
-        assert callable(getattr(ChronyConnection, "get_sources"))
+        assert callable(ChronyConnection.get_sources)
 
     def test_has_get_source_stats_method(self):
         """Test that ChronyConnection has get_source_stats method."""
         from pychrony import ChronyConnection
 
         assert hasattr(ChronyConnection, "get_source_stats")
-        assert callable(getattr(ChronyConnection, "get_source_stats"))
+        assert callable(ChronyConnection.get_source_stats)
 
     def test_has_get_rtc_data_method(self):
         """Test that ChronyConnection has get_rtc_data method."""
         from pychrony import ChronyConnection
 
         assert hasattr(ChronyConnection, "get_rtc_data")
-        assert callable(getattr(ChronyConnection, "get_rtc_data"))
+        assert callable(ChronyConnection.get_rtc_data)
 
     def test_init_accepts_address_parameter(self):
         """Test that ChronyConnection.__init__ accepts address parameter."""
@@ -111,8 +111,9 @@ class TestTrackingStatusContract:
 
     def test_is_dataclass(self):
         """Test that TrackingStatus is a dataclass."""
-        from pychrony import TrackingStatus
         from dataclasses import is_dataclass
+
+        from pychrony import TrackingStatus
 
         assert is_dataclass(TrackingStatus)
 
@@ -175,14 +176,14 @@ class TestTrackingStatusContract:
         from pychrony import TrackingStatus
 
         assert hasattr(TrackingStatus, "is_synchronized")
-        assert callable(getattr(TrackingStatus, "is_synchronized"))
+        assert callable(TrackingStatus.is_synchronized)
 
     def test_has_is_leap_pending_method(self):
         """Test that TrackingStatus has is_leap_pending method."""
         from pychrony import TrackingStatus
 
         assert hasattr(TrackingStatus, "is_leap_pending")
-        assert callable(getattr(TrackingStatus, "is_leap_pending"))
+        assert callable(TrackingStatus.is_leap_pending)
 
 
 class TestExceptionContract:
@@ -300,14 +301,14 @@ class TestSourceContract:
         from pychrony import Source
 
         assert hasattr(Source, "is_reachable")
-        assert callable(getattr(Source, "is_reachable"))
+        assert callable(Source.is_reachable)
 
     def test_has_is_selected_method(self):
         """Test that Source has is_selected method."""
         from pychrony import Source
 
         assert hasattr(Source, "is_selected")
-        assert callable(getattr(Source, "is_selected"))
+        assert callable(Source.is_selected)
 
 
 class TestSourceStatsContract:
@@ -366,7 +367,7 @@ class TestSourceStatsContract:
         from pychrony import SourceStats
 
         assert hasattr(SourceStats, "has_sufficient_samples")
-        assert callable(getattr(SourceStats, "has_sufficient_samples"))
+        assert callable(SourceStats.has_sufficient_samples)
 
 
 class TestRTCDataContract:
@@ -417,7 +418,7 @@ class TestRTCDataContract:
         from pychrony import RTCData
 
         assert hasattr(RTCData, "is_calibrated")
-        assert callable(getattr(RTCData, "is_calibrated"))
+        assert callable(RTCData.is_calibrated)
 
 
 class TestAllDataclassesAreFrozen:
@@ -428,22 +429,22 @@ class TestAllDataclassesAreFrozen:
         from pychrony import TrackingStatus
 
         # Check frozen attribute
-        assert getattr(TrackingStatus, "__dataclass_params__").frozen is True
+        assert TrackingStatus.__dataclass_params__.frozen is True
 
     def test_source_is_frozen(self):
         """Test that Source is frozen."""
         from pychrony import Source
 
-        assert getattr(Source, "__dataclass_params__").frozen is True
+        assert Source.__dataclass_params__.frozen is True
 
     def test_sourcestats_is_frozen(self):
         """Test that SourceStats is frozen."""
         from pychrony import SourceStats
 
-        assert getattr(SourceStats, "__dataclass_params__").frozen is True
+        assert SourceStats.__dataclass_params__.frozen is True
 
     def test_rtcdata_is_frozen(self):
         """Test that RTCData is frozen."""
         from pychrony import RTCData
 
-        assert getattr(RTCData, "__dataclass_params__").frozen is True
+        assert RTCData.__dataclass_params__.frozen is True

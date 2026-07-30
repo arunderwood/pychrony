@@ -6,9 +6,8 @@ the most common testing scenarios.
 
 from __future__ import annotations
 
-from pychrony.models import LeapStatus, SourceState, SourceMode
-from tests.mocks.config import ChronyStateConfig, SourceConfig, RTCConfig
-
+from pychrony.models import LeapStatus, SourceMode, SourceState
+from tests.mocks.config import ChronyStateConfig, RTCConfig, SourceConfig
 
 __all__ = [
     "SCENARIO_NTP_SYNCED",

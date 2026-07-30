@@ -5,15 +5,15 @@ Tests for REFCLOCK sources and multi-source selection.
 
 from __future__ import annotations
 
-from pychrony.models import SourceState, SourceMode
+from pychrony.models import SourceMode, SourceState
 from tests.mocks import (
-    patched_chrony_connection,
-    ChronyStateConfig,
-    SourceConfig,
     SCENARIO_GPS_REFCLOCK,
-    SCENARIO_PPS_REFCLOCK,
     SCENARIO_MULTI_SOURCE,
     SCENARIO_NTP_SYNCED,
+    SCENARIO_PPS_REFCLOCK,
+    ChronyStateConfig,
+    SourceConfig,
+    patched_chrony_connection,
 )
 
 

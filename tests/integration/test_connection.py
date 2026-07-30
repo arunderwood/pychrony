@@ -25,13 +25,17 @@ class TestConnectionErrors:
     def test_invalid_socket_path_raises_connection_error(self):
         """Test that invalid socket path raises ChronyConnectionError."""
         if not HAS_CFFI_BINDINGS:
-            with pytest.raises(ChronyLibraryError):
-                with ChronyConnection("/nonexistent/path.sock") as conn:
-                    conn.get_tracking()
+            with (
+                pytest.raises(ChronyLibraryError),
+                ChronyConnection("/nonexistent/path.sock") as conn,
+            ):
+                conn.get_tracking()
         else:
-            with pytest.raises(ChronyConnectionError) as exc_info:
-                with ChronyConnection("/nonexistent/path.sock") as conn:
-                    conn.get_tracking()
+            with (
+                pytest.raises(ChronyConnectionError) as exc_info,
+                ChronyConnection("/nonexistent/path.sock") as conn,
+            ):
+                conn.get_tracking()
             assert "Failed to connect" in str(exc_info.value)
 
     def test_connection_error_has_error_code(self):
@@ -39,9 +43,11 @@ class TestConnectionErrors:
         if not HAS_CFFI_BINDINGS:
             pytest.skip("CFFI bindings not available")
 
-        with pytest.raises(ChronyConnectionError) as exc_info:
-            with ChronyConnection("/nonexistent/path.sock") as conn:
-                conn.get_tracking()
+        with (
+            pytest.raises(ChronyConnectionError) as exc_info,
+            ChronyConnection("/nonexistent/path.sock") as conn,
+        ):
+            conn.get_tracking()
         # Error code should be set (typically negative)
         assert exc_info.value.error_code is not None
 
@@ -54,9 +60,8 @@ class TestLibraryErrors:
         if HAS_CFFI_BINDINGS:
             pytest.skip("CFFI bindings are available")
 
-        with pytest.raises(ChronyLibraryError) as exc_info:
-            with ChronyConnection() as conn:
-                conn.get_tracking()
+        with pytest.raises(ChronyLibraryError) as exc_info, ChronyConnection() as conn:
+            conn.get_tracking()
         message = str(exc_info.value)
         # Should mention libchrony and installation
         assert "libchrony" in message.lower()
@@ -67,9 +72,8 @@ class TestLibraryErrors:
         if HAS_CFFI_BINDINGS:
             pytest.skip("CFFI bindings are available")
 
-        with pytest.raises(ChronyLibraryError) as exc_info:
-            with ChronyConnection() as conn:
-                conn.get_tracking()
+        with pytest.raises(ChronyLibraryError) as exc_info, ChronyConnection() as conn:
+            conn.get_tracking()
         assert exc_info.value.error_code is None
 
 
@@ -86,9 +90,11 @@ class TestSocketAutoDetection:
     def test_explicit_socket_path_used(self):
         """Test that explicit socket path is used."""
         # Nonexistent path should fail
-        with pytest.raises(ChronyConnectionError):
-            with ChronyConnection("/this/path/does/not/exist.sock") as conn:
-                conn.get_tracking()
+        with (
+            pytest.raises(ChronyConnectionError),
+            ChronyConnection("/this/path/does/not/exist.sock") as conn,
+        ):
+            conn.get_tracking()
 
 
 @pytest.mark.skipif(not HAS_CFFI_BINDINGS, reason="CFFI bindings not compiled")

@@ -3,8 +3,7 @@
 from dataclasses import fields
 from enum import Enum
 
-
-from pychrony import Source, TrackingStatus, LeapStatus, SourceState, SourceMode
+from pychrony import LeapStatus, Source, SourceMode, SourceState, TrackingStatus
 
 
 class TestEnumExports:

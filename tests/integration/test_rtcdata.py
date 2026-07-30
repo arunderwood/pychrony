@@ -35,7 +35,7 @@ class TestGetRtcDataIntegration:
 
     def test_get_rtc_data_with_custom_socket_path(self):
         """Test get_rtc_data with explicit socket path."""
-        from pychrony import ChronyConnection, RTCData, ChronyConnectionError
+        from pychrony import ChronyConnection, ChronyConnectionError, RTCData
 
         # Try primary socket path
         try:

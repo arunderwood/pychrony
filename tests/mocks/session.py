@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pychrony._core._fields import (
-    FieldType,
-    TRACKING_FIELDS,
+    RTC_FIELDS,
     SOURCE_FIELDS,
     SOURCESTATS_FIELDS,
-    RTC_FIELDS,
+    TRACKING_FIELDS,
+    FieldType,
 )
 
 if TYPE_CHECKING:
@@ -129,7 +129,6 @@ class MockLib:
 
     def chrony_close_socket(self, fd: int) -> None:
         """Mock chrony_close_socket."""
-        pass
 
     def chrony_init_session(self, session_ptr: MockPointer, fd: int) -> int:
         """Mock chrony_init_session."""
@@ -142,7 +141,6 @@ class MockLib:
 
     def chrony_deinit_session(self, session: Any) -> None:
         """Mock chrony_deinit_session."""
-        pass
 
     def chrony_request_report_number_records(
         self, session: Any, report_name: bytes
@@ -179,9 +177,7 @@ class MockLib:
 
         if report == "tracking":
             return 1
-        elif report == "sources":
-            return len(config.sources)
-        elif report == "sourcestats":
+        elif report == "sources" or report == "sourcestats":
             return len(config.sources)
         elif report == "rtcdata":
             if config.rtc is not None and config.rtc.available:

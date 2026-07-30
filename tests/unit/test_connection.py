@@ -7,9 +7,9 @@ import pytest
 
 from pychrony import ChronyConnection
 from pychrony._core._bindings import (
-    _timespec_to_float,
     DEFAULT_SOCKET_PATHS,
     NANOSECONDS_PER_SECOND,
+    _timespec_to_float,
 )
 from pychrony.exceptions import (
     ChronyConnectionError,
@@ -61,9 +61,8 @@ class TestChronyConnectionContextManager:
     @patch("pychrony._core._bindings._LIBRARY_AVAILABLE", False)
     def test_raises_library_error_when_bindings_unavailable(self):
         """Test that entering context raises ChronyLibraryError when CFFI unavailable."""
-        with pytest.raises(ChronyLibraryError):
-            with ChronyConnection():
-                pass
+        with pytest.raises(ChronyLibraryError), ChronyConnection():
+            pass
 
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
@@ -107,9 +106,8 @@ class TestChronyConnectionContextManager:
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = 0
 
-        with pytest.raises(ValueError):
-            with ChronyConnection("/test.sock"):
-                raise ValueError("test error")
+        with pytest.raises(ValueError), ChronyConnection("/test.sock"):
+            raise ValueError("test error")
 
         mock_lib.chrony_deinit_session.assert_called_once()
         mock_lib.chrony_close_socket.assert_called_once_with(5)
@@ -124,9 +122,11 @@ class TestChronyConnectionContextManager:
         mock_lib.chrony_open_socket.return_value = -1
         mock_ffi.NULL = None
 
-        with pytest.raises(ChronyConnectionError) as exc_info:
-            with ChronyConnection("/nonexistent.sock"):
-                pass
+        with (
+            pytest.raises(ChronyConnectionError) as exc_info,
+            ChronyConnection("/nonexistent.sock"),
+        ):
+            pass
 
         assert "Failed to connect" in str(exc_info.value)
 
@@ -138,9 +138,11 @@ class TestChronyConnectionContextManager:
         mock_lib.chrony_open_socket.return_value = -13  # EACCES
         mock_ffi.NULL = None
 
-        with pytest.raises(ChronyPermissionError) as exc_info:
-            with ChronyConnection("/protected.sock"):
-                pass
+        with (
+            pytest.raises(ChronyPermissionError) as exc_info,
+            ChronyConnection("/protected.sock"),
+        ):
+            pass
 
         assert "Permission denied" in str(exc_info.value)
 
@@ -154,9 +156,8 @@ class TestChronyConnectionContextManager:
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = -1  # Failure
 
-        with pytest.raises(ChronyConnectionError):
-            with ChronyConnection("/test.sock"):
-                pass
+        with pytest.raises(ChronyConnectionError), ChronyConnection("/test.sock"):
+            pass
 
         mock_lib.chrony_close_socket.assert_called_once_with(5)
 
