@@ -14,7 +14,7 @@ authors = [
     {name = "arunderwood", email = "arunderwood@users.noreply.github.com"}
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
     "Programming Language :: Python :: 3.10",
