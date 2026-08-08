@@ -28,7 +28,7 @@ jobs:
         submodules: recursive  # Required for vendor/libchrony
 
     - name: Build wheels with cibuildwheel
-      uses: pypa/cibuildwheel@v4.1
+      uses: pypa/cibuildwheel@v4.2
       with:
         extras: uv
       env:
