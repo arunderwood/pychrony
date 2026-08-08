@@ -24,10 +24,20 @@ uv pip install cibuildwheel               # install cibuildwheel for manylinux b
 cibuildwheel --platform linux             # build manylinux wheels (requires Docker)
                                           # output in wheelhouse/
 
-# Integration tests (require Docker with libchrony)
-docker build -t pychrony-test -f docker/Dockerfile.test .
-docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+# Integration tests (require Docker; image builds libchrony from vendor/)
+git submodule update --init --recursive   # vendor/libchrony must be populated
+docker build -t pychrony-test -f docker/Dockerfile.test . && \
+  docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+Keep the `&&` joining build and run. `pychrony-test` is a fixed tag, so if the
+build fails and `docker run` still executes, it silently reuses the last image
+under that tag — possibly built from a different worktree or an older commit —
+and reports a full pass. Confirm the pytest paths name the current worktree.
+
+Never pipe the build through `tail`/`head` to trim output: the pipeline then
+exits with the pager's status, which defeats the `&&` and reintroduces exactly
+that stale-image failure.
 
 Cross-version testing (Python 3.10-3.15) is handled by CI.
 
@@ -39,9 +49,12 @@ uv run pytest
 uv run ruff check .
 uv run ruff format .
 uv run ty check src/
-docker build -t pychrony-test -f docker/Dockerfile.test .
-docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+docker build -t pychrony-test -f docker/Dockerfile.test . && \
+  docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+A green integration run only counts if the build ahead of it succeeded — see the
+stale-image note above.
 
 ## Architecture
 
