@@ -2,64 +2,108 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
+  # Unit, contract, and import tests across every supported interpreter.
+  # Keep this matrix in sync with the classifiers and the cibuildwheel
+  # `build` allowlist in pyproject.toml, and with release.yml.
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
-    
+
     steps:
-    - uses: actions/checkout@v7
-    
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: uv sync --all-groups
-    
-    - name: Run linting
-      run: uv run ruff check .
-    
-    - name: Run formatting check
-      run: uv run ruff format --check .
-    
-    - name: Run type checking
-      run: uv run ty check src/
-    
-    - name: Run tests
-      run: uv run pytest --cov=src --cov-report=xml
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run pytest --cov=src --cov-report=xml
+
+  # Lint and type checking. Results do not vary by interpreter, so this
+  # runs once rather than once per matrix entry.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Run ruff check
+        run: uv run ruff check .
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+
+      - name: Run type checking
+        run: uv run ty check src/
 
   docs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
 
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-        python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
 
-    - name: Install dependencies
-      run: uv sync --group docs
+      - name: Install dependencies
+        run: uv sync --group docs
 
-    # docs.yml deploys straight to gh-pages on main, so this is the only
-    # chance to catch a broken docs build before it becomes a failed publish.
-    # --strict promotes broken links and mkdocstrings resolution failures
-    # (which would otherwise render an empty API page) into hard errors.
-    - name: Build documentation
-      run: uv run mkdocs build --strict
+      # docs.yml deploys straight to gh-pages on main, so this is the only
+      # chance to catch a broken docs build before it becomes a failed publish.
+      # --strict promotes broken links and mkdocstrings resolution failures
+      # (which would otherwise render an empty API page) into hard errors.
+      - name: Build documentation
+        run: uv run mkdocs build --strict
 
+  # Full suite in Docker with libchrony - the only place integration
+  # tests run against a live chronyd.
+  docker-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile.test
+          tags: pychrony-test:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run tests
+        run: |
+          docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
