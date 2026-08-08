@@ -41,3 +41,25 @@ jobs:
     - name: Run tests
       run: uv run pytest --cov=src --cov-report=xml
 
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Install UV
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: uv sync --group docs
+
+    # docs.yml deploys straight to gh-pages on main, so this is the only
+    # chance to catch a broken docs build before it becomes a failed publish.
+    # --strict promotes broken links and mkdocstrings resolution failures
+    # (which would otherwise render an empty API page) into hard errors.
+    - name: Build documentation
+      run: uv run mkdocs build --strict
+
