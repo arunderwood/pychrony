@@ -29,7 +29,7 @@ docker build -t pychrony-test -f docker/Dockerfile.test .
 docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
 
-Cross-version testing (Python 3.10-3.14) is handled by CI.
+Cross-version testing (Python 3.10-3.15) is handled by CI.
 
 ## Before Committing
 
