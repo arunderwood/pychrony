@@ -107,13 +107,23 @@ jobs:
 
     - name: Install from Test PyPI
       run: |
-        for i in 1 2 3 4 5; do
-          pip install --index-url https://test.pypi.org/simple/ \
+        # --no-cache-dir is load-bearing. The simple index is served with
+        # `cache-control: max-age=600`, so pip stores the first response for ten
+        # minutes; without this flag every later attempt replays the same stale
+        # index from disk and the retry loop cannot outlast Test PyPI's CDN lag.
+        for i in $(seq 1 10); do
+          if pip install --no-cache-dir \
+            --index-url https://test.pypi.org/simple/ \
             --extra-index-url https://pypi.org/simple/ \
-            pychrony==${{ steps.version.outputs.version }} && break
+            pychrony==${{ steps.version.outputs.version }}; then
+            echo "Installed on attempt $i"
+            exit 0
+          fi
           echo "Attempt $i failed, retrying in 30s..."
           sleep 30
         done
+        echo "::error::pychrony==${{ steps.version.outputs.version }} never became installable from Test PyPI"
+        exit 1
 
     - name: Verify import and version
       run: |
