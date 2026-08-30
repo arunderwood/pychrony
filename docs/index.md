@@ -70,35 +70,27 @@ except ChronyConnectionError:
     print("chronyd unreachable")
 ```
 
-`ChronyConnectionError` means chronyd could not be reached — either the
-connection would not open, or it opened and nothing answered. The second case is
-normal on the command port, which is UDP: the socket opens whether or not
-chronyd is listening, so a disabled or blocked command port only surfaces on the
-first request. `ChronyDataError` is reserved for a report that arrived but was
-malformed.
+`ChronyConnectionError` means chronyd could not be reached — the connection
+would not open, or it opened and nothing answered. The second is normal on the
+command port, which is UDP: the socket opens whether or not chronyd is
+listening, so a disabled port only surfaces on the first request.
+`ChronyDataError` is reserved for a report that arrived but was malformed.
 
 ## Choosing a Transport
 
-With no argument, `ChronyConnection` auto-detects by attempting each candidate
-in turn — the default Unix socket paths, then the localhost command port — and
-uses the first that connects. A socket path that exists is not assumed to be
-usable: connecting to a Unix socket requires write permission, so a present
-socket can still refuse the connection, and auto-detect moves on when it does.
-
-The candidates, and the socket-then-localhost fallback, match
-[what chronyc does](https://chrony-project.org/doc/4.9/chronyc.html): it tries
-the Unix socket first and, if that fails because it is not running as root,
-falls back to 127.0.0.1 and then ::1.
+With no argument, `ChronyConnection` tries each candidate in turn — the default
+Unix socket paths, then the localhost command port — and uses the first that
+connects. A socket path that exists is not assumed usable: connecting to a Unix
+socket requires write permission, so a present socket can still refuse, and
+auto-detect moves on when it does. These are the same candidates
+[chronyc uses](https://chrony-project.org/doc/4.9/chronyc.html).
 
 !!! note "The IPv6 candidate is close to a formality"
 
-    The command port is UDP, so opening a socket to it succeeds whether or not
-    chronyd is listening, and the IPv4 candidate wins whenever an IPv4 socket
-    can be created. `[::1]` is reached only if the IPv4 attempt itself errors,
-    such as on a host with no IPv4 stack. chronyd binds both by default, so this
-    rarely matters — but on a host configured with `bindcmdaddress ::1` and no
-    IPv4 command port, chronyc connects while auto-detect stops on IPv4 and
-    fails at the first request. Pass `"[::1]"` explicitly there.
+    The command port is UDP, so opening a socket succeeds with nothing
+    listening, and the IPv4 candidate wins whenever an IPv4 socket can be
+    created. On a host serving the command port on `::1` alone, pass `"[::1]"`
+    explicitly.
 
 The two transports do not carry the same privileges:
 
@@ -109,23 +101,22 @@ The two transports do not carry the same privileges:
 | Capability | chronyd's control channel | monitoring commands only |
 
 chrony describes full access through the Unix socket as "more or less equivalent
-to being able to modify the chronyd's configuration file and restart it". Over
-the command port, anything outside the monitoring set is refused with
+to being able to modify the chronyd's configuration file and restart it";
+anything outside the monitoring set is refused over the command port with
 `Not authorised`, even from localhost.
 
 **For read-only monitoring, prefer the command port.** Every report pychrony
 reads — `tracking`, `sources`, `sourcestats` and `rtcdata` — is in the set
-chronyd serves over it, so the command port costs nothing in capability. chronyd
-binds it to localhost by default; `cmdport 0` disables it (which does not disable
-the Unix socket).
+chronyd serves over it, so it costs nothing in capability. chronyd binds it to
+localhost by default; `cmdport 0` disables it (but not the Unix socket).
 
 !!! warning "Joining the `chrony` group does not grant socket access"
 
     chronyd creates the socket owned by the `chrony` user without group write,
-    and connecting to a Unix socket requires write permission. chrony also
-    requires the socket's directory to be accessible only by the root or chrony
-    user, so loosening these permissions works against chronyd's own design —
-    and buys a control channel a monitoring client does not need.
+    and connecting requires write permission. chrony also requires the socket's
+    directory to be accessible only by the root or chrony user, so loosening
+    these permissions works against its design — and buys a control channel a
+    monitoring client does not need.
 
 See the [chrony.conf man page](https://chrony-project.org/doc/4.9/chrony.conf.html)
 for `cmdport`, `bindcmdaddress` and `cmdallow`.

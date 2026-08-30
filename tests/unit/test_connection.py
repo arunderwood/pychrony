@@ -270,9 +270,9 @@ class TestChronyConnectionAddressResolution:
     ):
         """A socket that exists but refuses connection must not end auto-detect.
 
-        This is the regression case: os.path.exists() is True for the Unix
-        socket, but connect() fails because the caller lacks write permission.
-        Auto-detect must continue to the command port rather than raise.
+        os.path.exists() is True for the Unix socket, but connect() fails
+        because the caller lacks write permission. Auto-detect must carry on to
+        the command port rather than raise.
         """
         mock_exists.return_value = True
         connectable = DEFAULT_COMMAND_PORTS[0].encode()

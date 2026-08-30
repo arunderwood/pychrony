@@ -1,12 +1,10 @@
 """Integration test configuration.
 
-Every test here is guarded by ``HAS_CFFI_BINDINGS`` so the suite can be
-collected on a machine without compiled bindings. That guard makes a run with
-no bindings look almost exactly like a passing one, which is the wrong outcome
-in an environment built to prove the bindings work.
-
-In that environment - the test image, which sets ``PYCHRONY_INTEGRATION_STRICT``
-- missing bindings are a hard error instead. Elsewhere the tests still skip.
+Every test here is guarded on the compiled bindings so the suite stays
+collectable without them. That makes a run with no bindings look much like a
+passing one - the wrong outcome in an environment built to prove the bindings
+work. Where ``PYCHRONY_INTEGRATION_STRICT`` is set, missing bindings are a hard
+error instead; elsewhere they stay a skip.
 """
 
 import importlib.util

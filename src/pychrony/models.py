@@ -26,15 +26,11 @@ __all__ = [
 class Transport(Enum):
     """Transport a `ChronyConnection` is using to reach chronyd.
 
-    The two transports do not carry the same privileges. chronyd's Unix socket
-    is its control channel: chrony documents full access through it as "more or
-    less equivalent to being able to modify the chronyd's configuration file and
-    restart it". Over the command port chronyd serves only monitoring commands
-    and answers anything else with "Not authorised", even from localhost.
-
-    Every report pychrony reads (tracking, sources, sourcestats, rtcdata) is in
-    the monitoring set chronyd allows over the command port, so a read-only
-    consumer loses nothing by preferring `COMMAND_PORT`.
+    The two do not carry the same privileges: chrony describes full access
+    through the Unix socket as "more or less equivalent to being able to modify
+    the chronyd's configuration file and restart it". Every report pychrony
+    reads is in the monitoring set the command port serves, so a read-only
+    consumer loses nothing by requiring `COMMAND_PORT`.
 
     Attributes:
         UNIX_SOCKET: chronyd's Unix domain socket, its read-write control

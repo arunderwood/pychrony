@@ -11,9 +11,9 @@ services:
         - type=local,src=.docker-cache
     command: >
       sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
-    # No ../src mount: it would shadow the compiled _cffi_bindings*.so that the
-    # image builds into /app/src/pychrony/_core/, leaving every test that needs
-    # libchrony to skip. Rebuild the image to pick up source changes.
+    # Mounting host src/ here shadows the compiled _cffi_bindings*.so the image
+    # builds into /app/src/pychrony/_core/, silently skipping every test that
+    # needs libchrony. Rebuild the image to pick up source changes.
     volumes:
       - ../tests:/app/tests:ro
     cap_add:
@@ -42,7 +42,7 @@ services:
         - type=local,src=.docker-cache
     command: >
       sh -c "chronyd && sleep 2 && pytest tests/integration -v --tb=short"
-    # No ../src mount - see test-all.
+    # Host src/ must not be mounted here - see test-all.
     volumes:
       - ../tests:/app/tests:ro
     cap_add:
@@ -59,8 +59,8 @@ services:
       sh -c "chronyd && sleep 2 && /bin/bash"
     stdin_open: true
     tty: true
-    # No ../src mount - see test-all. libchrony would be unreachable from the
-    # shell, which is the one thing this shell exists to poke at.
+    # Host src/ must not be mounted here - see test-all. It would leave libchrony
+    # unreachable from the shell, the one thing this shell exists to poke at.
     volumes:
       - ../tests:/app/tests
     cap_add:

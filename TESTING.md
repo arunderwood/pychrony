@@ -304,21 +304,22 @@ Supported CFFI functions for error injection:
 - `chrony_process_response`: Simulate response processing failures
 - `chrony_request_record`: Simulate record fetch failures
 
-The injected value for `chrony_open_socket` is returned verbatim, so use `-1`.
-It is **not** a negated errno: libchrony's `chrony_open_socket()` returns `-1`
-on every failure and never encodes a reason in its return value.
+The injected value is returned verbatim. It is **not** a negated errno:
+`chrony_open_socket()` returns `-1` on every failure and never encodes a reason.
 
 #### Which exception to expect
 
 `ChronyConnectionError` covers both a socket that will not open and a request
-that goes unanswered. Injecting `5` (`CHRONY_SEND_FAILED`) or `6`
-(`CHRONY_RECV_FAILED`) into `chrony_process_response` produces it rather than
-`ChronyDataError`, because a failed `send()`/`recv()` means chronyd could not be
-reached. Other values are report-level failures and raise `ChronyDataError`.
+that goes unanswered. Injecting `CHRONY_SEND_FAILED` or `CHRONY_RECV_FAILED`
+into `chrony_process_response` produces it rather than `ChronyDataError`,
+because a failed `send()`/`recv()` means chronyd could not be reached. Other
+values are report-level failures and raise `ChronyDataError`. Import the
+constants from `pychrony._core._bindings` rather than writing their numeric
+values, which come from libchrony's header.
 
-`ChronyPermissionError` cannot be triggered by error injection at all. pychrony
-detects permission denial by inspecting the socket on disk, since libchrony does
-not report a reason, so simulating it means faking the filesystem:
+`ChronyPermissionError` cannot be injected at all: pychrony detects permission
+denial by inspecting the socket on disk, since libchrony reports no reason. So
+simulating it means faking the filesystem:
 
 ```python
 from unittest.mock import patch

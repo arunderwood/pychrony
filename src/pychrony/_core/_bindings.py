@@ -29,29 +29,22 @@ from ..models import (
     _ref_id_to_name,
 )
 
-# Default Unix socket paths tried during auto-detect, in order. chrony's
-# compiled-in default is documented as both /run/chrony/chronyd.sock and
-# /var/run/chrony/chronyd.sock depending on release, and the two are the same
-# file wherever /var/run is a symlink to /run, so both are tried.
+# Unix socket paths tried during auto-detect, in order. chrony documents its
+# compiled-in default as /run/... or /var/run/... depending on release; the two
+# are the same file wherever /var/run symlinks to /run.
 DEFAULT_SOCKET_PATHS = [
     "/run/chrony/chronyd.sock",
     "/var/run/chrony/chronyd.sock",
 ]
 
-# Localhost command-port addresses tried after the Unix sockets. chronyd binds
-# the command port to 127.0.0.1 and ::1 by default (bindcmdaddress) on port 323
-# (cmdport), and accepts monitoring commands only from localhost by default
-# (cmdallow). "cmdport 0" disables it; that does not disable the Unix socket.
+# Localhost command-port addresses, tried after the Unix sockets. chronyd serves
+# these by default (cmdport 323 on 127.0.0.1 and ::1, monitoring commands from
+# localhost only); "cmdport 0" disables them and leaves the Unix socket.
 #
-# The list matches chronyc's default, and so does the socket-then-localhost
-# fallback. The step between the two IP entries does not: these are UDP, so
-# chrony_open_socket() succeeds with no listener and the IPv4 candidate wins
-# whenever an IPv4 socket can be created at all. ::1 is therefore reached only
-# when the IPv4 attempt itself errors - a host with no IPv4 stack - and not when
-# chronyd merely is not serving on 127.0.0.1. chronyc gets further because it
-# decides by exchanging a message rather than by connect(), so on a host with
-# "bindcmdaddress ::1" and no IPv4 command port chronyc connects while this
-# fails at the first request.
+# These are UDP, so chrony_open_socket() succeeds with no listener: the IPv4
+# entry wins whenever an IPv4 socket can be created, and ::1 is reached only
+# when that cannot. Serving the command port on ::1 alone needs an explicit
+# address.
 DEFAULT_COMMAND_PORTS = [
     "127.0.0.1:323",
     "[::1]:323",
@@ -77,14 +70,10 @@ try:
 except ImportError:
     _LIBRARY_AVAILABLE = False
 
-# chrony_err values for a failed send()/recv() on the socket. Both mean chronyd
-# could not be reached, not that its data was bad.
-#
-# Read from the compiled bindings so the values come from libchrony's own
-# chrony.h: an enumerator inserted ahead of these upstream would otherwise shift
-# them silently, and the symptom would be misclassified errors. The literals are
-# only a fallback for when no bindings exist, in which case no request can be
-# made and nothing is ever classified against them.
+# chrony_err values for a failed send()/recv(): chronyd could not be reached,
+# rather than its data being bad. Taken from the compiled bindings so that an
+# enumerator added upstream cannot silently shift them into misclassifying
+# errors. The literals apply only with no bindings, where nothing is classified.
 if _LIBRARY_AVAILABLE:
     CHRONY_SEND_FAILED = _lib.CHRONY_SEND_FAILED
     CHRONY_RECV_FAILED = _lib.CHRONY_RECV_FAILED
@@ -105,12 +94,11 @@ def _is_unix_socket_address(address: str) -> bool:
 
 
 def _is_permission_denied(address: str) -> bool:
-    """Return True if a failed connect to `address` was a permissions problem.
+    """Return True if `address` is a Unix socket that exists but is not writable.
 
-    Only meaningful for Unix sockets. Note the check is deliberately not used
-    to decide *whether* to attempt a connection: `os.path.exists` also reports
-    False when the socket's parent directory is not traversable, which says
-    nothing about whether chronyd is reachable.
+    Diagnostic only. It must not gate connection attempts: `os.path.exists` is
+    also False when the socket's parent directory is not traversable, which says
+    nothing about whether chronyd is reachable there.
     """
     return (
         _is_unix_socket_address(address)
@@ -248,11 +236,10 @@ class ChronyConnection:
             - Unix socket path: ``"/run/chrony/chronyd.sock"``
             - IPv4: ``"192.168.1.1"`` or ``"192.168.1.1:323"``
             - IPv6: ``"2001:db8::1"`` or ``"[2001:db8::1]:323"``
-            - ``None``: Auto-detect. Each candidate is tried by actually
-              attempting the connection, in order: the default Unix socket
-              paths, then the localhost command port (IPv4, then IPv6).
-              The first candidate that connects wins; use `address` and
-              `transport` to find out which one that was.
+            - ``None``: Auto-detect. The default Unix socket paths, then the
+              localhost command port, are each tried by attempting the
+              connection; the first that connects wins. `address` and
+              `transport` report which one did.
 
     Methods:
         get_tracking: Get current NTP tracking status (returns `TrackingStatus`).
@@ -261,17 +248,15 @@ class ChronyConnection:
         get_rtc_data: Get RTC tracking data (returns `RTCData` or ``None``).
 
     Choosing a transport:
-        chronyd's Unix socket is its control channel and is accessible locally
-        by the root or chrony user only; its command port is limited to
-        monitoring commands. Every report this class reads is in the monitoring
-        set, so a read-only consumer should prefer the command port and can
-        assert on `transport` to be sure of what it holds.
+        The Unix socket is a control channel; the command port serves only
+        monitoring commands, which covers every report this class reads. A
+        read-only consumer should prefer it and can assert on `transport`.
 
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
 
     See Also:
-        `Transport`: Which transport a connection resolved to.
+        `Transport`: The transport a connection resolved to, and why it matters.
         `TrackingStatus`: Tracking data model.
         `Source`: Time source data model.
         `SourceStats`: Source statistics data model.
@@ -323,9 +308,8 @@ class ChronyConnection:
     def address(self) -> str | None:
         """Address this connection is actually using, or None if not connected.
 
-        For an explicit address this is that address. For auto-detect it is
-        whichever candidate connected, so callers can tell a Unix socket from
-        the localhost command port. Cleared when the connection closes.
+        For an explicit address this is that address; for auto-detect it is
+        whichever candidate connected. Cleared when the connection closes.
         """
         return self._resolved_address
 
@@ -333,10 +317,8 @@ class ChronyConnection:
     def transport(self) -> Transport | None:
         """Transport in use, or None if not connected.
 
-        The two transports differ in privilege: `Transport.UNIX_SOCKET` is
-        chronyd's control channel, while over `Transport.COMMAND_PORT` chronyd
-        serves monitoring commands only. A caller that must not hold a control
-        channel can assert on this.
+        `Transport` covers why the two differ in privilege. A caller that must
+        not hold a control channel can assert on this.
         """
         if self._resolved_address is None:
             return None
@@ -358,13 +340,11 @@ class ChronyConnection:
         return [*DEFAULT_SOCKET_PATHS, *DEFAULT_COMMAND_PORTS]
 
     def _open(self) -> None:
-        """Open socket connection and initialize session.
+        """Open a socket to the first reachable candidate and start a session.
 
-        Candidates are tried by attempting the connection, not by probing the
-        filesystem: a socket path can exist and still refuse connections (a
-        Unix socket needs write permission), and a path can be unstattable
-        while chronyd is perfectly reachable. Only a real connection attempt
-        distinguishes those.
+        Candidates are decided by attempting the connection: a Unix socket can
+        be present yet refuse to connect, since connecting needs write
+        permission, and can be unstattable while chronyd is reachable there.
 
         Raises:
             ChronyConnectionError: If no candidate could be connected to
@@ -386,8 +366,7 @@ class ChronyConnection:
         else:
             self._raise_open_error(candidates, denied_address, last_error_code)
 
-        # Remembered for diagnostics: a command-port connection reached after a
-        # Unix socket refused us explains later "chronyd never answered" errors.
+        # Kept for diagnostics: it explains a later unanswered request.
         self._denied_socket = denied_address
 
         # Initialize session
@@ -475,22 +454,16 @@ class ChronyConnection:
             )
 
     def _raise_request_error(self, description: str, err: int) -> NoReturn:
-        """Raise the appropriate error for a failed request or response.
+        """Raise the error matching a failed request or response.
 
-        `CHRONY_SEND_FAILED` and `CHRONY_RECV_FAILED` are returned when the
-        underlying `send()` or `recv()` fails, so they mean chronyd could not be
-        reached - a connection problem, not a data problem. They are reported as
-        `ChronyConnectionError` so that callers handling "chronyd unreachable"
-        catch them. Every other `chrony_err` concerns the report itself and is
-        reported as `ChronyDataError`.
-
-        This matters most on the command port: it is UDP, so the socket opens
-        whether or not chronyd is listening, and a dead command port only shows
-        up here.
+        A failed send()/recv() means chronyd could not be reached, so it is a
+        connection problem: callers handling "chronyd unreachable" should not
+        have to catch a data error for it as well. Every other chrony_err
+        concerns the report itself.
 
         Args:
-            description: What was being attempted, e.g. "Failed to process
-                tracking response"
+            description: What was attempted, e.g. "Failed to process tracking
+                response"
             err: chrony_err value from the failed call
 
         Raises:

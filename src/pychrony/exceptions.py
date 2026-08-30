@@ -4,11 +4,8 @@ This module defines typed exceptions for chrony-specific error conditions.
 All exceptions inherit from ChronyError.
 
 See Also:
-    chronyc man page (how chronyd is reached, and which commands are allowed
-    over the network): https://chrony-project.org/doc/4.9/chronyc.html
-
-    chrony.conf man page (``cmdport``, ``bindcmdaddress``, ``cmdallow``):
-    https://chrony-project.org/doc/4.9/chrony.conf.html
+    chronyc man page - how chronyd is reached, and which commands it allows
+    over the network: https://chrony-project.org/doc/4.9/chronyc.html
 """
 
 
@@ -34,10 +31,9 @@ class ChronyError(Exception):
 class ChronyConnectionError(ChronyError):
     """Raised when chronyd cannot be reached.
 
-    Covers both a connection that could not be opened and one that opened but
-    produced no answer. The latter matters on the command port: it is UDP, so
-    the socket opens whether or not chronyd is listening, and a disabled or
-    blocked command port only shows up on the first request.
+    Covers a connection that could not be opened and one that opened but was
+    never answered. The second is specific to the command port: it is UDP, so
+    the socket opens whether or not chronyd is listening.
 
     Common causes:
 
@@ -62,24 +58,15 @@ class ChronyConnectionError(ChronyError):
 class ChronyPermissionError(ChronyError):
     """Raised when chronyd's Unix socket exists but refuses the connection.
 
-    chrony documents the Unix domain socket as "accessible locally by the root
-    or chrony user". Connecting to a Unix socket requires write permission, and
-    chronyd creates the socket owned by the chrony user without group write, so
-    **joining chrony's group does not grant access**. chrony further requires
-    the socket's directory to be accessible only by the root or chrony user, so
-    widening these permissions works against chronyd's own design.
+    Connecting to a Unix socket needs write permission, and chronyd creates the
+    socket owned by the chrony user without group write, so **joining chrony's
+    group does not grant access** - only root does. chrony also requires the
+    socket's directory to be accessible only by the root or chrony user, so
+    widening these permissions works against its design.
 
-    Escalating is also the wrong trade for a monitoring client. The Unix socket
-    is chronyd's control channel; chrony notes that full access through it is
-    "more or less equivalent to being able to modify the chronyd's
-    configuration file and restart it". Every report pychrony reads - tracking,
-    sources, sourcestats and rtcdata - is in the set of monitoring commands
-    chronyd serves over its command port, so the command port costs nothing in
-    capability and grants nothing extra.
-
-    For read-only monitoring, prefer the command port on localhost. chronyd
-    enables it by default on 127.0.0.1 and ::1, so this is usually a one-line
-    change at the call site rather than a privilege grant.
+    Prefer the command port for read-only monitoring: chronyd enables it on
+    localhost by default and serves every report pychrony reads, while refusing
+    the control commands the Unix socket would expose.
 
     Common causes:
 
@@ -105,10 +92,9 @@ class ChronyPermissionError(ChronyError):
 class ChronyDataError(ChronyError):
     """Raised when a report is retrieved but its data is invalid or incomplete.
 
-    Reserved for problems with the report itself. A failure to reach chronyd -
-    including a request that is sent but never answered - raises
-    `ChronyConnectionError` instead, so that callers handling "chronyd is
-    unreachable" do not have to catch this as well.
+    Reserved for problems with the report itself. A failure to reach chronyd,
+    including a request sent but never answered, raises `ChronyConnectionError`
+    instead, so "chronyd is unreachable" is one exception to catch, not two.
 
     Common causes:
 

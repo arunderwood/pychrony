@@ -43,10 +43,9 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && ldconfig
 RUN mkdir -p /run/chrony && chown chrony:chrony /run/chrony && chmod 750 /run/chrony
 
 # Configure chronyd for testing (local reference clock + Unix socket + NTP source)
-# cmdport is left at its default (323, bound to localhost) so the auto-detect
-# fallback from the Unix socket to the command port can be exercised. Setting
-# "cmdport 0" here would make that path untestable. cmdallow is redundant with
-# the default localhost-only policy but is kept explicit for the test image.
+# The command port stays at its default (323 on localhost) so the auto-detect
+# fallback from the Unix socket can be exercised; "cmdport 0" would make that
+# path untestable.
 RUN echo "local stratum 10" >> /etc/chrony.conf && \
     echo "allow 127.0.0.1" >> /etc/chrony.conf && \
     echo "cmdallow 127.0.0.1" >> /etc/chrony.conf && \

@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
+from pychrony._core._bindings import CHRONY_RECV_FAILED
 from pychrony.exceptions import (
     ChronyConnectionError,
     ChronyDataError,
@@ -339,7 +340,9 @@ class TestDocumentedErrorInjectionRecipes:
 
     def test_recv_failure_raises_connection_error_not_data_error(self):
         """Injecting CHRONY_RECV_FAILED is a connection error, per TESTING.md."""
-        config = ChronyStateConfig(error_injection={"chrony_process_response": 6})
+        config = ChronyStateConfig(
+            error_injection={"chrony_process_response": CHRONY_RECV_FAILED}
+        )
 
         with (
             pytest.raises(ChronyConnectionError),
@@ -349,6 +352,7 @@ class TestDocumentedErrorInjectionRecipes:
 
     def test_other_response_failure_is_a_data_error(self):
         """A non-transport chrony_err still raises ChronyDataError."""
+        # CHRONY_UNKNOWN_REPORT: a problem with the report, not the transport
         config = ChronyStateConfig(error_injection={"chrony_process_response": 3})
 
         with pytest.raises(ChronyDataError), patched_chrony_connection(config) as conn:
