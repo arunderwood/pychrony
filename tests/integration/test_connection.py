@@ -4,10 +4,15 @@ These tests verify proper error handling when connection to chronyd fails.
 """
 
 import importlib.util
+import os
+import pwd
+import stat
+import subprocess
+import sys
 
 import pytest
 
-from pychrony import ChronyConnection
+from pychrony import ChronyConnection, Transport
 from pychrony.exceptions import (
     ChronyConnectionError,
     ChronyLibraryError,
@@ -126,3 +131,123 @@ class TestConnectionReuse:
             # Verify we got data
             assert tracking.stratum <= 15
             assert len(sources) == len(stats)  # Should match
+
+
+UNPRIVILEGED_USER = "testuser"
+CHRONY_RUNTIME_DIR = "/run/chrony"
+
+
+def _unprivileged_user_exists() -> bool:
+    """Return True if the unprivileged test account is present."""
+    try:
+        pwd.getpwnam(UNPRIVILEGED_USER)
+    except KeyError:
+        return False
+    return True
+
+
+def _run_unprivileged(code: str) -> subprocess.CompletedProcess:
+    """Run a Python snippet as the unprivileged test user.
+
+    Supplementary groups are cleared so the child cannot reach chronyd's socket
+    through chrony group membership, which is the situation a read-only consumer
+    is in.
+    """
+    entry = pwd.getpwnam(UNPRIVILEGED_USER)
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        check=False,
+        user=entry.pw_uid,
+        group=entry.pw_gid,
+        extra_groups=[],
+        cwd="/",
+    )
+
+
+@pytest.fixture
+def traversable_runtime_dir():
+    """Make chronyd's runtime directory traversable, then restore its mode.
+
+    This is the condition under which the Unix socket stat()s successfully for
+    an unprivileged user but still refuses the connection, because connecting
+    to a Unix socket requires write permission the caller does not have.
+    """
+    original_mode = stat.S_IMODE(os.stat(CHRONY_RUNTIME_DIR).st_mode)
+    os.chmod(CHRONY_RUNTIME_DIR, 0o755)
+    try:
+        yield
+    finally:
+        os.chmod(CHRONY_RUNTIME_DIR, original_mode)
+
+
+@pytest.mark.skipif(not HAS_CFFI_BINDINGS, reason="CFFI bindings not compiled")
+class TestResolvedTransport:
+    """Tests for reporting which transport a connection ended up on."""
+
+    def test_address_and_transport_reported_for_auto_detect(self):
+        """Auto-detect reports the candidate it actually connected to."""
+        with ChronyConnection() as conn:
+            assert conn.address is not None
+            assert conn.transport is not None
+            conn.get_tracking()
+
+    def test_address_and_transport_are_none_before_and_after_connect(self):
+        """Neither property makes a claim outside an open connection."""
+        conn = ChronyConnection()
+        assert conn.address is None
+        assert conn.transport is None
+
+        with conn:
+            assert conn.address is not None
+
+        assert conn.address is None
+        assert conn.transport is None
+
+    def test_explicit_command_port_reports_command_port(self):
+        """An explicit localhost address is reported as the read-only transport."""
+        with ChronyConnection("127.0.0.1") as conn:
+            assert conn.transport is Transport.COMMAND_PORT
+            assert conn.address == "127.0.0.1"
+            assert conn.get_tracking() is not None
+
+
+@pytest.mark.skipif(not HAS_CFFI_BINDINGS, reason="CFFI bindings not compiled")
+@pytest.mark.skipif(os.geteuid() != 0, reason="requires root to drop privileges")
+@pytest.mark.skipif(
+    not _unprivileged_user_exists(), reason=f"no {UNPRIVILEGED_USER} account"
+)
+class TestAutoDetectFallback:
+    """Tests that auto-detect falls back on connectability, not on stat()."""
+
+    def test_falls_back_to_command_port_when_socket_refuses_connection(
+        self, traversable_runtime_dir
+    ):
+        """Regression: an unconnectable-but-present socket must not end auto-detect.
+
+        With chronyd's runtime directory traversable, an unprivileged caller can
+        stat() the Unix socket but cannot connect to it. Auto-detect must carry
+        on to the command port instead of raising.
+        """
+        result = _run_unprivileged(
+            "import os\n"
+            "from pychrony import ChronyConnection, Transport\n"
+            "assert os.path.exists('/run/chrony/chronyd.sock'), 'socket should stat'\n"
+            "with ChronyConnection() as c:\n"
+            "    print(c.transport.value, c.get_tracking().stratum)\n"
+        )
+        assert result.returncode == 0, result.stderr
+        assert Transport.COMMAND_PORT.value in result.stdout
+
+    def test_falls_back_when_socket_cannot_be_stat_ed(self):
+        """The stock case still works: unstattable socket, connection via localhost."""
+        result = _run_unprivileged(
+            "import os\n"
+            "from pychrony import ChronyConnection, Transport\n"
+            "assert not os.path.exists('/run/chrony/chronyd.sock')\n"
+            "with ChronyConnection() as c:\n"
+            "    print(c.transport.value, c.get_tracking().stratum)\n"
+        )
+        assert result.returncode == 0, result.stderr
+        assert Transport.COMMAND_PORT.value in result.stdout

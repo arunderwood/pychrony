@@ -15,8 +15,16 @@ ffi.cdef("""
 // Opaque session handle
 typedef struct chrony_session chrony_session;
 
-// Error codes
-typedef int chrony_err;
+// Error codes. Declared as a real enum with a trailing "..." so CFFI resolves
+// each enumerator to its true value from chrony.h at compile time, rather than
+// this file having to mirror the ordering. Only the enumerators pychrony
+// branches on are named; the "..." covers the rest.
+typedef enum {
+    CHRONY_OK,
+    CHRONY_SEND_FAILED,
+    CHRONY_RECV_FAILED,
+    ...
+} chrony_err;
 
 // Connection management
 int chrony_open_socket(const char *address);

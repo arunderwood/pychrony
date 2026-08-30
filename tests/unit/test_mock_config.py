@@ -6,9 +6,18 @@ and helper methods.
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
+from pychrony._core._bindings import CHRONY_RECV_FAILED
+from pychrony.exceptions import (
+    ChronyConnectionError,
+    ChronyDataError,
+    ChronyPermissionError,
+)
 from pychrony.models import LeapStatus, SourceState
+from tests.mocks import patched_chrony_connection
 from tests.mocks.config import ChronyStateConfig, RTCConfig, SourceConfig
 
 
@@ -84,11 +93,11 @@ class TestChronyStateConfigValidation:
         """Valid error injection keys should be accepted."""
         config = ChronyStateConfig(
             error_injection={
-                "chrony_open_socket": -13,
+                "chrony_open_socket": -1,
                 "chrony_init_session": -1,
             }
         )
-        assert config.error_injection["chrony_open_socket"] == -13
+        assert config.error_injection["chrony_open_socket"] == -1
 
 
 class TestChronyStateConfigMethods:
@@ -297,3 +306,54 @@ class TestRTCConfigMethods:
         """is_calibrated returns False when samples == 0."""
         config = RTCConfig(samples=0)
         assert config.is_calibrated() is False
+
+
+class TestDocumentedErrorInjectionRecipes:
+    """Tests that the error-injection recipes in TESTING.md actually work."""
+
+    def test_open_failure_raises_connection_error(self):
+        """Injecting -1 into chrony_open_socket raises ChronyConnectionError."""
+        config = ChronyStateConfig(error_injection={"chrony_open_socket": -1})
+
+        with (
+            pytest.raises(ChronyConnectionError),
+            patched_chrony_connection(config),
+        ):
+            pass
+
+    def test_permission_error_recipe_from_testing_md(self):
+        """The documented ChronyPermissionError recipe produces that error.
+
+        Permission denial cannot be injected through libchrony's return value,
+        so TESTING.md tells readers to fake the socket's filesystem state. That
+        recipe is reproduced here so it cannot quietly stop working.
+        """
+        config = ChronyStateConfig(error_injection={"chrony_open_socket": -1})
+
+        with (
+            patch("os.path.exists", return_value=True),  # socket is present...
+            patch("os.access", return_value=False),  # ...but not writable
+            pytest.raises(ChronyPermissionError),
+            patched_chrony_connection(config),
+        ):
+            pass
+
+    def test_recv_failure_raises_connection_error_not_data_error(self):
+        """Injecting CHRONY_RECV_FAILED is a connection error, per TESTING.md."""
+        config = ChronyStateConfig(
+            error_injection={"chrony_process_response": CHRONY_RECV_FAILED}
+        )
+
+        with (
+            pytest.raises(ChronyConnectionError),
+            patched_chrony_connection(config) as conn,
+        ):
+            conn.get_tracking()
+
+    def test_other_response_failure_is_a_data_error(self):
+        """A non-transport chrony_err still raises ChronyDataError."""
+        # CHRONY_UNKNOWN_REPORT: a problem with the report, not the transport
+        config = ChronyStateConfig(error_injection={"chrony_process_response": 3})
+
+        with pytest.raises(ChronyDataError), patched_chrony_connection(config) as conn:
+            conn.get_tracking()

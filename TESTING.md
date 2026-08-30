@@ -282,27 +282,64 @@ Inject errors at specific CFFI function calls to test error handling:
 
 ```python
 from tests.mocks import ChronyStateConfig, patched_chrony_connection
-from pychrony.exceptions import ChronyPermissionError
+from pychrony.exceptions import ChronyConnectionError
 
 config = ChronyStateConfig(
     error_injection={
-        "chrony_open_socket": -13,  # EACCES (permission denied)
+        "chrony_open_socket": -1,  # libchrony returns -1 on any open failure
     }
 )
 
 
-def test_permission_error():
-    with pytest.raises(ChronyPermissionError):
+def test_connection_error():
+    with pytest.raises(ChronyConnectionError):
         with patched_chrony_connection(config) as conn:
             pass  # Error raised during connection
 ```
 
 Supported CFFI functions for error injection:
-- `chrony_open_socket`: Simulate connection failures (-13 for EACCES)
+- `chrony_open_socket`: Simulate a socket that will not open (use `-1`)
 - `chrony_init_session`: Simulate session initialization failures
 - `chrony_request_report_number_records`: Simulate report request failures
 - `chrony_process_response`: Simulate response processing failures
 - `chrony_request_record`: Simulate record fetch failures
+
+The injected value is returned verbatim. It is **not** a negated errno:
+`chrony_open_socket()` returns `-1` on every failure and never encodes a reason.
+
+#### Which exception to expect
+
+`ChronyConnectionError` covers both a socket that will not open and a request
+that goes unanswered. Injecting `CHRONY_SEND_FAILED` or `CHRONY_RECV_FAILED`
+into `chrony_process_response` produces it rather than `ChronyDataError`,
+because a failed `send()`/`recv()` means chronyd could not be reached. Other
+values are report-level failures and raise `ChronyDataError`. Import the
+constants from `pychrony._core._bindings` rather than writing their numeric
+values, which come from libchrony's header.
+
+`ChronyPermissionError` cannot be injected at all: pychrony detects permission
+denial by inspecting the socket on disk, since libchrony reports no reason. So
+simulating it means faking the filesystem:
+
+```python
+from unittest.mock import patch
+
+import pytest
+
+from pychrony import ChronyConnection
+from pychrony.exceptions import ChronyPermissionError
+
+
+def test_permission_error():
+    config = ChronyStateConfig(error_injection={"chrony_open_socket": -1})
+    with (
+        patch("os.path.exists", return_value=True),  # socket is present...
+        patch("os.access", return_value=False),  # ...but not writable
+        pytest.raises(ChronyPermissionError),
+        patched_chrony_connection(config),
+    ):
+        pass
+```
 
 ### Custom Scenarios
 

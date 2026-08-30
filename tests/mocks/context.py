@@ -37,8 +37,8 @@ def patched_chrony_connection(
         ChronyConnection instance connected to mock session.
 
     Raises:
-        ChronyConnectionError: If error_injection includes connection errors.
-        ChronyPermissionError: If error_injection includes -13 (EACCES).
+        ChronyConnectionError: If error_injection makes chronyd unreachable,
+            whether the socket fails to open or a request goes unanswered.
         ChronyDataError: If error_injection includes data errors.
 
     Example:

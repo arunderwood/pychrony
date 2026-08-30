@@ -79,3 +79,42 @@ class TestSourceNoLongerHasNameProperties:
         """Test that Source no longer has state_name property."""
         # After enum migration, state_name is removed - use state.name instead
         assert not hasattr(Source, "state_name")
+
+
+class TestTransportAPI:
+    """Contract tests for the resolved-transport API."""
+
+    def test_transport_in_all(self):
+        """Test that Transport is in __all__."""
+        from pychrony import __all__
+
+        assert "Transport" in __all__
+
+    def test_transport_is_enum(self):
+        """Test that Transport is an Enum."""
+        from enum import Enum
+
+        from pychrony import Transport
+
+        assert issubclass(Transport, Enum)
+
+    def test_transport_members(self):
+        """Test that Transport distinguishes the control channel from the read-only port."""
+        from pychrony import Transport
+
+        assert {m.name for m in Transport} == {"UNIX_SOCKET", "COMMAND_PORT"}
+
+    def test_connection_exposes_address_and_transport(self):
+        """Test that ChronyConnection exposes address and transport as properties."""
+        from pychrony import ChronyConnection
+
+        assert isinstance(ChronyConnection.address, property)
+        assert isinstance(ChronyConnection.transport, property)
+
+    def test_address_and_transport_none_when_not_connected(self):
+        """Test that neither property claims a transport outside a connection."""
+        from pychrony import ChronyConnection
+
+        conn = ChronyConnection()
+        assert conn.address is None
+        assert conn.transport is None

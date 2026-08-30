@@ -12,6 +12,7 @@ __all__ = [
     "LeapStatus",
     "SourceState",
     "SourceMode",
+    "Transport",
     # Dataclasses
     "TrackingStatus",
     "Source",
@@ -20,6 +21,36 @@ __all__ = [
     # Helpers
     "_ref_id_to_name",
 ]
+
+
+class Transport(Enum):
+    """Transport a `ChronyConnection` is using to reach chronyd.
+
+    The two do not carry the same privileges: chrony describes full access
+    through the Unix socket as "more or less equivalent to being able to modify
+    the chronyd's configuration file and restart it". Every report pychrony
+    reads is in the monitoring set the command port serves, so a read-only
+    consumer loses nothing by requiring `COMMAND_PORT`.
+
+    Attributes:
+        UNIX_SOCKET: chronyd's Unix domain socket, its read-write control
+            channel. Accessible locally by the root or chrony user.
+        COMMAND_PORT: chronyd's UDP command port (default 323, bound to
+            127.0.0.1 and ::1). Serves monitoring commands only.
+
+    See Also:
+        https://chrony-project.org/doc/4.9/chronyc.html
+
+    Examples:
+        >>> from pychrony import ChronyConnection, Transport
+        >>> with ChronyConnection() as conn:
+        ...     if conn.transport is not Transport.COMMAND_PORT:
+        ...         raise RuntimeError("refusing to hold a control channel")
+        ...     tracking = conn.get_tracking()
+    """
+
+    UNIX_SOCKET = "unix_socket"
+    COMMAND_PORT = "command_port"
 
 
 class LeapStatus(Enum):

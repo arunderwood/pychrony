@@ -43,12 +43,17 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && ldconfig
 RUN mkdir -p /run/chrony && chown chrony:chrony /run/chrony && chmod 750 /run/chrony
 
 # Configure chronyd for testing (local reference clock + Unix socket + NTP source)
+# The command port stays at its default (323 on localhost) so the auto-detect
+# fallback from the Unix socket can be exercised; "cmdport 0" would make that
+# path untestable.
 RUN echo "local stratum 10" >> /etc/chrony.conf && \
     echo "allow 127.0.0.1" >> /etc/chrony.conf && \
     echo "cmdallow 127.0.0.1" >> /etc/chrony.conf && \
-    echo "cmdport 0" >> /etc/chrony.conf && \
     echo "bindcmdaddress /run/chrony/chronyd.sock" >> /etc/chrony.conf && \
     echo "server pool.ntp.org iburst" >> /etc/chrony.conf
+
+# Unprivileged user for tests that must not be able to reach the Unix socket
+RUN useradd -m testuser
 
 # Install UV for Python package management
 RUN pip3 install uv
@@ -75,6 +80,10 @@ RUN uv pip install --system -e "."
 # ffi.compile() outputs to /app/pychrony/_core/, but editable install is at /app/src/pychrony/
 RUN python3 -c "from pychrony._core._build_bindings import ffi; ffi.compile(verbose=True)" && \
     cp /app/pychrony/_core/_cffi_bindings*.so /app/src/pychrony/_core/
+
+# Integration tests must fail, not skip, if the compiled bindings are missing:
+# this image exists to prove they work, so a skipped run must not look green.
+ENV PYCHRONY_INTEGRATION_STRICT=1
 
 # Default command: run all tests
 CMD ["pytest", "tests/", "-v"]

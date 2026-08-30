@@ -6,7 +6,7 @@
 [![Documentation](https://img.shields.io/badge/docs-pychrony.org-blue)](https://pychrony.org/)
 [![License](https://img.shields.io/pypi/l/pychrony)](https://github.com/arunderwood/pychrony/blob/main/LICENSE)
 
-Query your system's time synchronization status from Python. PyChrony provides bindings for [chrony](https://chrony.tuxfamily.org/), the default NTP (Network Time Protocol) client on most Linux distributions, letting you monitor clock accuracy, sync status, and time sources programmatically.
+Query your system's time synchronization status from Python. PyChrony provides bindings for [chrony](https://chrony-project.org/), the default NTP (Network Time Protocol) client on most Linux distributions, letting you monitor clock accuracy, sync status, and time sources programmatically.
 
 ## Features
 
@@ -85,6 +85,27 @@ with ChronyConnection() as conn:
     print(f"Synchronized: {status.is_synchronized()}")
 ```
 
+With no argument, pychrony tries chronyd's Unix socket and then its localhost
+command port, using the first that connects — the same candidates
+[chronyc uses](https://chrony-project.org/doc/4.9/chronyc.html).
+
+The two are not equivalent in privilege. The Unix socket is chronyd's control
+channel, restricted to the root or `chrony` user; the command port serves
+monitoring commands only, which is everything pychrony reads. Read-only
+consumers should prefer the command port and can require it:
+
+```python
+from pychrony import ChronyConnection, Transport
+
+with ChronyConnection() as conn:
+    assert conn.transport is Transport.COMMAND_PORT
+    status = conn.get_tracking()
+```
+
+Note that joining the `chrony` group does **not** grant access to the Unix
+socket. See [Choosing a Transport](https://pychrony.org/#choosing-a-transport)
+for details.
+
 ## Compatibility
 
 - **Python**: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15
@@ -95,7 +116,7 @@ with ChronyConnection() as conn:
 
 - [Documentation](https://pychrony.org/) — Full API reference and guides
 - [GitHub Issues](https://github.com/arunderwood/pychrony/issues) — Report bugs or request features
-- [chrony documentation](https://chrony.tuxfamily.org/documentation.html) — Understanding NTP and chrony
+- [chrony documentation](https://chrony-project.org/documentation.html) — Understanding NTP and chrony
 
 ## License
 
