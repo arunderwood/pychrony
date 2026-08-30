@@ -51,16 +51,36 @@ Error Handling:
     ...         status = conn.get_tracking()
     ... except ChronyLibraryError:
     ...     print("libchrony not installed")
-    ... except ChronyConnectionError:
-    ...     print("chronyd not running")
     ... except ChronyPermissionError:
-    ...     print("permission denied - add user to chrony group")
+    ...     print("permission denied - try ChronyConnection('127.0.0.1')")
+    ... except ChronyConnectionError:
+    ...     print("chronyd unreachable")
+
+Choosing a Transport:
+    With no argument, each candidate is tried in turn - chronyd's Unix socket
+    paths, then its localhost command port - and the first that connects wins.
+    This is the order chronyc itself uses.
+
+    The two transports differ in privilege. The Unix socket is chronyd's
+    control channel, accessible to the root or chrony user only; the command
+    port serves monitoring commands only, which covers every report pychrony
+    reads. Read-only consumers should prefer the command port. Note that
+    joining the chrony group does not grant access to the Unix socket.
+
+    >>> from pychrony import ChronyConnection, Transport
+    >>> with ChronyConnection() as conn:
+    ...     assert conn.transport is Transport.COMMAND_PORT
+    ...     status = conn.get_tracking()
 
 Custom Socket Path:
     >>> with ChronyConnection("/custom/path/chronyd.sock") as conn:
     ...     status = conn.get_tracking()
 
 Remote chronyd via UDP:
+    Requires configuration on the remote host: chronyd binds its command port
+    to loopback (bindcmdaddress) and accepts monitoring commands only from
+    localhost (cmdallow) by default. The command port is unauthenticated.
+
     >>> with ChronyConnection("192.168.1.100") as conn:
     ...     status = conn.get_tracking()
 
@@ -92,6 +112,7 @@ Thread Safety:
 For more information, see:
 - https://github.com/arunderwood/pychrony
 - https://chrony-project.org/
+- https://chrony-project.org/doc/4.9/chronyc.html
 """
 
 from importlib.metadata import PackageNotFoundError, version
@@ -112,6 +133,7 @@ from .models import (
     SourceState,
     SourceStats,
     TrackingStatus,
+    Transport,
 )
 
 try:
@@ -128,6 +150,7 @@ __all__ = [
     "LeapStatus",
     "SourceState",
     "SourceMode",
+    "Transport",
     # Data models
     "TrackingStatus",
     "Source",

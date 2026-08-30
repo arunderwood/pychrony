@@ -24,9 +24,11 @@ Public API:
         - patched_chrony_connection: Patch CFFI bindings with mock
 
 Error Injection:
-    The error_injection dict in ChronyStateConfig maps operation names to
-    error codes. Supported operations:
-        - "chrony_open_socket": Connection error (-13 for EACCES)
+    The error_injection dict in ChronyStateConfig maps operation names to the
+    value the mocked call returns. Supported operations:
+        - "chrony_open_socket": Failure to open a socket. libchrony returns -1
+          on any failure, so use -1; the value is not a negated errno, and no
+          value makes this raise ChronyPermissionError (see TESTING.md).
         - "chrony_init_session": Session initialization error
         - "chrony_request_report_number_records": Report request error
         - "chrony_process_response": Response processing error

@@ -47,6 +47,10 @@ Categorical values for status fields.
     options:
       show_root_heading: true
 
+::: pychrony.Transport
+    options:
+      show_root_heading: true
+
 ## Exceptions
 
 Exception hierarchy for error handling.

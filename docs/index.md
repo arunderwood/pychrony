@@ -60,13 +60,83 @@ try:
         status = conn.get_tracking()
 except ChronyLibraryError:
     print("libchrony not installed")
-except ChronyConnectionError:
-    print("chronyd not running")
 except ChronyPermissionError:
-    print("Permission denied - add user to chrony group")
+    # chronyd's Unix socket is its control channel and is restricted to the
+    # root or chrony user. For read-only monitoring, use the command port.
+    print("Permission denied - falling back to the command port")
+    with ChronyConnection("127.0.0.1") as conn:
+        status = conn.get_tracking()
+except ChronyConnectionError:
+    print("chronyd unreachable")
 ```
 
+`ChronyConnectionError` means chronyd could not be reached — either the
+connection would not open, or it opened and nothing answered. The second case is
+normal on the command port, which is UDP: the socket opens whether or not
+chronyd is listening, so a disabled or blocked command port only surfaces on the
+first request. `ChronyDataError` is reserved for a report that arrived but was
+malformed.
+
+## Choosing a Transport
+
+With no argument, `ChronyConnection` auto-detects by attempting each candidate
+in turn — the default Unix socket paths, then the localhost command port — and
+uses the first that connects. A socket path that exists is not assumed to be
+usable: connecting to a Unix socket requires write permission, so a present
+socket can still refuse the connection, and auto-detect moves on when it does.
+
+This mirrors what [chronyc itself does](https://chrony-project.org/doc/4.9/chronyc.html):
+it tries the Unix socket first and, if that fails because it is not running as
+root, falls back to 127.0.0.1 and then ::1.
+
+The two transports do not carry the same privileges:
+
+| | Unix socket | Command port |
+| --- | --- | --- |
+| Address | `/run/chrony/chronyd.sock` | `127.0.0.1`, `[::1]` (port 323) |
+| Access | root or the `chrony` user only | localhost by default (`cmdallow`) |
+| Capability | chronyd's control channel | monitoring commands only |
+
+chrony describes full access through the Unix socket as "more or less equivalent
+to being able to modify the chronyd's configuration file and restart it". Over
+the command port, anything outside the monitoring set is refused with
+`Not authorised`, even from localhost.
+
+**For read-only monitoring, prefer the command port.** Every report pychrony
+reads — `tracking`, `sources`, `sourcestats` and `rtcdata` — is in the set
+chronyd serves over it, so the command port costs nothing in capability. chronyd
+binds it to localhost by default; `cmdport 0` disables it (which does not disable
+the Unix socket).
+
+!!! warning "Joining the `chrony` group does not grant socket access"
+
+    chronyd creates the socket owned by the `chrony` user without group write,
+    and connecting to a Unix socket requires write permission. chrony also
+    requires the socket's directory to be accessible only by the root or chrony
+    user, so loosening these permissions works against chronyd's own design —
+    and buys a control channel a monitoring client does not need.
+
+See the [chrony.conf man page](https://chrony-project.org/doc/4.9/chrony.conf.html)
+for `cmdport`, `bindcmdaddress` and `cmdallow`.
+
+`address` and `transport` report what the connection actually settled on, so a
+caller that must not hold a control channel can assert on it:
+
+```python
+from pychrony import ChronyConnection, Transport
+
+with ChronyConnection() as conn:
+    if conn.transport is not Transport.COMMAND_PORT:
+        raise RuntimeError(f"refusing to hold a control channel ({conn.address})")
+    status = conn.get_tracking()
+```
+
+Both are `None` outside an open connection.
+
 ## Remote and Custom Connections
+
+An explicit address is used as given, with no fallback — asking for a specific
+transport never lands you silently on another one.
 
 Connect to a custom Unix socket path:
 
@@ -81,6 +151,13 @@ Connect to a remote chronyd instance via UDP:
 with ChronyConnection("192.168.1.100") as conn:
     status = conn.get_tracking()
 ```
+
+This needs configuration on the remote host, which does not allow it by default:
+chronyd binds its command port to loopback only (`bindcmdaddress`) and accepts
+monitoring commands only from localhost (`cmdallow`). Widening either exposes
+chronyd's monitoring data to the network, so scope `cmdallow` to the hosts that
+need it. The command port is unauthenticated, so treat it as readable by anyone
+who can reach it.
 
 ## Thread Safety
 

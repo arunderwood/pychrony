@@ -5,14 +5,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from pychrony import ChronyConnection
+from pychrony import ChronyConnection, Transport
 from pychrony._core._bindings import (
+    CHRONY_RECV_FAILED,
+    CHRONY_SEND_FAILED,
+    DEFAULT_COMMAND_PORTS,
     DEFAULT_SOCKET_PATHS,
     NANOSECONDS_PER_SECOND,
     _timespec_to_float,
 )
 from pychrony.exceptions import (
     ChronyConnectionError,
+    ChronyDataError,
     ChronyLibraryError,
     ChronyPermissionError,
 )
@@ -133,9 +137,19 @@ class TestChronyConnectionContextManager:
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
     @patch("pychrony._core._bindings._ffi")
-    def test_permission_error_on_denied_access(self, mock_ffi, mock_lib, mock_check):
-        """Test that permission error is raised when access denied."""
-        mock_lib.chrony_open_socket.return_value = -13  # EACCES
+    @patch("os.access")
+    @patch("os.path.exists")
+    def test_permission_error_on_denied_access(
+        self, mock_exists, mock_access, mock_ffi, mock_lib, mock_check
+    ):
+        """A Unix socket that exists but is not writable raises a permission error.
+
+        libchrony's chrony_open_socket() only ever returns -1, never a negated
+        errno, so permission denial is detected from the socket itself.
+        """
+        mock_exists.return_value = True
+        mock_access.return_value = False
+        mock_lib.chrony_open_socket.return_value = -1
         mock_ffi.NULL = None
 
         with (
@@ -145,6 +159,36 @@ class TestChronyConnectionContextManager:
             pass
 
         assert "Permission denied" in str(exc_info.value)
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    @patch("os.access")
+    @patch("os.path.exists")
+    def test_permission_error_recommends_command_port_not_group(
+        self, mock_exists, mock_access, mock_ffi, mock_lib, mock_check
+    ):
+        """Remediation points at the read-only command port, not the chrony group.
+
+        Joining chrony's group does not grant access (the socket is not
+        group-writable), and the Unix socket is a read-write control channel,
+        so recommending it over-privileges read-only callers.
+        """
+        mock_exists.return_value = True
+        mock_access.return_value = False
+        mock_lib.chrony_open_socket.return_value = -1
+        mock_ffi.NULL = None
+
+        with (
+            pytest.raises(ChronyPermissionError) as exc_info,
+            ChronyConnection("/protected.sock"),
+        ):
+            pass
+
+        message = str(exc_info.value)
+        assert "127.0.0.1" in message
+        assert "cmdport 0" in message
+        assert "add user to chrony group" not in message.lower()
 
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
@@ -200,20 +244,18 @@ class TestChronyConnectionAddressResolution:
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
     @patch("pychrony._core._bindings._ffi")
-    @patch("os.path.exists")
-    def test_uses_first_existing_default_socket(
-        self, mock_exists, mock_ffi, mock_lib, mock_check
+    def test_uses_first_connectable_default_socket(
+        self, mock_ffi, mock_lib, mock_check
     ):
-        """Test that first existing default socket is used."""
-        mock_exists.side_effect = lambda p: p == DEFAULT_SOCKET_PATHS[0]
+        """First candidate that connects is used, without probing the filesystem."""
         mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
+        mock_ffi.new.return_value = [MagicMock()]
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = 0
 
-        with ChronyConnection():
-            pass
+        with ChronyConnection() as conn:
+            assert conn.address == DEFAULT_SOCKET_PATHS[0]
+            assert conn.transport is Transport.UNIX_SOCKET
 
         mock_lib.chrony_open_socket.assert_called_once_with(
             DEFAULT_SOCKET_PATHS[0].encode()
@@ -223,43 +265,94 @@ class TestChronyConnectionAddressResolution:
     @patch("pychrony._core._bindings._lib")
     @patch("pychrony._core._bindings._ffi")
     @patch("os.path.exists")
-    def test_uses_second_default_socket_if_first_missing(
+    def test_falls_back_when_existing_socket_refuses_connection(
         self, mock_exists, mock_ffi, mock_lib, mock_check
     ):
-        """Test that second default socket is used if first doesn't exist."""
-        mock_exists.side_effect = lambda p: p == DEFAULT_SOCKET_PATHS[1]
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
+        """A socket that exists but refuses connection must not end auto-detect.
+
+        This is the regression case: os.path.exists() is True for the Unix
+        socket, but connect() fails because the caller lacks write permission.
+        Auto-detect must continue to the command port rather than raise.
+        """
+        mock_exists.return_value = True
+        connectable = DEFAULT_COMMAND_PORTS[0].encode()
+        mock_lib.chrony_open_socket.side_effect = lambda addr: (
+            5 if addr == connectable else -1
+        )
+        mock_ffi.new.return_value = [MagicMock()]
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = 0
 
-        with ChronyConnection():
-            pass
+        with ChronyConnection() as conn:
+            assert conn.address == DEFAULT_COMMAND_PORTS[0]
+            assert conn.transport is Transport.COMMAND_PORT
+
+        attempted = [c.args[0] for c in mock_lib.chrony_open_socket.call_args_list]
+        assert attempted == [
+            p.encode() for p in [*DEFAULT_SOCKET_PATHS, DEFAULT_COMMAND_PORTS[0]]
+        ]
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    @patch("os.path.exists")
+    def test_unstattable_socket_is_still_attempted(
+        self, mock_exists, mock_ffi, mock_lib, mock_check
+    ):
+        """A socket path that cannot be stat()ed is still tried.
+
+        os.path.exists() is False when the parent directory is not traversable,
+        which says nothing about whether chronyd is reachable there.
+        """
+        mock_exists.return_value = False
+        mock_lib.chrony_open_socket.return_value = 5
+        mock_ffi.new.return_value = [MagicMock()]
+        mock_ffi.NULL = None
+        mock_lib.chrony_init_session.return_value = 0
+
+        with ChronyConnection() as conn:
+            assert conn.address == DEFAULT_SOCKET_PATHS[0]
 
         mock_lib.chrony_open_socket.assert_called_once_with(
-            DEFAULT_SOCKET_PATHS[1].encode()
+            DEFAULT_SOCKET_PATHS[0].encode()
         )
 
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
     @patch("pychrony._core._bindings._ffi")
     @patch("os.path.exists")
-    def test_passes_null_when_no_default_sockets_exist(
+    def test_tries_every_candidate_before_failing(
         self, mock_exists, mock_ffi, mock_lib, mock_check
     ):
-        """Test that NULL is passed when no default sockets exist."""
+        """Every candidate is attempted, and the error names them all."""
         mock_exists.return_value = False
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
+        mock_lib.chrony_open_socket.return_value = -1
         mock_ffi.NULL = None
-        mock_lib.chrony_init_session.return_value = 0
 
-        with ChronyConnection():
+        with pytest.raises(ChronyConnectionError) as exc_info, ChronyConnection():
             pass
 
-        mock_lib.chrony_open_socket.assert_called_once_with(None)
+        attempted = [c.args[0] for c in mock_lib.chrony_open_socket.call_args_list]
+        expected = [*DEFAULT_SOCKET_PATHS, *DEFAULT_COMMAND_PORTS]
+        assert attempted == [p.encode() for p in expected]
+        for candidate in expected:
+            assert candidate in str(exc_info.value)
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    def test_explicit_address_does_not_fall_back(self, mock_ffi, mock_lib, mock_check):
+        """An explicit address is never silently swapped for another transport."""
+        mock_lib.chrony_open_socket.return_value = -1
+        mock_ffi.NULL = None
+
+        with (
+            pytest.raises(ChronyConnectionError),
+            ChronyConnection("/custom/chronyd.sock"),
+        ):
+            pass
+
+        mock_lib.chrony_open_socket.assert_called_once_with(b"/custom/chronyd.sock")
 
     @patch("pychrony._core._bindings._check_library_available")
     @patch("pychrony._core._bindings._lib")
@@ -432,3 +525,103 @@ class TestGetRtcDataReturnsNone:
             result = conn.get_rtc_data()
 
         assert result is None
+
+
+class TestResponseFailureDiagnostics:
+    """Tests for classifying and diagnosing a failure to reach chronyd."""
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    @patch("os.access")
+    @patch("os.path.exists")
+    def test_recv_failure_on_command_port_explains_itself(
+        self, mock_exists, mock_access, mock_ffi, mock_lib, mock_check
+    ):
+        """A dead command port is reported as a connection failure, and says why.
+
+        The command port is UDP, so connect() succeeds with nothing listening.
+        The failure only surfaces on the first receive.
+        """
+        mock_exists.return_value = True
+        mock_access.return_value = False
+        connectable = DEFAULT_COMMAND_PORTS[0].encode()
+        mock_lib.chrony_open_socket.side_effect = lambda addr: (
+            5 if addr == connectable else -1
+        )
+        mock_ffi.new.return_value = [MagicMock()]
+        mock_ffi.NULL = None
+        mock_lib.chrony_init_session.return_value = 0
+        mock_lib.chrony_request_report_number_records.return_value = 0
+        mock_lib.chrony_needs_response.return_value = True
+        mock_lib.chrony_process_response.return_value = CHRONY_RECV_FAILED
+
+        with (
+            pytest.raises(ChronyConnectionError) as exc_info,
+            ChronyConnection() as conn,
+        ):
+            conn.get_tracking()
+
+        message = str(exc_info.value)
+        assert "cmdport 0" in message
+        # The Unix socket that pushed auto-detect onto the command port is named
+        assert DEFAULT_SOCKET_PATHS[0] in message
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    def test_send_failure_is_a_connection_error(self, mock_ffi, mock_lib, mock_check):
+        """A failed send() is a connection failure, not a data failure."""
+        mock_lib.chrony_open_socket.return_value = 5
+        mock_ffi.new.return_value = [MagicMock()]
+        mock_ffi.NULL = None
+        mock_lib.chrony_init_session.return_value = 0
+        mock_lib.chrony_request_report_number_records.return_value = CHRONY_SEND_FAILED
+
+        with (
+            pytest.raises(ChronyConnectionError) as exc_info,
+            ChronyConnection() as conn,
+        ):
+            conn.get_tracking()
+
+        assert "did not respond" in str(exc_info.value)
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    def test_no_command_port_guidance_on_unix_socket(
+        self, mock_ffi, mock_lib, mock_check
+    ):
+        """A Unix socket failure gets no command-port guidance."""
+        mock_lib.chrony_open_socket.return_value = 5
+        mock_ffi.new.return_value = [MagicMock()]
+        mock_ffi.NULL = None
+        mock_lib.chrony_init_session.return_value = 0
+        mock_lib.chrony_request_report_number_records.return_value = 0
+        mock_lib.chrony_needs_response.return_value = True
+        mock_lib.chrony_process_response.return_value = CHRONY_RECV_FAILED
+
+        with (
+            pytest.raises(ChronyConnectionError) as exc_info,
+            ChronyConnection() as conn,
+        ):
+            conn.get_tracking()
+
+        assert "cmdport 0" not in str(exc_info.value)
+
+    @patch("pychrony._core._bindings._check_library_available")
+    @patch("pychrony._core._bindings._lib")
+    @patch("pychrony._core._bindings._ffi")
+    def test_non_transport_error_is_still_a_data_error(
+        self, mock_ffi, mock_lib, mock_check
+    ):
+        """Failures that are not send/recv problems stay ChronyDataError."""
+        mock_lib.chrony_open_socket.return_value = 5
+        mock_ffi.new.return_value = [MagicMock()]
+        mock_ffi.NULL = None
+        mock_lib.chrony_init_session.return_value = 0
+        # CHRONY_UNKNOWN_REPORT - a problem with the report, not the transport
+        mock_lib.chrony_request_report_number_records.return_value = 3
+
+        with pytest.raises(ChronyDataError), ChronyConnection() as conn:
+            conn.get_tracking()

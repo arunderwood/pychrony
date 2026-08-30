@@ -6,11 +6,10 @@ to chronyd and retrieving time synchronization status.
 Internal implementation - use pychrony.ChronyConnection instead.
 """
 
-import errno
 import math
 import os
 from types import TracebackType
-from typing import Any
+from typing import Any, NoReturn
 
 from ..exceptions import (
     ChronyConnectionError,
@@ -26,17 +25,43 @@ from ..models import (
     SourceState,
     SourceStats,
     TrackingStatus,
+    Transport,
     _ref_id_to_name,
 )
 
-# Default socket paths to try (in order)
+# Default Unix socket paths tried during auto-detect, in order. chrony's
+# compiled-in default is documented as both /run/chrony/chronyd.sock and
+# /var/run/chrony/chronyd.sock depending on release, and the two are the same
+# file wherever /var/run is a symlink to /run, so both are tried.
 DEFAULT_SOCKET_PATHS = [
     "/run/chrony/chronyd.sock",
     "/var/run/chrony/chronyd.sock",
 ]
 
+# Localhost command-port addresses tried after the Unix sockets. chronyd binds
+# the command port to 127.0.0.1 and ::1 by default (bindcmdaddress) on port 323
+# (cmdport), and accepts monitoring commands only from localhost by default
+# (cmdallow). "cmdport 0" disables it; that does not disable the Unix socket.
+#
+# This chain mirrors chronyc's own documented behaviour: it tries the Unix
+# socket first and, if that fails because it is not running as root, falls back
+# to 127.0.0.1 and then ::1.
+DEFAULT_COMMAND_PORTS = [
+    "127.0.0.1:323",
+    "[::1]:323",
+]
+
 # Conversion constants
 NANOSECONDS_PER_SECOND = 1e9
+
+# chrony_err values for a failed send()/recv() on the socket, from the
+# chrony_err enum in libchrony's chrony.h. The CFFI cdef types chrony_err as a
+# plain int, so the enumerators are not exposed and their values are mirrored
+# here. Both mean chronyd could not be reached, not that its data was bad.
+CHRONY_SEND_FAILED = 5
+CHRONY_RECV_FAILED = 6
+
+TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
 
 # Try to import compiled CFFI bindings
 # These are generated at build time by CFFI, so they may not exist
@@ -54,6 +79,30 @@ try:
     _LIBRARY_AVAILABLE = True
 except ImportError:
     _LIBRARY_AVAILABLE = False
+
+
+def _is_unix_socket_address(address: str) -> bool:
+    """Return True if an address names a Unix socket path.
+
+    Mirrors libchrony's own rule: a leading slash means a Unix socket,
+    anything else is parsed as an IP address with an optional port.
+    """
+    return address.startswith("/")
+
+
+def _is_permission_denied(address: str) -> bool:
+    """Return True if a failed connect to `address` was a permissions problem.
+
+    Only meaningful for Unix sockets. Note the check is deliberately not used
+    to decide *whether* to attempt a connection: `os.path.exists` also reports
+    False when the socket's parent directory is not traversable, which says
+    nothing about whether chronyd is reachable.
+    """
+    return (
+        _is_unix_socket_address(address)
+        and os.path.exists(address)
+        and not os.access(address, os.R_OK | os.W_OK)
+    )
 
 
 def _check_library_available() -> None:
@@ -185,7 +234,11 @@ class ChronyConnection:
             - Unix socket path: ``"/run/chrony/chronyd.sock"``
             - IPv4: ``"192.168.1.1"`` or ``"192.168.1.1:323"``
             - IPv6: ``"2001:db8::1"`` or ``"[2001:db8::1]:323"``
-            - ``None``: Auto-detect (tries Unix socket paths, then localhost)
+            - ``None``: Auto-detect. Each candidate is tried by actually
+              attempting the connection, in order: the default Unix socket
+              paths, then the localhost command port (IPv4, then IPv6).
+              The first candidate that connects wins; use `address` and
+              `transport` to find out which one that was.
 
     Methods:
         get_tracking: Get current NTP tracking status (returns `TrackingStatus`).
@@ -193,14 +246,25 @@ class ChronyConnection:
         get_source_stats: Get source statistics (returns ``list[SourceStats]``).
         get_rtc_data: Get RTC tracking data (returns `RTCData` or ``None``).
 
+    Choosing a transport:
+        chronyd's Unix socket is its control channel and is accessible locally
+        by the root or chrony user only; its command port is limited to
+        monitoring commands. Every report this class reads is in the monitoring
+        set, so a read-only consumer should prefer the command port and can
+        assert on `transport` to be sure of what it holds.
+
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
 
     See Also:
+        `Transport`: Which transport a connection resolved to.
         `TrackingStatus`: Tracking data model.
         `Source`: Time source data model.
         `SourceStats`: Source statistics data model.
         `RTCData`: RTC tracking data model.
+
+        chronyc man page (access methods and the monitoring command set):
+        https://chrony-project.org/doc/4.9/chronyc.html
 
     Examples:
         >>> with ChronyConnection() as conn:
@@ -217,6 +281,8 @@ class ChronyConnection:
             address: Connection address (see class docstring for formats)
         """
         self._address = address
+        self._resolved_address: str | None = None
+        self._denied_socket: str | None = None
         self._fd: int | None = None
         self._session: Any = None
         self._session_ptr: Any = None
@@ -239,58 +305,76 @@ class ChronyConnection:
         self._in_context = False
         self._close()
 
-    def _resolve_address(self) -> bytes | None:
-        """Resolve the address to use for connection.
+    @property
+    def address(self) -> str | None:
+        """Address this connection is actually using, or None if not connected.
 
-        Returns:
-            Encoded address bytes, or None for auto-detect
+        For an explicit address this is that address. For auto-detect it is
+        whichever candidate connected, so callers can tell a Unix socket from
+        the localhost command port. Cleared when the connection closes.
+        """
+        return self._resolved_address
 
-        Raises:
-            ChronyConnectionError: If no socket path found during auto-detect
+    @property
+    def transport(self) -> Transport | None:
+        """Transport in use, or None if not connected.
+
+        The two transports differ in privilege: `Transport.UNIX_SOCKET` is
+        chronyd's control channel, while over `Transport.COMMAND_PORT` chronyd
+        serves monitoring commands only. A caller that must not hold a control
+        channel can assert on this.
+        """
+        if self._resolved_address is None:
+            return None
+        return (
+            Transport.UNIX_SOCKET
+            if _is_unix_socket_address(self._resolved_address)
+            else Transport.COMMAND_PORT
+        )
+
+    def _candidate_addresses(self) -> list[str]:
+        """Return the addresses to try, in order.
+
+        An explicit address is used as given, with no fallback: asking for a
+        specific transport should not silently land on a different one. Only
+        auto-detect walks the candidate chain.
         """
         if self._address is not None:
-            return self._address.encode()
-
-        # Auto-detect: try default Unix socket paths
-        for path in DEFAULT_SOCKET_PATHS:
-            if os.path.exists(path):
-                return path.encode()
-
-        # No Unix socket found - pass NULL to let libchrony try localhost
-        return None
+            return [self._address]
+        return [*DEFAULT_SOCKET_PATHS, *DEFAULT_COMMAND_PORTS]
 
     def _open(self) -> None:
         """Open socket connection and initialize session.
 
+        Candidates are tried by attempting the connection, not by probing the
+        filesystem: a socket path can exist and still refuse connections (a
+        Unix socket needs write permission), and a path can be unstattable
+        while chronyd is perfectly reachable. Only a real connection attempt
+        distinguishes those.
+
         Raises:
-            ChronyConnectionError: If connection fails
-            ChronyPermissionError: If permission denied
+            ChronyConnectionError: If no candidate could be connected to
+            ChronyPermissionError: If a Unix socket was rejected on permissions
         """
-        address_bytes = self._resolve_address()
+        candidates = self._candidate_addresses()
+        last_error_code = -1
+        denied_address: str | None = None
 
-        # Open socket connection
-        if address_bytes is not None:
-            self._fd = _lib.chrony_open_socket(address_bytes)
+        for address in candidates:
+            fd = _lib.chrony_open_socket(address.encode())
+            if fd >= 0:
+                self._fd = fd
+                self._resolved_address = address
+                break
+            last_error_code = fd
+            if denied_address is None and _is_permission_denied(address):
+                denied_address = address
         else:
-            self._fd = _lib.chrony_open_socket(_ffi.NULL)
+            self._raise_open_error(candidates, denied_address, last_error_code)
 
-        if self._fd < 0:
-            # Check for permission issues
-            if self._fd == -errno.EACCES or (
-                self._address is not None
-                and os.path.exists(self._address)
-                and not os.access(self._address, os.R_OK | os.W_OK)
-            ):
-                raise ChronyPermissionError(
-                    f"Permission denied accessing {self._address or 'chronyd'}. "
-                    "Run as root or add user to chrony group.",
-                    error_code=self._fd,
-                )
-            address_desc = self._address or "chronyd (auto-detect)"
-            raise ChronyConnectionError(
-                f"Failed to connect to {address_desc}. Is chronyd running?",
-                error_code=self._fd,
-            )
+        # Remembered for diagnostics: a command-port connection reached after a
+        # Unix socket refused us explains later "chronyd never answered" errors.
+        self._denied_socket = denied_address
 
         # Initialize session
         self._session_ptr = _ffi.new("chrony_session **")
@@ -299,12 +383,57 @@ class ChronyConnection:
             # Clean up socket on failure
             _lib.chrony_close_socket(self._fd)
             self._fd = None
+            self._resolved_address = None
             raise ChronyConnectionError(
                 "Failed to initialize chrony session",
                 error_code=err,
             )
 
         self._session = self._session_ptr[0]
+
+    def _raise_open_error(
+        self,
+        candidates: list[str],
+        denied_address: str | None,
+        error_code: int,
+    ) -> None:
+        """Raise the most specific error for a failed set of connect attempts.
+
+        Args:
+            candidates: Addresses that were tried, in order
+            denied_address: First candidate rejected on permissions, if any
+            error_code: Error code from the last failed attempt
+
+        Raises:
+            ChronyPermissionError: If a Unix socket was rejected on permissions
+            ChronyConnectionError: Otherwise
+        """
+        if denied_address is not None:
+            raise ChronyPermissionError(
+                f"Permission denied connecting to {denied_address}. This is "
+                "chronyd's control socket, accessible only to the root or "
+                "chrony user; joining chrony's group does not help, because "
+                "the socket is not group-writable. For read-only monitoring "
+                'use the command port instead - ChronyConnection("127.0.0.1") '
+                "- which serves every report this library reads. chronyd binds "
+                'it to localhost by default; "cmdport 0" disables it. See '
+                "https://chrony-project.org/doc/4.9/chronyc.html",
+                error_code=error_code,
+            )
+
+        if self._address is not None:
+            raise ChronyConnectionError(
+                f"Failed to connect to {self._address}. Is chronyd running?",
+                error_code=error_code,
+            )
+
+        raise ChronyConnectionError(
+            "Failed to connect to chronyd (auto-detect). Tried: "
+            f"{', '.join(candidates)}. Is chronyd running? If it is, its Unix "
+            "socket may be unreachable for this user and its command port "
+            'disabled ("cmdport 0").',
+            error_code=error_code,
+        )
 
     def _close(self) -> None:
         """Close session and socket connection."""
@@ -317,6 +446,8 @@ class ChronyConnection:
             self._fd = None
 
         self._session_ptr = None
+        self._resolved_address = None
+        self._denied_socket = None
 
     def _ensure_context(self) -> None:
         """Ensure we're within a context manager.
@@ -329,6 +460,46 @@ class ChronyConnection:
                 "ChronyConnection methods must be called within a 'with' block"
             )
 
+    def _raise_request_error(self, description: str, err: int) -> NoReturn:
+        """Raise the appropriate error for a failed request or response.
+
+        `CHRONY_SEND_FAILED` and `CHRONY_RECV_FAILED` are returned when the
+        underlying `send()` or `recv()` fails, so they mean chronyd could not be
+        reached - a connection problem, not a data problem. They are reported as
+        `ChronyConnectionError` so that callers handling "chronyd unreachable"
+        catch them. Every other `chrony_err` concerns the report itself and is
+        reported as `ChronyDataError`.
+
+        This matters most on the command port: it is UDP, so the socket opens
+        whether or not chronyd is listening, and a dead command port only shows
+        up here.
+
+        Args:
+            description: What was being attempted, e.g. "Failed to process
+                tracking response"
+            err: chrony_err value from the failed call
+
+        Raises:
+            ChronyConnectionError: If the send or receive itself failed
+            ChronyDataError: For any other failure
+        """
+        if err not in TRANSPORT_ERRORS:
+            raise ChronyDataError(description, error_code=err)
+
+        message = f"{description}: chronyd did not respond on {self._resolved_address}."
+        if self.transport is Transport.COMMAND_PORT:
+            message += (
+                " The command port is UDP, so the connection opens even when "
+                'chronyd is not listening. It may be disabled ("cmdport 0"), '
+                "bound to another address (bindcmdaddress), or blocked."
+            )
+            if self._denied_socket is not None:
+                message += (
+                    f" Auto-detect used it because {self._denied_socket} "
+                    "refused the connection."
+                )
+        raise ChronyConnectionError(message, error_code=err)
+
     def _request_report(self, report_name: bytes) -> int:
         """Request number of records for a report type.
 
@@ -339,21 +510,20 @@ class ChronyConnection:
             Number of records available
 
         Raises:
-            ChronyDataError: If request fails
+            ChronyConnectionError: If chronyd could not be reached
+            ChronyDataError: If the report itself could not be retrieved
         """
         err = _lib.chrony_request_report_number_records(self._session, report_name)
         if err != 0:
-            raise ChronyDataError(
-                f"Failed to request {report_name.decode()} report",
-                error_code=err,
+            self._raise_request_error(
+                f"Failed to request {report_name.decode()} report", err
             )
 
         while _lib.chrony_needs_response(self._session):
             err = _lib.chrony_process_response(self._session)
             if err != 0:
-                raise ChronyDataError(
-                    f"Failed to process {report_name.decode()} response",
-                    error_code=err,
+                self._raise_request_error(
+                    f"Failed to process {report_name.decode()} response", err
                 )
 
         return _lib.chrony_get_report_number_records(self._session)
@@ -366,21 +536,20 @@ class ChronyConnection:
             index: Record index
 
         Raises:
-            ChronyDataError: If request fails
+            ChronyConnectionError: If chronyd could not be reached
+            ChronyDataError: If the record itself could not be retrieved
         """
         err = _lib.chrony_request_record(self._session, report_name, index)
         if err != 0:
-            raise ChronyDataError(
-                f"Failed to request {report_name.decode()} record {index}",
-                error_code=err,
+            self._raise_request_error(
+                f"Failed to request {report_name.decode()} record {index}", err
             )
 
         while _lib.chrony_needs_response(self._session):
             err = _lib.chrony_process_response(self._session)
             if err != 0:
-                raise ChronyDataError(
-                    f"Failed to process {report_name.decode()} record {index}",
-                    error_code=err,
+                self._raise_request_error(
+                    f"Failed to process {report_name.decode()} record {index}", err
                 )
 
     def get_tracking(self) -> TrackingStatus:
@@ -391,6 +560,7 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
+            ChronyConnectionError: If chronyd did not respond.
             ChronyDataError: If tracking data is invalid or incomplete.
 
         Examples:
@@ -483,6 +653,7 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
+            ChronyConnectionError: If chronyd did not respond.
             ChronyDataError: If source data is invalid or incomplete.
 
         Examples:
@@ -577,6 +748,7 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
+            ChronyConnectionError: If chronyd did not respond.
             ChronyDataError: If statistics data is invalid or incomplete.
 
         Examples:
@@ -641,6 +813,7 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
+            ChronyConnectionError: If chronyd did not respond.
             ChronyDataError: If RTC data is invalid or malformed.
 
         Examples:
