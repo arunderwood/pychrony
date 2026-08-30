@@ -86,7 +86,7 @@ with ChronyConnection() as conn:
 ```
 
 With no argument, pychrony tries chronyd's Unix socket and then its localhost
-command port, using the first that connects — the same order
+command port, using the first that connects — the same candidates
 [chronyc uses](https://chrony-project.org/doc/4.9/chronyc.html).
 
 The two are not equivalent in privilege. The Unix socket is chronyd's control

@@ -85,9 +85,20 @@ uses the first that connects. A socket path that exists is not assumed to be
 usable: connecting to a Unix socket requires write permission, so a present
 socket can still refuse the connection, and auto-detect moves on when it does.
 
-This mirrors what [chronyc itself does](https://chrony-project.org/doc/4.9/chronyc.html):
-it tries the Unix socket first and, if that fails because it is not running as
-root, falls back to 127.0.0.1 and then ::1.
+The candidates, and the socket-then-localhost fallback, match
+[what chronyc does](https://chrony-project.org/doc/4.9/chronyc.html): it tries
+the Unix socket first and, if that fails because it is not running as root,
+falls back to 127.0.0.1 and then ::1.
+
+!!! note "The IPv6 candidate is close to a formality"
+
+    The command port is UDP, so opening a socket to it succeeds whether or not
+    chronyd is listening, and the IPv4 candidate wins whenever an IPv4 socket
+    can be created. `[::1]` is reached only if the IPv4 attempt itself errors,
+    such as on a host with no IPv4 stack. chronyd binds both by default, so this
+    rarely matters — but on a host configured with `bindcmdaddress ::1` and no
+    IPv4 command port, chronyc connects while auto-detect stops on IPv4 and
+    fails at the first request. Pass `"[::1]"` explicitly there.
 
 The two transports do not carry the same privileges:
 

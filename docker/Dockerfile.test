@@ -82,5 +82,9 @@ RUN uv pip install --system -e "."
 RUN python3 -c "from pychrony._core._build_bindings import ffi; ffi.compile(verbose=True)" && \
     cp /app/pychrony/_core/_cffi_bindings*.so /app/src/pychrony/_core/
 
+# Integration tests must fail, not skip, if the compiled bindings are missing:
+# this image exists to prove they work, so a skipped run must not look green.
+ENV PYCHRONY_INTEGRATION_STRICT=1
+
 # Default command: run all tests
 CMD ["pytest", "tests/", "-v"]

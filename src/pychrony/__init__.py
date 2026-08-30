@@ -59,7 +59,7 @@ Error Handling:
 Choosing a Transport:
     With no argument, each candidate is tried in turn - chronyd's Unix socket
     paths, then its localhost command port - and the first that connects wins.
-    This is the order chronyc itself uses.
+    These are the candidates chronyc itself uses.
 
     The two transports differ in privilege. The Unix socket is chronyd's
     control channel, accessible to the root or chrony user only; the command

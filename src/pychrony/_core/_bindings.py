@@ -43,9 +43,15 @@ DEFAULT_SOCKET_PATHS = [
 # (cmdport), and accepts monitoring commands only from localhost by default
 # (cmdallow). "cmdport 0" disables it; that does not disable the Unix socket.
 #
-# This chain mirrors chronyc's own documented behaviour: it tries the Unix
-# socket first and, if that fails because it is not running as root, falls back
-# to 127.0.0.1 and then ::1.
+# The list matches chronyc's default, and so does the socket-then-localhost
+# fallback. The step between the two IP entries does not: these are UDP, so
+# chrony_open_socket() succeeds with no listener and the IPv4 candidate wins
+# whenever an IPv4 socket can be created at all. ::1 is therefore reached only
+# when the IPv4 attempt itself errors - a host with no IPv4 stack - and not when
+# chronyd merely is not serving on 127.0.0.1. chronyc gets further because it
+# decides by exchanging a message rather than by connect(), so on a host with
+# "bindcmdaddress ::1" and no IPv4 command port chronyc connects while this
+# fails at the first request.
 DEFAULT_COMMAND_PORTS = [
     "127.0.0.1:323",
     "[::1]:323",
@@ -53,15 +59,6 @@ DEFAULT_COMMAND_PORTS = [
 
 # Conversion constants
 NANOSECONDS_PER_SECOND = 1e9
-
-# chrony_err values for a failed send()/recv() on the socket, from the
-# chrony_err enum in libchrony's chrony.h. The CFFI cdef types chrony_err as a
-# plain int, so the enumerators are not exposed and their values are mirrored
-# here. Both mean chronyd could not be reached, not that its data was bad.
-CHRONY_SEND_FAILED = 5
-CHRONY_RECV_FAILED = 6
-
-TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
 
 # Try to import compiled CFFI bindings
 # These are generated at build time by CFFI, so they may not exist
@@ -79,6 +76,23 @@ try:
     _LIBRARY_AVAILABLE = True
 except ImportError:
     _LIBRARY_AVAILABLE = False
+
+# chrony_err values for a failed send()/recv() on the socket. Both mean chronyd
+# could not be reached, not that its data was bad.
+#
+# Read from the compiled bindings so the values come from libchrony's own
+# chrony.h: an enumerator inserted ahead of these upstream would otherwise shift
+# them silently, and the symptom would be misclassified errors. The literals are
+# only a fallback for when no bindings exist, in which case no request can be
+# made and nothing is ever classified against them.
+if _LIBRARY_AVAILABLE:
+    CHRONY_SEND_FAILED = _lib.CHRONY_SEND_FAILED
+    CHRONY_RECV_FAILED = _lib.CHRONY_RECV_FAILED
+else:
+    CHRONY_SEND_FAILED = 5
+    CHRONY_RECV_FAILED = 6
+
+TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
 
 
 def _is_unix_socket_address(address: str) -> bool:
