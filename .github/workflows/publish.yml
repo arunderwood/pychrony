@@ -15,22 +15,30 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   publish-pypi:
     name: Publish to Production PyPI
     runs-on: ubuntu-latest
     environment: pypi
-    # Only run if: workflow_run succeeded, OR manual dispatch
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 15
+    # workflow_run matches by workflow *name*, so a fork PR that adds its own
+    # "Release" workflow on pull_request would also trigger this job. Accept only
+    # runs from a push (a tag, for the real Release) in this repository.
     if: >
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository) ||
       github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Download artifacts (from triggering workflow_run)
       if: github.event_name == 'workflow_run'
-      uses: dawidd6/action-download-artifact@v24
+      uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
       with:
         workflow: release.yml
         run_id: ${{ github.event.workflow_run.id }}
@@ -42,7 +50,7 @@ jobs:
 
     - name: Download artifacts (from manual dispatch)
       if: github.event_name == 'workflow_dispatch'
-      uses: dawidd6/action-download-artifact@v24
+      uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
       with:
         workflow: release.yml
         name: ^(wheels-.*|sdist)$
@@ -58,4 +66,4 @@ jobs:
       run: ls -la dist/
 
     - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
