@@ -238,6 +238,7 @@ Key fields:
 - `reference_id`: Reference identifier (uint32)
 - `leap_status`: `LeapStatus` enum value
 - `sources`: List of `SourceConfig` instances
+- `source_list_changes`: Source lists chronyd moves to, one per source count it answers (see [Source List Changes](#source-list-changes))
 - `rtc`: Optional `RTCConfig` for RTC data
 - `error_injection`: Dict for injecting errors
 
@@ -340,6 +341,31 @@ def test_permission_error():
     ):
         pass
 ```
+
+### Source List Changes
+
+chronyd adds and removes sources while it resolves `pool` and `server` names,
+and when it replaces unreachable pool servers. A record count can then be
+stale by the time a record is requested. The mock models this the way libchrony
+behaves: the count is fixed when its response arrives, and a record request past
+the end of the current list fails with `CHRONY_UNEXPECTED_STATUS`.
+
+`source_list_changes` holds the lists chronyd moves to, in order. The mock takes
+the next one right after it answers each `sources` or `sourcestats` count:
+
+```python
+config = ChronyStateConfig(
+    sources=[SourceConfig(address=a) for a in ("10.0.0.1", "10.0.0.2", "10.0.0.3")],
+    # After the first count (3), one source is gone: record 2 no longer exists.
+    source_list_changes=[[SourceConfig(address=a) for a in ("10.0.0.1", "10.0.0.2")]],
+)
+
+with patched_chrony_connection(config) as conn:
+    assert len(conn.get_sources()) == 2
+```
+
+The mock copies `sources` and `source_list_changes` per connection, so shared
+scenarios are never modified.
 
 ### Custom Scenarios
 

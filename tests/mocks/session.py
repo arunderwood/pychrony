@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from pychrony._core._bindings import CHRONY_UNEXPECTED_STATUS
 from pychrony._core._fields import (
     RTC_FIELDS,
     SOURCE_FIELDS,
@@ -18,8 +19,11 @@ from pychrony._core._fields import (
 )
 
 if TYPE_CHECKING:
-    from tests.mocks.config import ChronyStateConfig
+    from tests.mocks.config import ChronyStateConfig, SourceConfig
 
+
+# Reports whose records are chronyd's sources, one record per source.
+SOURCE_REPORTS = frozenset({"sources", "sourcestats"})
 
 __all__ = [
     "MockTimespec",
@@ -153,6 +157,7 @@ class MockLib:
             return error
 
         self._session.current_report = report_name.decode("utf-8")
+        self._session.count_requested = True
         self._session.pending_responses = 1
         return 0
 
@@ -161,29 +166,35 @@ class MockLib:
         return self._session.pending_responses > 0
 
     def chrony_process_response(self, session: Any) -> int:
-        """Mock chrony_process_response."""
+        """Mock chrony_process_response.
+
+        Like libchrony, the record count is fixed when the count response
+        arrives, and a record request past the end of the source list fails
+        here with CHRONY_UNEXPECTED_STATUS.
+        """
         error = self._session.config.error_injection.get("chrony_process_response")
         if error is not None:
             return error
 
-        if self._session.pending_responses > 0:
-            self._session.pending_responses -= 1
+        session_state = self._session
+        if session_state.pending_responses == 0:
+            return 0
+        session_state.pending_responses -= 1
+
+        if session_state.count_requested:
+            session_state.num_records = session_state.count_records()
+            if session_state.current_report in SOURCE_REPORTS:
+                session_state.advance_source_list()
+        elif (
+            session_state.current_report in SOURCE_REPORTS
+            and session_state.current_record_index >= len(session_state.sources)
+        ):
+            return CHRONY_UNEXPECTED_STATUS
         return 0
 
     def chrony_get_report_number_records(self, session: Any) -> int:
         """Mock chrony_get_report_number_records."""
-        report = self._session.current_report
-        config = self._session.config
-
-        if report == "tracking":
-            return 1
-        elif report == "sources" or report == "sourcestats":
-            return len(config.sources)
-        elif report == "rtcdata":
-            if config.rtc is not None and config.rtc.available:
-                return 1
-            return 0
-        return 0
+        return self._session.num_records
 
     def chrony_request_record(
         self, session: Any, report_name: bytes, index: int
@@ -194,6 +205,7 @@ class MockLib:
             return error
 
         self._session.current_record_index = index
+        self._session.count_requested = False
         self._session.pending_responses = 1
         return 0
 
@@ -216,8 +228,8 @@ class MockLib:
             # which dynamically resolves to "address" (mode != 2) or "reference ID" (mode == 2)
             if name == "address":
                 record_idx = self._session.current_record_index
-                if record_idx < len(self._session.config.sources):
-                    source = self._session.config.sources[record_idx]
+                if record_idx < len(self._session.sources):
+                    source = self._session.sources[record_idx]
                     # Import SourceMode here to avoid circular import
                     from pychrony.models import SourceMode
 
@@ -266,8 +278,12 @@ class MockChronySession:
 
     Attributes:
         config: Configuration driving mock behavior
+        sources: chronyd's current source list. Starts as config.sources and
+            steps through config.source_list_changes.
         current_report: Currently active report name
         current_record_index: Current record being accessed
+        count_requested: Whether the outstanding request is a record count
+        num_records: Record count from the last count response
         pending_responses: Number of responses pending
         lib: Mock _lib object
         ffi: Mock _ffi object
@@ -275,11 +291,37 @@ class MockChronySession:
 
     def __init__(self, config: ChronyStateConfig) -> None:
         self.config = config
+        # Copies, so that stepping through source list changes leaves the
+        # config untouched: scenarios are shared module-level instances.
+        self.sources: list[SourceConfig] = list(config.sources)
+        self._source_list_changes = list(config.source_list_changes)
         self.current_report: str | None = None
         self.current_record_index: int = 0
+        self.count_requested: bool = False
+        self.num_records: int = 0
         self.pending_responses: int = 0
         self.lib = MockLib(self)
         self.ffi = MockFFI()
+
+    def count_records(self) -> int:
+        """Return the record count chronyd reports for the current report."""
+        report = self.current_report
+
+        if report == "tracking":
+            return 1
+        elif report in SOURCE_REPORTS:
+            return len(self.sources)
+        elif report == "rtcdata":
+            rtc = self.config.rtc
+            if rtc is not None and rtc.available:
+                return 1
+            return 0
+        return 0
+
+    def advance_source_list(self) -> None:
+        """Move chronyd's source list to the next configured change, if any."""
+        if self._source_list_changes:
+            self.sources = list(self._source_list_changes.pop(0))
 
     def get_field_value(self, index: int, field_type: FieldType) -> Any:
         """Get field value for current report and record.
@@ -335,13 +377,12 @@ class MockChronySession:
 
     def _get_source_field(self, index: int) -> Any:
         """Get sources report field by index."""
-        config = self.config
         record_idx = self.current_record_index
 
-        if record_idx >= len(config.sources):
+        if record_idx >= len(self.sources):
             return 0
 
-        source = config.sources[record_idx]
+        source = self.sources[record_idx]
         fields = list(SOURCE_FIELDS.keys())
 
         if index >= len(fields):
@@ -373,13 +414,12 @@ class MockChronySession:
 
     def _get_sourcestats_field(self, index: int) -> Any:
         """Get sourcestats report field by index."""
-        config = self.config
         record_idx = self.current_record_index
 
-        if record_idx >= len(config.sources):
+        if record_idx >= len(self.sources):
             return 0
 
-        source = config.sources[record_idx]
+        source = self.sources[record_idx]
         fields = list(SOURCESTATS_FIELDS.keys())
 
         if index >= len(fields):

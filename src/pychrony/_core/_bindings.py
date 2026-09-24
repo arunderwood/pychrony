@@ -8,8 +8,9 @@ Internal implementation - use pychrony.ChronyConnection instead.
 
 import math
 import os
+from collections.abc import Callable
 from types import TracebackType
-from typing import Any, NoReturn
+from typing import Any, NoReturn, TypeVar
 
 from ..exceptions import (
     ChronyConnectionError,
@@ -28,6 +29,8 @@ from ..models import (
     Transport,
     _ref_id_to_name,
 )
+
+_T = TypeVar("_T")
 
 # Unix socket paths tried during auto-detect, in order. chrony documents its
 # compiled-in default as /run/... or /var/run/... depending on release; the two
@@ -74,14 +77,26 @@ except ImportError:
 # rather than its data being bad. Taken from the compiled bindings so that an
 # enumerator added upstream cannot silently shift them into misclassifying
 # errors. The literals apply only with no bindings, where nothing is classified.
+#
+# CHRONY_UNEXPECTED_STATUS is how a request for a source index past the end of
+# chronyd's list comes back: chronyd answers STT_NOSUCHSOURCE, which libchrony
+# has no case for.
 if _LIBRARY_AVAILABLE:
     CHRONY_SEND_FAILED = _lib.CHRONY_SEND_FAILED
     CHRONY_RECV_FAILED = _lib.CHRONY_RECV_FAILED
+    CHRONY_UNEXPECTED_STATUS = _lib.CHRONY_UNEXPECTED_STATUS
 else:
     CHRONY_SEND_FAILED = 5
     CHRONY_RECV_FAILED = 6
+    CHRONY_UNEXPECTED_STATUS = 11
 
 TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
+
+# Reads of a per-source report before the last failure is raised. chronyd adds
+# and removes sources while it resolves pool and server names, and when it
+# replaces unreachable pool servers, so the record count can be stale by the
+# time a record is requested. Each read starts over from a fresh count.
+SOURCE_LIST_READ_ATTEMPTS = 3
 
 
 def _is_unix_socket_address(address: str) -> bool:
@@ -539,6 +554,58 @@ class ChronyConnection:
                     f"Failed to process {report_name.decode()} record {index}", err
                 )
 
+    def _read_records(
+        self, report_name: bytes, read_record: Callable[[], _T]
+    ) -> list[_T]:
+        """Read every record of a report, one request per record.
+
+        Args:
+            report_name: Report name (e.g., b"sources")
+            read_record: Extracts and validates the record the session holds
+
+        Returns:
+            One read_record result per record, in index order
+
+        Raises:
+            ChronyConnectionError: If chronyd could not be reached
+            ChronyDataError: If a record could not be retrieved or is invalid
+        """
+        records = []
+        for index in range(self._request_report(report_name)):
+            self._request_record(report_name, index)
+            records.append(read_record())
+        return records
+
+    def _read_source_list(
+        self, report_name: bytes, read_record: Callable[[], _T]
+    ) -> list[_T]:
+        """Read a per-source report, starting over if the source list changes.
+
+        A shrinking list shows up as CHRONY_UNEXPECTED_STATUS on a record
+        request. libchrony uses that code for every chronyd status it does not
+        know, so a failure that is not a list change also gets retried, and
+        then raised once the attempts run out.
+
+        Args:
+            report_name: Report name (b"sources" or b"sourcestats")
+            read_record: Extracts and validates the record the session holds
+
+        Returns:
+            One read_record result per source, in index order
+
+        Raises:
+            ChronyConnectionError: If chronyd could not be reached
+            ChronyDataError: If a record is invalid, or could not be retrieved
+                on any of SOURCE_LIST_READ_ATTEMPTS reads
+        """
+        for _ in range(SOURCE_LIST_READ_ATTEMPTS - 1):
+            try:
+                return self._read_records(report_name, read_record)
+            except ChronyDataError as e:
+                if e.error_code != CHRONY_UNEXPECTED_STATUS:
+                    raise
+        return self._read_records(report_name, read_record)
+
     def get_tracking(self) -> TrackingStatus:
         """Get current tracking status from chronyd.
 
@@ -650,19 +717,13 @@ class ChronyConnection:
             ...         print(f"{src.address}: stratum {src.stratum}")
         """
         self._ensure_context()
+        return self._read_source_list(b"sources", self._read_source)
 
-        num_records = self._request_report(b"sources")
-        if num_records < 1:
-            return []
-
-        sources = []
-        for i in range(num_records):
-            self._request_record(b"sources", i)
-            data = self._extract_source()
-            self._validate_source(data)
-            sources.append(Source(**data))
-
-        return sources
+    def _read_source(self) -> Source:
+        """Build a Source from the current session record."""
+        data = self._extract_source()
+        self._validate_source(data)
+        return Source(**data)
 
     def _extract_source(self) -> dict:
         """Extract source fields from the current session record."""
@@ -745,19 +806,13 @@ class ChronyConnection:
             ...         print(f"{s.address}: {s.samples} samples")
         """
         self._ensure_context()
+        return self._read_source_list(b"sourcestats", self._read_sourcestats)
 
-        num_records = self._request_report(b"sourcestats")
-        if num_records < 1:
-            return []
-
-        stats = []
-        for i in range(num_records):
-            self._request_record(b"sourcestats", i)
-            data = self._extract_sourcestats()
-            self._validate_sourcestats(data)
-            stats.append(SourceStats(**data))
-
-        return stats
+    def _read_sourcestats(self) -> SourceStats:
+        """Build a SourceStats from the current session record."""
+        data = self._extract_sourcestats()
+        self._validate_sourcestats(data)
+        return SourceStats(**data)
 
     def _extract_sourcestats(self) -> dict:
         """Extract sourcestats fields from the current session record."""

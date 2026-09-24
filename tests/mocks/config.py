@@ -212,6 +212,9 @@ class ChronyStateConfig:
         root_dispersion: Root dispersion in seconds
         update_interval: Update interval in seconds
         sources: List of source configurations
+        source_list_changes: Source lists chronyd moves to, in order, one
+            each time it answers a sources or sourcestats count. Simulates
+            sources added or removed between the count and the record requests.
         rtc: RTC configuration (None if not available)
         error_injection: Map of operation names to error codes
     """
@@ -233,6 +236,7 @@ class ChronyStateConfig:
 
     # Sub-configurations
     sources: list[SourceConfig] = field(default_factory=list)
+    source_list_changes: list[list[SourceConfig]] = field(default_factory=list)
     rtc: RTCConfig | None = None
 
     # Error injection
