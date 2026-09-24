@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+# Never cancel a release in progress: a half-finished run can leave Test PyPI
+# holding a version that production PyPI never gets.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-wheels:
     name: Build wheels (${{ matrix.arch }})
@@ -35,6 +41,8 @@ jobs:
       env:
         CIBW_ARCHS_LINUX: ${{ matrix.arch }}
 
+    # publish.yml downloads artifacts by the regex ^(wheels-.*|sdist)$.
+    # Keep both artifact names matching it.
     - name: Upload wheel artifacts
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
@@ -62,6 +70,7 @@ jobs:
     - name: Build sdist
       run: uv build --sdist
 
+    # Name matched by the publish.yml download regex. See the wheel upload.
     - name: Upload sdist artifact
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
@@ -76,7 +85,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
+      id-token: write  # OIDC token for Test PyPI Trusted Publishing
 
     steps:
     - name: Download all artifacts

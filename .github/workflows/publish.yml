@@ -16,6 +16,12 @@ on:
 permissions:
   contents: read
 
+# One publish at a time: a manual dispatch that overlaps an automatic run would
+# upload the same files twice. Never cancel, so a started upload always finishes.
+concurrency:
+  group: publish-pypi
+  cancel-in-progress: false
+
 jobs:
   publish-pypi:
     name: Publish to Production PyPI
@@ -23,7 +29,7 @@ jobs:
     environment: pypi
     permissions:
       contents: read
-      id-token: write
+      id-token: write  # OIDC token for PyPI Trusted Publishing
     timeout-minutes: 15
     # workflow_run matches by workflow *name*, so a fork PR that adds its own
     # "Release" workflow on pull_request would also trigger this job. Accept only
@@ -36,6 +42,9 @@ jobs:
       github.event_name == 'workflow_dispatch'
 
     steps:
+    # The artifact names are a contract with release.yml, which uploads
+    # `wheels-<arch>` and `sdist`. Renaming either there breaks this regex, and
+    # the failure only shows up here, after Test PyPI already has the release.
     - name: Download artifacts (from triggering workflow_run)
       if: github.event_name == 'workflow_run'
       uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
