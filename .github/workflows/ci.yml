@@ -1,13 +1,21 @@
 name: CI
 
+# pull_request has no branches filter: it matches the base branch, so a PR
+# stacked on another PR's branch would get no checks at all.
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+# A new push to a PR obsoletes the run before it. Runs on main are never
+# cancelled, so every commit there gets a complete result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # Unit, contract, and import tests across every supported interpreter.
@@ -117,4 +125,13 @@ jobs:
 
       - name: Run tests
         run: |
-          docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c "chronyd && sleep 2 && pytest tests/ -v --tb=short"
+          docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c '
+            chronyd
+            i=0
+            until chronyc -n tracking >/dev/null 2>&1; do
+              i=$((i + 1))
+              if [ "$i" -ge 40 ]; then echo "chronyd not ready after 20s"; exit 1; fi
+              sleep 0.5
+            done
+            pytest tests/ -v --tb=short
+          '

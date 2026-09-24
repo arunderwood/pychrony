@@ -110,10 +110,9 @@ jobs:
       id: version
       run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-    - name: Wait for Test PyPI availability
-      run: sleep 30
-
     - name: Install from Test PyPI
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
         # --no-cache-dir is load-bearing. The simple index is served with
         # `cache-control: max-age=600`, so pip stores the first response for ten
@@ -123,21 +122,27 @@ jobs:
           if pip install --no-cache-dir \
             --index-url https://test.pypi.org/simple/ \
             --extra-index-url https://pypi.org/simple/ \
-            pychrony==${{ steps.version.outputs.version }}; then
+            "pychrony==$VERSION"; then
             echo "Installed on attempt $i"
             exit 0
           fi
-          echo "Attempt $i failed, retrying in 30s..."
-          sleep 30
+          if [ "$i" -lt 10 ]; then
+            echo "Attempt $i failed, retrying in 30s..."
+            sleep 30
+          fi
         done
-        echo "::error::pychrony==${{ steps.version.outputs.version }} never became installable from Test PyPI"
+        echo "::error::pychrony==$VERSION never became installable from Test PyPI"
         exit 1
 
     - name: Verify import and version
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
         python -c "
+        import os
         import pychrony
+        expected = os.environ['VERSION']
         print(f'Installed version: {pychrony.__version__}')
-        assert pychrony.__version__ == '${{ steps.version.outputs.version }}', \
-            f'Version mismatch: {pychrony.__version__} != ${{ steps.version.outputs.version }}'
+        assert pychrony.__version__ == expected, \
+            f'Version mismatch: {pychrony.__version__} != {expected}'
         "
