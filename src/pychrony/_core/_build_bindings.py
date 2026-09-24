@@ -23,6 +23,7 @@ typedef enum {
     CHRONY_OK,
     CHRONY_SEND_FAILED,
     CHRONY_RECV_FAILED,
+    CHRONY_UNEXPECTED_STATUS,
     ...
 } chrony_err;
 
