@@ -127,15 +127,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # chronyd answers commands before it has resolved its pool and server
+      # names, and the source list grows as each name resolves. Tests that
+      # walk the source list race that growth, so wait until no source has an
+      # unresolved address. chronyc also fails until the command socket is up.
       - name: Run tests
         run: |
           docker run --rm --cap-add=SYS_TIME pychrony-test:latest sh -c '
             chronyd
             i=0
-            until chronyc -n tracking >/dev/null 2>&1; do
+            until chronyc -n activity 2>/dev/null | grep -q "^0 sources with unknown address"; do
               i=$((i + 1))
-              if [ "$i" -ge 40 ]; then echo "chronyd not ready after 20s"; exit 1; fi
+              if [ "$i" -ge 40 ]; then
+                echo "chronyd sources not resolved after 20s"
+                chronyc -n activity
+                exit 1
+              fi
               sleep 0.5
             done
+            echo "chronyd sources resolved after $i polls"
             pytest tests/ -v --tb=short
           '
