@@ -46,7 +46,12 @@ RUN mkdir -p /run/chrony && chown chrony:chrony /run/chrony && chmod 750 /run/ch
 # The command port stays at its default (323 on localhost) so the auto-detect
 # fallback from the Unix socket can be exercised; "cmdport 0" would make that
 # path untestable.
-RUN echo "local stratum 10" >> /etc/chrony.conf && \
+# Fedora's stock "pool" line is removed so the only NTP source is the single
+# "server" below. A pool starts as 8 placeholders that need several DNS
+# answers to fill, and chronyd waits 28s before retrying a partial fill,
+# which outlasts the CI readiness gate.
+RUN sed -i '/^pool /d' /etc/chrony.conf && \
+    echo "local stratum 10" >> /etc/chrony.conf && \
     echo "allow 127.0.0.1" >> /etc/chrony.conf && \
     echo "cmdallow 127.0.0.1" >> /etc/chrony.conf && \
     echo "bindcmdaddress /run/chrony/chronyd.sock" >> /etc/chrony.conf && \
