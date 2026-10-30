@@ -1848,7 +1848,9 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
 <span class="normal">1041</span>
 <span class="normal">1042</span>
 <span class="normal">1043</span>
-<span class="normal">1044</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
+<span class="normal">1044</span>
+<span class="normal">1045</span>
+<span class="normal">1046</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for chrony connections.</span>
 
 <span class="sd">    Provides connection reuse for multiple queries to chronyd within a single</span>
@@ -2150,7 +2152,9 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
                 <span class="p">)</span>
         <span class="k">raise</span> <span class="n">ChronyConnectionError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="n">err</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_await_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resend</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">int</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># RET503: the loop falls through only into _raise_request_error, which is</span>
+    <span class="c1"># NoReturn; ruff does not follow that annotation on method calls.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_await_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resend</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">int</span><span class="p">],</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>  <span class="c1"># noqa: RET503</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the response to the request just sent, resending on timeout.</span>
 
 <span class="sd">        Each attempt waits up to the connection&#39;s timeout, on the monotonic</span>
@@ -2343,7 +2347,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
             <span class="k">raise</span> <span class="n">ChronyDataError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unknown leap_status value </span><span class="si">{</span><span class="n">leap_status_int</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="s2">&quot;This may indicate a newer chrony version - please update pychrony.&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">ref_id</span><span class="p">,</span>
@@ -2439,7 +2443,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
             <span class="k">raise</span> <span class="n">ChronyDataError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unknown state value </span><span class="si">{</span><span class="n">state_int</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="s2">&quot;This may indicate a newer chrony version - please update pychrony.&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="n">SourceMode</span><span class="p">(</span><span class="n">mode_int</span><span class="p">)</span>
@@ -2447,7 +2451,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
             <span class="k">raise</span> <span class="n">ChronyDataError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unknown mode value </span><span class="si">{</span><span class="n">mode_int</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="s2">&quot;This may indicate a newer chrony version - please update pychrony.&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
         <span class="c1"># In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS</span>
         <span class="c1"># which exposes either &quot;address&quot; (NTP sources) or &quot;reference ID&quot; (refclocks).</span>
@@ -3024,9 +3028,7 @@ not hold a control channel can assert on this.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">736</span>
-<span class="normal">737</span>
-<span class="normal">738</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">738</span>
 <span class="normal">739</span>
 <span class="normal">740</span>
 <span class="normal">741</span>
@@ -3081,7 +3083,9 @@ not hold a control channel can assert on this.</p>
 <span class="normal">790</span>
 <span class="normal">791</span>
 <span class="normal">792</span>
-<span class="normal">793</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
+<span class="normal">793</span>
+<span class="normal">794</span>
+<span class="normal">795</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get current tracking status from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3115,7 +3119,7 @@ not hold a control channel can assert on this.</p>
         <span class="k">raise</span> <span class="n">ChronyDataError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unknown leap_status value </span><span class="si">{</span><span class="n">leap_status_int</span><span class="si">}</span><span class="s2">. &quot;</span>
             <span class="s2">&quot;This may indicate a newer chrony version - please update pychrony.&quot;</span>
-        <span class="p">)</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;reference_id&quot;</span><span class="p">:</span> <span class="n">ref_id</span><span class="p">,</span>
@@ -3241,9 +3245,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">830</span>
 <span class="normal">831</span>
 <span class="normal">832</span>
 <span class="normal">833</span>
@@ -3260,7 +3262,9 @@ Empty list if no sources are configured.</p>
 <span class="normal">844</span>
 <span class="normal">845</span>
 <span class="normal">846</span>
-<span class="normal">847</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
+<span class="normal">847</span>
+<span class="normal">848</span>
+<span class="normal">849</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get all configured time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3382,9 +3386,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">917</span>
-<span class="normal">918</span>
-<span class="normal">919</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">919</span>
 <span class="normal">920</span>
 <span class="normal">921</span>
 <span class="normal">922</span>
@@ -3401,7 +3403,9 @@ Empty list if no sources are configured.</p>
 <span class="normal">933</span>
 <span class="normal">934</span>
 <span class="normal">935</span>
-<span class="normal">936</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
+<span class="normal">936</span>
+<span class="normal">937</span>
+<span class="normal">938</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get statistical data for all time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3522,9 +3526,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 977</span>
-<span class="normal"> 978</span>
-<span class="normal"> 979</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 979</span>
 <span class="normal"> 980</span>
 <span class="normal"> 981</span>
 <span class="normal"> 982</span>
@@ -3566,7 +3568,9 @@ Empty list if no sources are configured.</p>
 <span class="normal">1018</span>
 <span class="normal">1019</span>
 <span class="normal">1020</span>
-<span class="normal">1021</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">1021</span>
+<span class="normal">1022</span>
+<span class="normal">1023</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get Real-Time Clock tracking data from chronyd.</span>
 
 <span class="sd">    Returns:</span>
