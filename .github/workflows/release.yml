@@ -74,9 +74,49 @@ jobs:
         name: sdist
         path: dist/*.tar.gz
 
+  # Run the integration suite against the x86_64 wheels this run built, in the
+  # chronyd container, before anything is published. The image installs the
+  # wheel matching its python3 (Fedora's) from the wheelhouse and fails if
+  # there is none, so a missing wheel cannot pass as a skipped run.
+  integration-test-wheel:
+    name: Integration tests (wheel)
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        submodules: recursive  # Required for vendor/libchrony
+        persist-credentials: false
+
+    - name: Download x86_64 wheels
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: wheels-x86_64
+        path: wheelhouse/
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+    # No gha cache here: like the sdist build, a release must not build from a
+    # cache that a PR run could have written.
+    - name: Build Docker image
+      uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+      with:
+        context: .
+        file: docker/Dockerfile.test
+        tags: pychrony-test:latest
+        load: true
+        build-args: PYCHRONY_INSTALL=wheel
+        build-contexts: wheelhouse=wheelhouse
+
+    - name: Run tests
+      run: docker run --rm --cap-add=SYS_TIME pychrony-test:latest run-integration.sh
+
   publish-testpypi:
     name: Publish to Test PyPI
-    needs: [build-wheels, build-sdist]
+    needs: [build-wheels, build-sdist, integration-test-wheel]
     runs-on: ubuntu-latest
     environment: testpypi
     timeout-minutes: 15
@@ -104,7 +144,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.12", "3.15"]
+        python: ["3.11", "3.12", "3.14t", "3.15"]
 
     steps:
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -151,6 +191,19 @@ jobs:
         print(f'Installed version: {pychrony.__version__}')
         assert pychrony.__version__ == expected, \
             f'Version mismatch: {pychrony.__version__} != {expected}'
+        "
+
+    # On a free-threaded interpreter, prove the cp3XXt wheel was installed
+    # (not the sdist, which has no compiled bindings) and that importing it
+    # leaves the GIL disabled.
+    - name: Verify free-threaded wheel
+      if: endsWith(matrix.python, 't')
+      run: |
+        python -c "
+        import sys
+        import pychrony._core._cffi_bindings
+        assert not sys._is_gil_enabled(), 'importing pychrony re-enabled the GIL'
+        print('GIL disabled after import')
         "
 
   # Production publish lives in this workflow, after verification, so it can

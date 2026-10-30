@@ -129,10 +129,16 @@ class MockLib:
         error = self._session.config.error_injection.get("chrony_open_socket")
         if error is not None:
             return error
-        return 5  # Valid file descriptor
+        # A fresh descriptor per open, so that a leaked socket stays visible
+        # in open_sockets rather than being masked by a reused number.
+        fd = self._session.next_fd
+        self._session.next_fd += 1
+        self._session.open_sockets.add(fd)
+        return fd
 
     def chrony_close_socket(self, fd: int) -> None:
         """Mock chrony_close_socket."""
+        self._session.open_sockets.discard(fd)
 
     def chrony_init_session(self, session_ptr: MockPointer, fd: int) -> int:
         """Mock chrony_init_session."""
@@ -159,6 +165,7 @@ class MockLib:
         self._session.current_report = report_name.decode("utf-8")
         self._session.count_requested = True
         self._session.pending_responses = 1
+        self._session.send_request()
         return 0
 
     def chrony_needs_response(self, session: Any) -> bool:
@@ -179,6 +186,12 @@ class MockLib:
 
         session_state = self._session
         if session_state.pending_responses == 0:
+            return 0
+        if not session_state.inbox:
+            raise AssertionError("chrony_process_response() would block in recv()")
+        # Like libchrony, an answer to anything but the latest request is
+        # skipped and the request stays outstanding.
+        if session_state.inbox.pop(0) != session_state.requests_sent - 1:
             return 0
         session_state.pending_responses -= 1
 
@@ -213,6 +226,7 @@ class MockLib:
         self._session.current_record_index = index
         self._session.count_requested = False
         self._session.pending_responses = 1
+        self._session.send_request()
         return 0
 
     def chrony_get_field_index(self, session: Any, field_name: bytes) -> int:
@@ -280,7 +294,8 @@ class MockChronySession:
     """Mock chrony session that simulates the CFFI bindings.
 
     Maintains protocol state and returns configured data via
-    mock _lib and _ffi objects.
+    mock _lib and _ffi objects. Responses are delivered through
+    `wait_readable`, which stands in for polling the socket.
 
     Attributes:
         config: Configuration driving mock behavior
@@ -291,6 +306,12 @@ class MockChronySession:
         count_requested: Whether the outstanding request is a record count
         num_records: Record count from the last count response
         pending_responses: Number of responses pending
+        requests_sent: Requests sent so far, resends included
+        inbox: Request numbers whose answers are waiting to be received
+        late_answers: Request numbers whose answers arrive at the next timeout
+        waits: Timeout of each wait_readable call, in seconds
+        open_sockets: Descriptors opened and not yet closed
+        next_fd: Descriptor the next successful open returns
         lib: Mock _lib object
         ffi: Mock _ffi object
     """
@@ -306,8 +327,36 @@ class MockChronySession:
         self.count_requested: bool = False
         self.num_records: int = 0
         self.pending_responses: int = 0
+        self.requests_sent: int = 0
+        self.inbox: list[int] = []
+        self.late_answers: list[int] = []
+        self.waits: list[float] = []
+        self.open_sockets: set[int] = set()
+        self.next_fd: int = 5
         self.lib = MockLib(self)
         self.ffi = MockFFI()
+
+    def send_request(self) -> None:
+        """Record a request sent to chronyd and schedule its answer."""
+        number = self.requests_sent
+        self.requests_sent += 1
+        if number in self.config.late_requests:
+            self.late_answers.append(number)
+        elif number not in self.config.dropped_requests:
+            self.inbox.append(number)
+
+    def wait_readable(self, fd: int, timeout: float) -> bool:
+        """Mock _wait_readable: True if an answer is waiting to be received.
+
+        With nothing waiting the wait times out, and any late answers arrive
+        then, after the timeout has expired.
+        """
+        self.waits.append(timeout)
+        if self.inbox:
+            return True
+        self.inbox.extend(self.late_answers)
+        self.late_answers.clear()
+        return False
 
     def count_records(self) -> int:
         """Return the record count chronyd reports for the current report."""
@@ -315,9 +364,9 @@ class MockChronySession:
 
         if report == "tracking":
             return 1
-        elif report in SOURCE_REPORTS:
+        if report in SOURCE_REPORTS:
             return len(self.sources)
-        elif report == "rtcdata":
+        if report == "rtcdata":
             # libchrony has no count request for rtcdata: it is always 1, and a
             # missing RTC only shows up when the record itself is requested.
             return 1
@@ -342,11 +391,11 @@ class MockChronySession:
 
         if report == "tracking":
             return self._get_tracking_field(index)
-        elif report == "sources":
+        if report == "sources":
             return self._get_source_field(index)
-        elif report == "sourcestats":
+        if report == "sourcestats":
             return self._get_sourcestats_field(index)
-        elif report == "rtcdata":
+        if report == "rtcdata":
             return self._get_rtc_field(index)
 
         return 0
