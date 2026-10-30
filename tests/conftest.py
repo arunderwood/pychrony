@@ -2,6 +2,9 @@
 
 import pytest
 
+# pytester runs inner pytest sessions to exercise pychrony's pytest plugin.
+pytest_plugins = ["pytester"]
+
 
 @pytest.fixture
 def sample_version():

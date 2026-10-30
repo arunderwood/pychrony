@@ -143,22 +143,60 @@ Available factory functions:
 - `make_source_stats(**overrides)` - Creates `SourceStats` instances
 - `make_rtc_data(**overrides)` - Creates `RTCData` instances
 
+`pychrony.testing` does not import pytest, so the factories work in any
+test framework and in environments without pytest installed.
+
 ### Pytest Fixtures
 
-When using pytest, fixtures are auto-discovered:
+Fixtures live in a separate plugin, `pychrony.pytest_plugin`. Enable it in your
+top-level `conftest.py`:
 
 ```python
-def test_synchronized_check(tracking_status):
-    """tracking_status fixture provides synchronized defaults."""
-    assert tracking_status.is_synchronized()
-
-
-def test_source_reachable(source):
-    """source fixture provides selected, reachable source."""
-    assert source.is_reachable()
+# conftest.py
+pytest_plugins = ["pychrony.pytest_plugin"]
 ```
 
-Available fixtures: `tracking_status`, `source`, `source_stats`, `rtc_data`
+```python
+def test_synchronized_check(chrony_tracking_status):
+    """chrony_tracking_status provides synchronized defaults."""
+    assert chrony_tracking_status.is_synchronized()
+
+
+def test_source_reachable(chrony_source):
+    """chrony_source provides a selected, reachable source."""
+    assert chrony_source.is_reachable()
+```
+
+Available fixtures: `chrony_tracking_status`, `chrony_source`,
+`chrony_source_stats`, `chrony_rtc_data`
+
+### Migrating from the Unprefixed Fixtures
+
+Earlier releases registered fixtures named `tracking_status`, `source`,
+`source_stats` and `rtc_data` in every pytest run wherever pychrony was
+installed. Those generic names could clash with other projects' fixtures. In
+this release:
+
+- The plugin is still loaded automatically (as the `pychrony` plugin), so
+  existing suites keep running.
+- The unprefixed names still work, but each use emits a `DeprecationWarning`
+  naming its replacement.
+- The `chrony_*` names are available both through automatic loading and
+  through `pytest_plugins = ["pychrony.pytest_plugin"]`.
+
+The next major release will remove the unprefixed names and the automatic
+loading. To migrate:
+
+1. Rename `tracking_status` → `chrony_tracking_status`, `source` →
+   `chrony_source`, `source_stats` → `chrony_source_stats`, `rtc_data` →
+   `chrony_rtc_data`.
+2. Add `pytest_plugins = ["pychrony.pytest_plugin"]` to your top-level
+   `conftest.py`.
+3. Optionally, turn off the deprecated automatic plugin now with
+   `-p no:pychrony` (for example in `addopts`) so the old names are gone.
+
+A fixture you define yourself with one of the old names always takes
+precedence over pychrony's.
 
 ---
 

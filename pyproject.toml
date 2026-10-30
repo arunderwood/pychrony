@@ -38,7 +38,7 @@ Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
 
 [project.entry-points.pytest11]
-pychrony = "pychrony.testing"
+pychrony = "pychrony._pytest_autoload"
 
 [tool.setuptools_scm]
 fallback_version = "0.0.0.dev0"

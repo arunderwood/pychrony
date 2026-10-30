@@ -1,20 +1,18 @@
 """Testing utilities for pychrony.
 
-This module provides factory functions and pytest fixtures for creating
-test instances of pychrony dataclasses with sensible defaults.
+This module provides factory functions for creating test instances of
+pychrony dataclasses with sensible defaults. It does not import pytest and
+works with any test framework.
 
-Factory Functions (for any test framework):
+Factory Functions:
     from pychrony.testing import make_tracking, make_source
     status = make_tracking(stratum=3, offset=-0.001)
 
-Pytest Fixtures (auto-discovered via plugin):
-    def test_something(tracking_status, source):
-        assert tracking_status.is_synchronized()
+Pytest fixtures live in `pychrony.pytest_plugin`; enable them with
+``pytest_plugins = ["pychrony.pytest_plugin"]`` in your ``conftest.py``.
 """
 
 from typing import Any
-
-import pytest
 
 from pychrony import (
     LeapStatus,
@@ -167,28 +165,3 @@ def make_rtc_data(**overrides: Any) -> RTCData:
         >>> make_rtc_data(freq_offset=-5.0)  # Custom drift rate
     """
     return RTCData(**{**RTCDATA_DEFAULTS, **overrides})
-
-
-# Pytest fixtures - auto-discovered via pytest plugin entry point
-@pytest.fixture
-def tracking_status() -> TrackingStatus:
-    """Fixture providing a synchronized TrackingStatus with defaults."""
-    return make_tracking()
-
-
-@pytest.fixture
-def source() -> Source:
-    """Fixture providing a selected, reachable Source with defaults."""
-    return make_source()
-
-
-@pytest.fixture
-def source_stats() -> SourceStats:
-    """Fixture providing a SourceStats with sufficient samples."""
-    return make_source_stats()
-
-
-@pytest.fixture
-def rtc_data() -> RTCData:
-    """Fixture providing a calibrated RTCData with defaults."""
-    return make_rtc_data()

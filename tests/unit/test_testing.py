@@ -1,5 +1,7 @@
-"""Unit tests for pychrony.testing module."""
+"""Unit tests for pychrony.testing and the pychrony pytest plugins."""
 
+import subprocess
+import sys
 from dataclasses import FrozenInstanceError
 
 import pytest
@@ -115,3 +117,117 @@ class TestMakeRtcData:
         """Test overriding offset."""
         rtc = make_rtc_data(offset=0.5)
         assert rtc.offset == 0.5
+
+
+class TestTestingWithoutPytest:
+    """pychrony.testing must stay importable when pytest is not installed."""
+
+    def test_import_with_pytest_blocked(self):
+        """Test factories import and work with pytest blocked from importing."""
+        code = (
+            "import sys\n"
+            "sys.modules['pytest'] = None\n"
+            "from pychrony.testing import (\n"
+            "    RTCDATA_DEFAULTS, SOURCE_DEFAULTS, SOURCESTATS_DEFAULTS,\n"
+            "    TRACKING_DEFAULTS, make_rtc_data, make_source,\n"
+            "    make_source_stats, make_tracking,\n"
+            ")\n"
+            "assert make_tracking().is_synchronized()\n"
+            "make_source(); make_source_stats(); make_rtc_data()\n"
+            "assert 'pychrony.pytest_plugin' not in sys.modules\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+
+
+PREFIXED_FIXTURE_TESTS = """
+from pychrony import RTCData, Source, SourceStats, TrackingStatus
+
+def test_prefixed(
+    chrony_tracking_status, chrony_source, chrony_source_stats, chrony_rtc_data
+):
+    assert isinstance(chrony_tracking_status, TrackingStatus)
+    assert chrony_tracking_status.is_synchronized()
+    assert isinstance(chrony_source, Source)
+    assert isinstance(chrony_source_stats, SourceStats)
+    assert isinstance(chrony_rtc_data, RTCData)
+"""
+
+OLD_FIXTURE_TESTS = """
+from pychrony import RTCData, Source, SourceStats, TrackingStatus
+
+def test_tracking_status(tracking_status):
+    assert isinstance(tracking_status, TrackingStatus)
+
+def test_source(source):
+    assert isinstance(source, Source)
+
+def test_source_stats(source_stats):
+    assert isinstance(source_stats, SourceStats)
+
+def test_rtc_data(rtc_data):
+    assert isinstance(rtc_data, RTCData)
+"""
+
+OPT_IN_CONFTEST = 'pytest_plugins = ["pychrony.pytest_plugin"]\n'
+
+
+class TestPytestPlugin:
+    """Tests for the opt-in plugin and the deprecated auto-loaded plugin."""
+
+    def test_autoload_provides_prefixed_fixtures(self, pytester):
+        """Test prefixed fixtures work through the auto-loaded plugin."""
+        pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
+        result = pytester.runpytest("-W", "error::DeprecationWarning")
+        result.assert_outcomes(passed=1)
+
+    def test_autoload_old_names_warn(self, pytester):
+        """Test old fixture names still work but emit DeprecationWarning."""
+        pytester.makepyfile(OLD_FIXTURE_TESTS)
+        result = pytester.runpytest()
+        result.assert_outcomes(passed=4, warnings=4)
+        for old, new in [
+            ("tracking_status", "chrony_tracking_status"),
+            ("source", "chrony_source"),
+            ("source_stats", "chrony_source_stats"),
+            ("rtc_data", "chrony_rtc_data"),
+        ]:
+            result.stdout.fnmatch_lines(
+                [
+                    (
+                        f"*DeprecationWarning: The pychrony '{old}' fixture is "
+                        f"deprecated*use '{new}' instead*"
+                    )
+                ]
+            )
+
+    def test_opt_in_alone_provides_only_prefixed(self, pytester):
+        """Test the opt-in plugin without autoload adds no unprefixed names."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
+        pytester.makepyfile(
+            test_prefixed=PREFIXED_FIXTURE_TESTS, test_old=OLD_FIXTURE_TESTS
+        )
+        result = pytester.runpytest("-p", "no:pychrony")
+        result.assert_outcomes(passed=1, errors=4)
+        result.stdout.fnmatch_lines(["*fixture 'tracking_status' not found*"])
+
+    def test_opt_in_with_autoload(self, pytester):
+        """Test opting in while the deprecated autoload is still active."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
+        pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
+        result = pytester.runpytest("-W", "error::DeprecationWarning")
+        result.assert_outcomes(passed=1)
+
+    def test_user_fixture_overrides_old_name(self, pytester):
+        """Test a user's own fixture named like an old alias takes precedence."""
+        pytester.makeconftest(
+            "import pytest\n\n@pytest.fixture\ndef source():\n    return 'mine'\n"
+        )
+        pytester.makepyfile("def test_source(source):\n    assert source == 'mine'\n")
+        result = pytester.runpytest("-W", "error::DeprecationWarning")
+        result.assert_outcomes(passed=1)
