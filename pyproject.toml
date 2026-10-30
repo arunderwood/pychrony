@@ -1,5 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "cffi>=1.14.0"]
+# PEP 639 license expressions + license-files need setuptools 77; the first
+# 77.x on PyPI is 77.0.1. cffi floors are the first release supporting each
+# Python (keep in sync with [project] dependencies).
+requires = [
+    "setuptools>=77.0.1",
+    "setuptools-scm>=8.0",
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -22,12 +33,18 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Free Threading :: 3 - Stable",
     "Topic :: System :: Networking :: Time Synchronization",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-    "cffi>=1.14.0",
+    # First cffi release supporting each Python version.
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
 ]
 
 [project.urls]
@@ -58,10 +75,26 @@ target-version = "py311"
 extend-exclude = ["specs/"]
 
 [tool.ruff.lint]
+extend-select = [
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",   # flake8-comprehensions
+    "I",    # isort
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific rules
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+]
 ignore = [
     # __all__ entries are grouped by category (enums, models, exceptions) with
     # explanatory comments; alphabetical sorting would destroy that structure.
     "RUF022",
+    # try/except inside a loop is free on 3.11+ (zero-cost exceptions), which is
+    # our minimum, and the source-list retry loop needs a handler per attempt.
+    "PERF203",
 ]
 
 [tool.pytest.ini_options]
@@ -73,7 +106,7 @@ addopts = ["-v", "--tb=short"]
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
+build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]

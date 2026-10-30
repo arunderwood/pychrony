@@ -105,6 +105,16 @@ class TestChronyConnectionContract:
         param = sig.parameters["address"]
         assert param.default is None
 
+    def test_timeout_is_keyword_only_with_default_one_second(self):
+        """Test that timeout is a keyword-only float parameter defaulting to 1.0."""
+        from pychrony import ChronyConnection
+
+        sig = inspect.signature(ChronyConnection.__init__)
+        param = sig.parameters["timeout"]
+        assert param.kind is inspect.Parameter.KEYWORD_ONLY
+        assert param.default == 1.0
+        assert param.annotation in (float, "float")
+
 
 class TestTrackingStatusContract:
     """Tests for TrackingStatus API contract."""

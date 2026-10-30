@@ -161,6 +161,30 @@ chronyd's monitoring data to the network, so scope `cmdallow` to the hosts that
 need it. The command port is unauthenticated, so treat it as readable by anyone
 who can reach it.
 
+## Timeouts
+
+chronyd is reached over datagram sockets, and a lost datagram is never
+answered. Each request therefore waits `timeout` seconds (keyword-only,
+default `1.0`) for its answer, and is resent up to twice if none arrives —
+chronyc's default retry count. A request with no answer after three attempts
+raises `ChronyConnectionError`, so a call gives up after at most three times
+`timeout`:
+
+```python
+from pychrony import ChronyConnection, ChronyConnectionError
+
+try:
+    with ChronyConnection("192.168.1.100", timeout=0.5) as conn:
+        status = conn.get_tracking()
+except ChronyConnectionError as e:
+    print(f"chronyd did not answer: {e}")
+```
+
+The command port is UDP, so opening a connection to it succeeds whether or not
+chronyd is listening. A disabled (`cmdport 0`), misaddressed or firewalled
+command port shows up as this timeout on the first request, not when the
+connection opens.
+
 ## Thread Safety
 
 `ChronyConnection` is **NOT thread-safe**. The underlying libchrony session
@@ -194,6 +218,10 @@ def get_tracking():
 
 The returned dataclasses (`TrackingStatus`, `Source`, etc.) are frozen and
 immutable, so they can be safely shared across threads after retrieval.
+
+The same rules apply on free-threaded CPython builds (3.14t and later), which
+pychrony ships wheels for. Disabling the GIL does not make a single
+`ChronyConnection` safe to share; keep one connection per thread.
 
 ## Quick Links
 

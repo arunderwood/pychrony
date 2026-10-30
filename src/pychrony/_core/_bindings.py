@@ -8,6 +8,8 @@ Internal implementation - use pychrony.ChronyConnection instead.
 
 import math
 import os
+import select
+import time
 from collections.abc import Callable
 from types import TracebackType
 from typing import TYPE_CHECKING, Any, NoReturn, Self, TypedDict, TypeVar, cast
@@ -98,6 +100,19 @@ TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
 # time a record is requested. Each read starts over from a fresh count.
 SOURCE_LIST_READ_ATTEMPTS = 3
 
+# Seconds to wait for each response before resending the request, unless the
+# caller passes another timeout. Matches chronyc's default initial timeout.
+DEFAULT_TIMEOUT = 1.0
+
+# Resends of an unanswered request before giving up, so a request goes out at
+# most REQUEST_RETRIES + 1 times. libchrony neither times out nor resends: it
+# opens blocking datagram sockets and leaves waiting to the caller, and a lost
+# UDP datagram is otherwise never answered. Matches chronyc's default "retries
+# 2". Unlike chronyc, which doubles its timeout on each resend, every attempt
+# waits the same timeout, so a request gives up after (REQUEST_RETRIES + 1) *
+# timeout seconds.
+REQUEST_RETRIES = 2
+
 
 # Field values read from one record, keyed by the matching model's field names.
 # They let the validators run before the frozen model is built, while keeping
@@ -177,6 +192,24 @@ def _is_permission_denied(address: str) -> bool:
         and os.path.exists(address)
         and not os.access(address, os.R_OK | os.W_OK)
     )
+
+
+def _wait_readable(fd: int, timeout: float) -> bool:
+    """Wait up to `timeout` seconds for `fd` to have something to receive.
+
+    Error and hangup conditions also end the wait, so that recv() reports them:
+    an ICMP port unreachable from a closed command port fails fast that way.
+
+    Args:
+        fd: Socket file descriptor
+        timeout: Seconds to wait
+
+    Returns:
+        True if recv() on `fd` will not block, False if the wait timed out
+    """
+    poller = select.poll()
+    poller.register(fd, select.POLLIN)
+    return bool(poller.poll(math.ceil(timeout * 1000)))
 
 
 def _check_library_available() -> None:
@@ -313,6 +346,14 @@ class ChronyConnection:
               connection; the first that connects wins. `address` and
               `transport` report which one did.
 
+        timeout: Seconds to wait for each response from chronyd (keyword
+            only, default 1.0, must be positive). A request still unanswered
+            after `timeout` is resent, up to twice, so a request fails after
+            at most three times `timeout`. chronyd is reached over datagram
+            sockets, and a lost datagram is never answered: without the
+            timeout a dropped packet or a firewalled command port would block
+            the call forever.
+
     Methods:
         get_tracking: Get current NTP tracking status (returns `TrackingStatus`).
         get_sources: Get configured time sources (returns ``list[Source]``).
@@ -323,6 +364,19 @@ class ChronyConnection:
         The Unix socket is a control channel; the command port serves only
         monitoring commands, which covers every report this class reads. A
         read-only consumer should prefer it and can assert on `transport`.
+
+    Timeouts:
+        A request that gets no answer within `timeout`, after its resends,
+        raises `ChronyConnectionError`. The command port is UDP, so opening a
+        connection to it succeeds whether or not chronyd is listening; a
+        disabled, misaddressed or firewalled command port shows up as that
+        timeout on the first request.
+
+    Reuse:
+        A connection can be entered again after its ``with`` block exits;
+        each entry opens a fresh socket and session. It cannot be entered
+        while already open: a nested ``with`` on the same object raises
+        `RuntimeError` and leaves the open connection untouched.
 
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
@@ -345,13 +399,22 @@ class ChronyConnection:
         ...     rtc = conn.get_rtc_data()
     """
 
-    def __init__(self, address: str | None = None) -> None:
-        """Initialize ChronyConnection with optional address.
+    def __init__(
+        self, address: str | None = None, *, timeout: float = DEFAULT_TIMEOUT
+    ) -> None:
+        """Initialize ChronyConnection with optional address and timeout.
 
         Args:
             address: Connection address (see class docstring for formats)
+            timeout: Seconds to wait for each response before resending
+
+        Raises:
+            ValueError: If timeout is not a positive, finite number
         """
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError(f"timeout must be a positive number of seconds: {timeout}")
         self._address = address
+        self._timeout = timeout
         self._resolved_address: str | None = None
         self._denied_socket: str | None = None
         self._fd: int | None = None
@@ -360,7 +423,16 @@ class ChronyConnection:
         self._in_context = False
 
     def __enter__(self) -> Self:
-        """Enter context manager, opening connection to chronyd."""
+        """Enter context manager, opening connection to chronyd.
+
+        Raises:
+            RuntimeError: If the connection is already open
+        """
+        if self._in_context:
+            raise RuntimeError(
+                "ChronyConnection is already open; it cannot be entered "
+                "again within its own 'with' block"
+            )
         _check_library_available()
         self._open()
         self._in_context = True
@@ -559,6 +631,57 @@ class ChronyConnection:
                 )
         raise ChronyConnectionError(message, error_code=err)
 
+    # RET503: the loop falls through only into _raise_request_error, which is
+    # NoReturn; ruff does not follow that annotation on method calls.
+    def _await_response(self, resend: Callable[[], int], description: str) -> int:  # noqa: RET503
+        """Process the response to the request just sent, resending on timeout.
+
+        Each attempt waits up to the connection's timeout, on the monotonic
+        clock, before every chrony_process_response(), so that its recv()
+        never blocks. libchrony skips datagrams that do not answer the request
+        outstanding, so a late answer to an earlier copy is passed over and the
+        wait goes on. A record request that libchrony follows up internally
+        stays within the same attempt.
+
+        Args:
+            resend: Sends the request again, returning its chrony_err. Each
+                send carries a fresh sequence number.
+            description: What was requested, for the timeout error, e.g.
+                "tracking report"
+
+        Returns:
+            0 once the response is processed, otherwise the chrony_err from
+            chrony_process_response() or from a failed resend, for the caller
+            to interpret.
+
+        Raises:
+            ChronyConnectionError: If REQUEST_RETRIES + 1 attempts went
+                unanswered
+        """
+        attempts = REQUEST_RETRIES + 1
+        for attempt in range(attempts):
+            if attempt > 0:
+                err = resend()
+                if err != 0:
+                    return err
+
+            deadline = time.monotonic() + self._timeout
+            while _lib.chrony_needs_response(self._session):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not _wait_readable(self._fd, remaining):
+                    break
+                err = _lib.chrony_process_response(self._session)
+                if err != 0:
+                    return err
+            else:
+                return 0
+
+        self._raise_request_error(
+            f"Timed out waiting for {description} ({attempts} attempts, "
+            f"{self._timeout:g} s each)",
+            CHRONY_RECV_FAILED,
+        )
+
     def _request_report(self, report_name: bytes) -> int:
         """Request number of records for a report type.
 
@@ -578,12 +701,16 @@ class ChronyConnection:
                 f"Failed to request {report_name.decode()} report", err
             )
 
-        while _lib.chrony_needs_response(self._session):
-            err = _lib.chrony_process_response(self._session)
-            if err != 0:
-                self._raise_request_error(
-                    f"Failed to process {report_name.decode()} response", err
-                )
+        err = self._await_response(
+            lambda: _lib.chrony_request_report_number_records(
+                self._session, report_name
+            ),
+            f"{report_name.decode()} report",
+        )
+        if err != 0:
+            self._raise_request_error(
+                f"Failed to process {report_name.decode()} response", err
+            )
 
         return _lib.chrony_get_report_number_records(self._session)
 
@@ -604,12 +731,14 @@ class ChronyConnection:
                 f"Failed to request {report_name.decode()} record {index}", err
             )
 
-        while _lib.chrony_needs_response(self._session):
-            err = _lib.chrony_process_response(self._session)
-            if err != 0:
-                self._raise_request_error(
-                    f"Failed to process {report_name.decode()} record {index}", err
-                )
+        err = self._await_response(
+            lambda: _lib.chrony_request_record(self._session, report_name, index),
+            f"{report_name.decode()} record {index}",
+        )
+        if err != 0:
+            self._raise_request_error(
+                f"Failed to process {report_name.decode()} record {index}", err
+            )
 
     def _read_records(
         self, report_name: bytes, read_record: Callable[[], _T]
@@ -697,7 +826,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown leap_status value {leap_status_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         data: _TrackingData = {
             "reference_id": ref_id,
@@ -793,7 +922,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown state value {state_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         try:
             mode = SourceMode(mode_int)
@@ -801,7 +930,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown mode value {mode_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         # In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
         # which exposes either "address" (NTP sources) or "reference ID" (refclocks).
@@ -933,10 +1062,12 @@ class ChronyConnection:
             if err != 0:
                 return None
 
-            while _lib.chrony_needs_response(self._session):
-                err = _lib.chrony_process_response(self._session)
-                if err != 0:
-                    return None
+            err = self._await_response(
+                lambda: _lib.chrony_request_record(self._session, b"rtcdata", 0),
+                "rtcdata record 0",
+            )
+            if err != 0:
+                return None
         # Deliberately broad: this is a C-library boundary, and an absent RTC is a
         # supported outcome reported as None rather than an error. Narrowing the
         # catch risks surfacing a CFFI failure as a crash for that normal case.
