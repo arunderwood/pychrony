@@ -290,6 +290,20 @@ def _validate_non_negative_int(value: int, field_name: str) -> None:
         raise ChronyDataError(f"{field_name} must be non-negative: {value}")
 
 
+def _validate_non_negative_float(value: float, field_name: str) -> None:
+    """Validate that a float is non-negative.
+
+    Args:
+        value: The float value to validate
+        field_name: Name of the field for error messages
+
+    Raises:
+        ChronyDataError: If value is negative
+    """
+    if value < 0:
+        raise ChronyDataError(f"{field_name} must be non-negative: {value}")
+
+
 def _get_float_field(session: "_ChronySession", name: str) -> float:
     """Get a float field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
@@ -861,8 +875,7 @@ class ChronyConnection:
 
     def _validate_tracking(self, data: _TrackingData) -> None:
         """Validate tracking data before creating TrackingStatus."""
-        if not 0 <= data["stratum"] <= 15:
-            raise ChronyDataError(f"Invalid stratum: {data['stratum']}")
+        _validate_bounded_int(data["stratum"], "stratum", 0, 15)
 
         float_fields = (
             "ref_time",
@@ -877,8 +890,7 @@ class ChronyConnection:
             "update_interval",
         )
         for field in float_fields:
-            if math.isnan(data[field]) or math.isinf(data[field]):
-                raise ChronyDataError(f"Invalid {field}: {data[field]}")
+            _validate_finite_float(data[field], field)
 
         non_negative = (
             "ref_time",
@@ -889,8 +901,7 @@ class ChronyConnection:
             "update_interval",
         )
         for field in non_negative:
-            if data[field] < 0:
-                raise ChronyDataError(f"{field} must be non-negative: {data[field]}")
+            _validate_non_negative_float(data[field], field)
 
     def get_sources(self) -> list[Source]:
         """Get all configured time sources from chronyd.
@@ -976,10 +987,7 @@ class ChronyConnection:
         for field in ["orig_latest_meas", "latest_meas", "latest_meas_err"]:
             _validate_finite_float(data[field], field)
 
-        if data["latest_meas_err"] < 0:
-            raise ChronyDataError(
-                f"latest_meas_err must be non-negative: {data['latest_meas_err']}"
-            )
+        _validate_non_negative_float(data["latest_meas_err"], "latest_meas_err")
 
     def get_source_stats(self) -> list[SourceStats]:
         """Get statistical data for all time sources from chronyd.
@@ -1032,14 +1040,8 @@ class ChronyConnection:
         for field in ["std_dev", "resid_freq", "skew", "offset", "offset_err"]:
             _validate_finite_float(data[field], field)
 
-        if data["std_dev"] < 0:
-            raise ChronyDataError(f"std_dev must be non-negative: {data['std_dev']}")
-        if data["skew"] < 0:
-            raise ChronyDataError(f"skew must be non-negative: {data['skew']}")
-        if data["offset_err"] < 0:
-            raise ChronyDataError(
-                f"offset_err must be non-negative: {data['offset_err']}"
-            )
+        for field in ["std_dev", "skew", "offset_err"]:
+            _validate_non_negative_float(data[field], field)
 
     def get_rtc_data(self) -> RTCData | None:
         """Get Real-Time Clock tracking data from chronyd.
@@ -1097,5 +1099,4 @@ class ChronyConnection:
         for field in ["ref_time", "offset", "freq_offset"]:
             _validate_finite_float(data[field], field)
 
-        if data["ref_time"] < 0:
-            raise ChronyDataError(f"ref_time must be non-negative: {data['ref_time']}")
+        _validate_non_negative_float(data["ref_time"], "ref_time")
