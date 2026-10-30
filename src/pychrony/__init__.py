@@ -45,7 +45,12 @@ RTC Data:
     ...         print("RTC tracking not configured")
 
 Error Handling:
-    >>> from pychrony import ChronyConnection, ChronyError
+    >>> from pychrony import (
+    ...     ChronyConnection,
+    ...     ChronyConnectionError,
+    ...     ChronyLibraryError,
+    ...     ChronyPermissionError,
+    ... )
     >>> try:
     ...     with ChronyConnection() as conn:
     ...         status = conn.get_tracking()
@@ -67,9 +72,19 @@ Choosing a Transport:
     reads. Read-only consumers should prefer the command port. Note that
     joining the chrony group does not grant access to the Unix socket.
 
+    To use the command port, ask for it explicitly; an explicit address is
+    used as given, with no fallback:
+
     >>> from pychrony import ChronyConnection, Transport
+    >>> with ChronyConnection("127.0.0.1") as conn:
+    ...     status = conn.get_tracking()
+
+    With auto-detect, check what the connection settled on and refuse a
+    control channel rather than assume:
+
     >>> with ChronyConnection() as conn:
-    ...     assert conn.transport is Transport.COMMAND_PORT
+    ...     if conn.transport is not Transport.COMMAND_PORT:
+    ...         raise RuntimeError(f"refusing a control channel ({conn.address})")
     ...     status = conn.get_tracking()
 
 Custom Socket Path:

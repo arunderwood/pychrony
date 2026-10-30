@@ -58,15 +58,19 @@ stale-image note above.
 
 ## Architecture
 
-- **CFFI bindings**: `src/pychrony/_core/_bindings.py` wraps libchrony C library
+- **Build**: setuptools + setuptools-scm (version from git tags); `setup.py` hooks in the CFFI build
+- **CFFI bindings**: `src/pychrony/_core/_bindings.py` wraps libchrony; `ChronyConnection` context manager with `get_tracking()`, `get_sources()`, `get_source_stats()`, `get_rtc_data()`, and `address`/`transport` properties
 - **Build script**: `src/pychrony/_core/_build_bindings.py` generates `_cffi_bindings*.so` at install time
-- **Data model**: `TrackingStatus` frozen dataclass in `models.py` (15 NTP tracking fields)
-- **Exceptions**: `ChronyError` base with 4 specific subclasses in `exceptions.py`
+- **Field registry**: `src/pychrony/_core/_fields.py` maps libchrony field names to `FieldType` per report (`TRACKING_FIELDS`, `SOURCE_FIELDS`, `SOURCESTATS_FIELDS`, `RTC_FIELDS`); shared by `_bindings.py` and `tests/mocks/`
+- **Data models** (`models.py`): frozen dataclasses `TrackingStatus`, `Source`, `SourceStats`, `RTCData`; enums `LeapStatus`, `SourceState`, `SourceMode`, `Transport`
+- **Exceptions** (`exceptions.py`): `ChronyError` base with `ChronyConnectionError`, `ChronyPermissionError`, `ChronyDataError`, `ChronyLibraryError`
+- **Testing utilities** (`testing.py`): `make_tracking()`/`make_source()`/`make_source_stats()`/`make_rtc_data()` factories and pytest fixtures, registered as a `pytest11` plugin
 - **libchrony reference**: `vendor/libchrony/` - submodule with API source (field definitions in `reports.h`)
 
 ## Testing Structure
 
 - **Unit tests** (`tests/unit/`): No external dependencies, mock CFFI bindings
+- **Protocol mocks** (`tests/mocks/`): Simulated libchrony sessions and scenarios used by unit tests
 - **Contract tests** (`tests/contract/`): API stability verification
 - **Integration tests** (`tests/integration/`): Require Docker with running chronyd
 
@@ -75,16 +79,9 @@ stale-image note above.
 - ty configured to ignore `possibly-missing-attribute` in `_bindings.py` (dynamic CFFI imports)
 - This is a read-only monitoring library; it does not control chronyd
 
-## Active Technologies
-- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
-- N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
-- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
-- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
-- N/A (library package, no persistence) (005-pypi-packaging)
-- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
-- N/A (test infrastructure, no persistence) (006-protocol-test-mocks)
+## Stack
 
-## Recent Changes
-- 005-pypi-packaging: Added PyPI packaging with cibuildwheel (manylinux_2_28), Trusted Publishers (OIDC), two-stage release workflow (Test PyPI → Production PyPI)
-- 004-categorical-enums: Added standard library Enum for categorical fields (LeapStatus, SourceState, SourceMode)
-- 003-multiple-reports-bindings: Added Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI + libchrony (system library via CFFI API mode bindings)
+- CFFI (API mode) over libchrony; pre-built wheels bundle libchrony
+- Standard library dataclasses and `Enum` for the data models
+- setuptools + setuptools-scm build; cibuildwheel manylinux wheels in CI
+- Release via Trusted Publishers (OIDC): Test PyPI, then PyPI
