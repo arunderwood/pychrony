@@ -10,7 +10,7 @@ import math
 import os
 from collections.abc import Callable
 from types import TracebackType
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn, Self, TypeVar
 
 from ..exceptions import (
     ChronyConnectionError,
@@ -302,7 +302,7 @@ class ChronyConnection:
         self._session_ptr: Any = None
         self._in_context = False
 
-    def __enter__(self) -> "ChronyConnection":
+    def __enter__(self) -> Self:
         """Enter context manager, opening connection to chronyd."""
         _check_library_available()
         self._open()

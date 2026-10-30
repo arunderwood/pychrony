@@ -9,7 +9,7 @@ description = "Python bindings for chrony NTP client"
 readme = "README.md"
 license = "MIT AND LGPL-2.1-or-later"
 license-files = ["LICENSE", "LICENSES/*"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     {name = "arunderwood", email = "arunderwood@users.noreply.github.com"}
 ]
@@ -17,7 +17,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -49,7 +48,7 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 # specs/ holds frozen spec-kit design documents; they are historical records and
 # are not kept in sync with the code, so exclude them from linting/formatting.
 extend-exclude = ["specs/"]
@@ -59,9 +58,6 @@ ignore = [
     # __all__ entries are grouped by category (enums, models, exceptions) with
     # explanatory comments; alphabetical sorting would destroy that structure.
     "RUF022",
-    # Wants __enter__ to return `Self`, which is only in typing from 3.11 on.
-    # This package supports 3.10 and has no typing_extensions dependency.
-    "PYI034",
 ]
 
 [tool.ty]
@@ -85,7 +81,7 @@ addopts = ["-v", "--tb=short"]
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
+build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]

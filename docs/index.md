@@ -207,6 +207,6 @@ pychrony ships wheels for. Disabling the GIL does not make a single
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.11+
 - libchrony (system library)
 - Linux (primary platform)
