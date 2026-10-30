@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from pychrony._core._bindings import CHRONY_UNEXPECTED_STATUS
+from pychrony._core._bindings import CHRONY_DISABLED, CHRONY_UNEXPECTED_STATUS
 from pychrony._core._fields import (
     RTC_FIELDS,
     SOURCE_FIELDS,
@@ -169,8 +169,9 @@ class MockLib:
         """Mock chrony_process_response.
 
         Like libchrony, the record count is fixed when the count response
-        arrives, and a record request past the end of the source list fails
-        here with CHRONY_UNEXPECTED_STATUS.
+        arrives, a record request past the end of the source list fails
+        here with CHRONY_UNEXPECTED_STATUS, and an rtcdata record request with
+        no RTC fails here with CHRONY_DISABLED (chronyd's STT_NORTC).
         """
         error = self._session.config.error_injection.get("chrony_process_response")
         if error is not None:
@@ -190,6 +191,10 @@ class MockLib:
             and session_state.current_record_index >= len(session_state.sources)
         ):
             return CHRONY_UNEXPECTED_STATUS
+        elif session_state.current_report == "rtcdata" and not (
+            session_state.config.rtc is not None and session_state.config.rtc.available
+        ):
+            return CHRONY_DISABLED
         return 0
 
     def chrony_get_report_number_records(self, session: Any) -> int:
@@ -204,6 +209,7 @@ class MockLib:
         if error is not None:
             return error
 
+        self._session.current_report = report_name.decode("utf-8")
         self._session.current_record_index = index
         self._session.count_requested = False
         self._session.pending_responses = 1
@@ -312,10 +318,9 @@ class MockChronySession:
         elif report in SOURCE_REPORTS:
             return len(self.sources)
         elif report == "rtcdata":
-            rtc = self.config.rtc
-            if rtc is not None and rtc.available:
-                return 1
-            return 0
+            # libchrony has no count request for rtcdata: it is always 1, and a
+            # missing RTC only shows up when the record itself is requested.
+            return 1
         return 0
 
     def advance_source_list(self) -> None:
