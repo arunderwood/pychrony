@@ -104,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.15"]
+        python: ["3.11", "3.12", "3.14t", "3.15"]
 
     steps:
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -151,6 +151,19 @@ jobs:
         print(f'Installed version: {pychrony.__version__}')
         assert pychrony.__version__ == expected, \
             f'Version mismatch: {pychrony.__version__} != {expected}'
+        "
+
+    # On a free-threaded interpreter, prove the cp3XXt wheel was installed
+    # (not the sdist, which has no compiled bindings) and that importing it
+    # leaves the GIL disabled.
+    - name: Verify free-threaded wheel
+      if: endsWith(matrix.python, 't')
+      run: |
+        python -c "
+        import sys
+        import pychrony._core._cffi_bindings
+        assert not sys._is_gil_enabled(), 'importing pychrony re-enabled the GIL'
+        print('GIL disabled after import')
         "
 
   # Production publish lives in this workflow, after verification, so it can
