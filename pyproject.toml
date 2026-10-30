@@ -54,6 +54,19 @@ target-version = "py310"
 extend-exclude = ["specs/"]
 
 [tool.ruff.lint]
+extend-select = [
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",   # flake8-comprehensions
+    "I",    # isort
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific rules
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+]
 ignore = [
     # __all__ entries are grouped by category (enums, models, exceptions) with
     # explanatory comments; alphabetical sorting would destroy that structure.
@@ -61,6 +74,9 @@ ignore = [
     # Wants __enter__ to return `Self`, which is only in typing from 3.11 on.
     # This package supports 3.10 and has no typing_extensions dependency.
     "PYI034",
+    # try/except inside a loop is free on 3.11+ (zero-cost exceptions), and the
+    # source-list retry loop needs the handler per attempt by design.
+    "PERF203",
 ]
 
 [tool.ty]

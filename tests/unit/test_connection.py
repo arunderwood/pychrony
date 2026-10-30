@@ -110,7 +110,10 @@ class TestChronyConnectionContextManager:
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = 0
 
-        with pytest.raises(ValueError), ChronyConnection("/test.sock"):
+        with (
+            pytest.raises(ValueError, match="test error"),
+            ChronyConnection("/test.sock"),
+        ):
             raise ValueError("test error")
 
         mock_lib.chrony_deinit_session.assert_called_once()

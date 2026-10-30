@@ -640,7 +640,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown leap_status value {leap_status_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         data = {
             "reference_id": ref_id,
@@ -736,7 +736,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown state value {state_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         try:
             mode = SourceMode(mode_int)
@@ -744,7 +744,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown mode value {mode_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         # In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
         # which exposes either "address" (NTP sources) or "reference ID" (refclocks).

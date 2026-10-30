@@ -71,7 +71,10 @@ class TestPatchedChronyConnection:
 
         original_lib = _bindings._lib
 
-        with pytest.raises(ValueError), patched_chrony_connection():
+        with (
+            pytest.raises(ValueError, match="Test exception"),
+            patched_chrony_connection(),
+        ):
             raise ValueError("Test exception")
 
         assert _bindings._lib is original_lib
