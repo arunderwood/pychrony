@@ -451,9 +451,10 @@ The image installs the test dependencies from `uv.lock` and installs pychrony
 non-editably, compiling the bindings through `setup.py` with
 `PYCHRONY_BUILD_CFFI=1`. Tests therefore run against the installed package.
 
-To test a built wheel instead of the source tree (this is what CI's
-"Integration tests (Docker, manylinux wheel)" job does), build a wheel for the
-image's Python (Fedora 44's 3.14) and pass the wheelhouse as a build context:
+CI runs this source variant on every PR. The release workflow runs the same
+suite against the x86_64 wheels it is about to publish, before Test PyPI.
+To do that locally, build a wheel for the image's Python (Fedora 44's 3.14)
+and pass the wheelhouse as a build context:
 
 ```bash
 CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \

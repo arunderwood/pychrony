@@ -30,7 +30,8 @@ docker build -t pychrony-test -f docker/Dockerfile.test . && \
   docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 
 # Same suite against a built wheel instead of the source tree (wheelhouse/
-# must hold a wheel for the image's python3, Fedora 44's 3.14)
+# must hold a wheel for the image's python3, Fedora 44's 3.14). CI runs the
+# source variant per PR; release.yml runs this against the shipped wheels.
 CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \
   docker build -t pychrony-test -f docker/Dockerfile.test \
     --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ . && \
