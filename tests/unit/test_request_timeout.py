@@ -124,12 +124,12 @@ class TestUnansweredRequests:
         assert session.requests_sent == 1 + len(sources) + 1
 
     def test_resend_recovers_rtc_record(self) -> None:
-        # Request 0 is the rtcdata count, request 1 its record.
-        config = replace(SCENARIO_RTC_AVAILABLE, dropped_requests=frozenset({1}))
+        # rtcdata has no count request, so request 0 is its record.
+        config = replace(SCENARIO_RTC_AVAILABLE, dropped_requests=frozenset({0}))
         with mock_connection(config) as (conn, session):
             rtc = conn.get_rtc_data()
         assert rtc is not None
-        assert session.requests_sent == 3
+        assert session.requests_sent == 2
 
     def test_each_wait_is_bounded_by_timeout(self) -> None:
         with (

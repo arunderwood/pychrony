@@ -83,13 +83,18 @@ except ImportError:
 # CHRONY_UNEXPECTED_STATUS is how a request for a source index past the end of
 # chronyd's list comes back: chronyd answers STT_NOSUCHSOURCE, which libchrony
 # has no case for.
+#
+# CHRONY_DISABLED is how an rtcdata request comes back when chronyd is not
+# tracking an RTC: chronyd answers STT_NORTC, which libchrony maps to it.
 if _LIBRARY_AVAILABLE:
     CHRONY_SEND_FAILED = _lib.CHRONY_SEND_FAILED
     CHRONY_RECV_FAILED = _lib.CHRONY_RECV_FAILED
+    CHRONY_DISABLED = _lib.CHRONY_DISABLED
     CHRONY_UNEXPECTED_STATUS = _lib.CHRONY_UNEXPECTED_STATUS
 else:
     CHRONY_SEND_FAILED = 5
     CHRONY_RECV_FAILED = 6
+    CHRONY_DISABLED = 10
     CHRONY_UNEXPECTED_STATUS = 11
 
 TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
@@ -984,8 +989,11 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
-            ChronyConnectionError: If chronyd did not respond.
-            ChronyDataError: If RTC data is invalid or malformed.
+            ChronyConnectionError: If chronyd could not be reached, including
+                when it stops responding mid-session.
+            ChronyDataError: If chronyd rejected the request for any reason
+                other than having no RTC (e.g. unauthorized), or if the RTC
+                data is invalid or malformed.
 
         Examples:
             >>> with ChronyConnection() as conn:
@@ -995,27 +1003,14 @@ class ChronyConnection:
         """
         self._ensure_context()
 
-        num_records = self._request_report(b"rtcdata")
-        if num_records < 1:
-            return None
-
-        # Try to fetch rtcdata record - may fail if RTC not actually configured
+        # libchrony has no count request for rtcdata (its record count is always
+        # 1), so the record request itself is what reveals a missing RTC.
         try:
-            err = _lib.chrony_request_record(self._session, b"rtcdata", 0)
-            if err != 0:
+            self._request_record(b"rtcdata", 0)
+        except ChronyDataError as e:
+            if e.error_code == CHRONY_DISABLED:
                 return None
-
-            err = self._await_response(
-                lambda: _lib.chrony_request_record(self._session, b"rtcdata", 0),
-                "rtcdata record 0",
-            )
-            if err != 0:
-                return None
-        # Deliberately broad: this is a C-library boundary, and an absent RTC is a
-        # supported outcome reported as None rather than an error. Narrowing the
-        # catch risks surfacing a CFFI failure as a crash for that normal case.
-        except Exception:  # noqa: BLE001
-            return None
+            raise
 
         data = self._extract_rtc()
         self._validate_rtc(data)

@@ -1,10 +1,20 @@
 """Unit tests for RTC mock scenarios.
 
-Tests for RTC availability and calibration states.
+Tests for RTC availability and calibration states, and for how get_rtc_data()
+tells a missing RTC apart from a failed request.
 """
 
 from __future__ import annotations
 
+import pytest
+
+from pychrony import ChronyConnectionError, ChronyDataError
+from pychrony._core._bindings import (
+    CHRONY_DISABLED,
+    CHRONY_RECV_FAILED,
+    CHRONY_SEND_FAILED,
+    CHRONY_UNEXPECTED_STATUS,
+)
 from tests.mocks import (
     SCENARIO_RTC_AVAILABLE,
     SCENARIO_RTC_UNAVAILABLE,
@@ -139,3 +149,56 @@ class TestRtcFieldValues:
             rtc = conn.get_rtc_data()
             assert rtc is not None
             assert rtc.freq_offset == -2.5
+
+
+class TestRtcRequestFailures:
+    """Only chronyd reporting no RTC is None; every other failure raises."""
+
+    def test_no_rtc_status_returns_none(self) -> None:
+        """CHRONY_DISABLED (chronyd's STT_NORTC) on the record means no RTC."""
+        config = ChronyStateConfig(
+            rtc=RTCConfig(available=True),
+            error_injection={"chrony_process_response": CHRONY_DISABLED},
+        )
+        with patched_chrony_connection(config) as conn:
+            assert conn.get_rtc_data() is None
+
+    @pytest.mark.parametrize(
+        ("operation", "error"),
+        [
+            ("chrony_request_record", CHRONY_SEND_FAILED),
+            ("chrony_process_response", CHRONY_RECV_FAILED),
+        ],
+    )
+    def test_transport_failure_raises_connection_error(
+        self, operation: str, error: int
+    ) -> None:
+        """chronyd going away mid-session is not "no RTC"."""
+        config = ChronyStateConfig(
+            rtc=RTCConfig(available=True), error_injection={operation: error}
+        )
+        with (
+            patched_chrony_connection(config) as conn,
+            pytest.raises(ChronyConnectionError) as exc_info,
+        ):
+            conn.get_rtc_data()
+        assert exc_info.value.error_code == error
+
+    @pytest.mark.parametrize(
+        ("operation", "error"),
+        [
+            ("chrony_request_record", CHRONY_UNEXPECTED_STATUS),
+            ("chrony_process_response", CHRONY_UNEXPECTED_STATUS),
+        ],
+    )
+    def test_other_failure_raises_data_error(self, operation: str, error: int) -> None:
+        """Any other failed request is a data error, not a missing RTC."""
+        config = ChronyStateConfig(
+            rtc=RTCConfig(available=True), error_injection={operation: error}
+        )
+        with (
+            patched_chrony_connection(config) as conn,
+            pytest.raises(ChronyDataError) as exc_info,
+        ):
+            conn.get_rtc_data()
+        assert exc_info.value.error_code == error
