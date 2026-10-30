@@ -52,6 +52,7 @@ class _Lib:
     CHRONY_OK: int
     CHRONY_SEND_FAILED: int
     CHRONY_RECV_FAILED: int
+    CHRONY_DISABLED: int
     CHRONY_UNEXPECTED_STATUS: int
 
     # Connection management
