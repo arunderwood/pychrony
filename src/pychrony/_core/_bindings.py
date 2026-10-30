@@ -574,7 +574,9 @@ class ChronyConnection:
                 )
         raise ChronyConnectionError(message, error_code=err)
 
-    def _await_response(self, resend: Callable[[], int], description: str) -> int:
+    # RET503: the loop falls through only into _raise_request_error, which is
+    # NoReturn; ruff does not follow that annotation on method calls.
+    def _await_response(self, resend: Callable[[], int], description: str) -> int:  # noqa: RET503
         """Process the response to the request just sent, resending on timeout.
 
         Each attempt waits up to the connection's timeout, on the monotonic
