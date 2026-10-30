@@ -659,6 +659,9 @@ def get_tracking():
 </code></pre>
 <p>The returned dataclasses (<code>TrackingStatus</code>, <code>Source</code>, etc.) are frozen and
 immutable, so they can be safely shared across threads after retrieval.</p>
+<p>The same rules apply on free-threaded CPython builds (3.14t and later), which
+pychrony ships wheels for. Disabling the GIL does not make a single
+<code>ChronyConnection</code> safe to share; keep one connection per thread.</p>
 <h2 id="quick-links">Quick Links</h2>
 <ul>
 <li><a href="api/">API Reference</a> - Complete API documentation</li>
