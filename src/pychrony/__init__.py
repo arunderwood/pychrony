@@ -109,6 +109,9 @@ Thread Safety:
     The returned dataclasses (TrackingStatus, Source, etc.) are frozen and
     immutable, so they can be safely shared across threads after retrieval.
 
+    The same rules apply on free-threaded CPython builds (3.14t and later):
+    disabling the GIL does not make a single ChronyConnection safe to share.
+
 For more information, see:
 - https://github.com/arunderwood/pychrony
 - https://chrony-project.org/
