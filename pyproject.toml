@@ -1,5 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "cffi>=1.14.0"]
+# PEP 639 license expressions + license-files need setuptools 77; the first
+# 77.x on PyPI is 77.0.1. cffi floors are the first release supporting each
+# Python (keep in sync with [project] dependencies).
+requires = [
+    "setuptools>=77.0.1",
+    "setuptools-scm>=8.0",
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -27,7 +38,12 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-    "cffi>=1.14.0",
+    # First cffi release supporting each Python version.
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
 ]
 
 [project.urls]
