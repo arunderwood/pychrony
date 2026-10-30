@@ -315,6 +315,12 @@ class ChronyConnection:
         disabled, misaddressed or firewalled command port shows up as that
         timeout on the first request.
 
+    Reuse:
+        A connection can be entered again after its ``with`` block exits;
+        each entry opens a fresh socket and session. It cannot be entered
+        while already open: a nested ``with`` on the same object raises
+        `RuntimeError` and leaves the open connection untouched.
+
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
 
@@ -360,7 +366,16 @@ class ChronyConnection:
         self._in_context = False
 
     def __enter__(self) -> Self:
-        """Enter context manager, opening connection to chronyd."""
+        """Enter context manager, opening connection to chronyd.
+
+        Raises:
+            RuntimeError: If the connection is already open
+        """
+        if self._in_context:
+            raise RuntimeError(
+                "ChronyConnection is already open; it cannot be entered "
+                "again within its own 'with' block"
+            )
         _check_library_available()
         self._open()
         self._in_context = True

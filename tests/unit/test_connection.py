@@ -625,3 +625,54 @@ class TestResponseFailureDiagnostics:
 
         with pytest.raises(ChronyDataError), ChronyConnection() as conn:
             conn.get_tracking()
+
+
+class TestChronyConnectionReentry:
+    """Tests for entering a connection that is already open."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Patch the bindings with a mock session that tracks open sockets."""
+        from tests.mocks import SCENARIO_NTP_SYNCED
+        from tests.mocks.session import MockChronySession
+
+        session = MockChronySession(SCENARIO_NTP_SYNCED)
+        with (
+            patch("pychrony._core._bindings._lib", session.lib),
+            patch("pychrony._core._bindings._ffi", session.ffi),
+            patch("pychrony._core._bindings._LIBRARY_AVAILABLE", True),
+            patch("pychrony._core._bindings._wait_readable", session.wait_readable),
+        ):
+            yield session
+
+    def test_nested_entry_raises_without_leaking(self, mock_session):
+        """Test that a nested 'with' raises and opens no second socket."""
+        conn = ChronyConnection()
+        with conn:
+            fd = conn._fd
+            with pytest.raises(RuntimeError, match="already open"), conn:
+                pass
+            assert mock_session.open_sockets == {fd}
+            assert conn._fd == fd
+        assert mock_session.open_sockets == set()
+
+    def test_connection_usable_after_nested_entry_error(self, mock_session):
+        """Test that the outer block keeps a working connection."""
+        conn = ChronyConnection()
+        with conn:
+            address = conn.address
+            with pytest.raises(RuntimeError), conn:
+                pass
+            assert conn._in_context
+            assert conn.address == address
+            assert conn.get_tracking() is not None
+
+    def test_sequential_reuse_works(self, mock_session):
+        """Test that a connection can be entered again after exiting."""
+        conn = ChronyConnection()
+        for _ in range(2):
+            with conn:
+                assert len(mock_session.open_sockets) == 1
+                assert conn.get_tracking() is not None
+            assert mock_session.open_sockets == set()
+            assert conn.address is None

@@ -129,10 +129,16 @@ class MockLib:
         error = self._session.config.error_injection.get("chrony_open_socket")
         if error is not None:
             return error
-        return 5  # Valid file descriptor
+        # A fresh descriptor per open, so that a leaked socket stays visible
+        # in open_sockets rather than being masked by a reused number.
+        fd = self._session.next_fd
+        self._session.next_fd += 1
+        self._session.open_sockets.add(fd)
+        return fd
 
     def chrony_close_socket(self, fd: int) -> None:
         """Mock chrony_close_socket."""
+        self._session.open_sockets.discard(fd)
 
     def chrony_init_session(self, session_ptr: MockPointer, fd: int) -> int:
         """Mock chrony_init_session."""
@@ -298,6 +304,8 @@ class MockChronySession:
         inbox: Request numbers whose answers are waiting to be received
         late_answers: Request numbers whose answers arrive at the next timeout
         waits: Timeout of each wait_readable call, in seconds
+        open_sockets: Descriptors opened and not yet closed
+        next_fd: Descriptor the next successful open returns
         lib: Mock _lib object
         ffi: Mock _ffi object
     """
@@ -317,6 +325,8 @@ class MockChronySession:
         self.inbox: list[int] = []
         self.late_answers: list[int] = []
         self.waits: list[float] = []
+        self.open_sockets: set[int] = set()
+        self.next_fd: int = 5
         self.lib = MockLib(self)
         self.ffi = MockFFI()
 
