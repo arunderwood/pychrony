@@ -1776,7 +1776,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session_ptr</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_in_context</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ChronyConnection&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Enter context manager, opening connection to chronyd.&quot;&quot;&quot;</span>
         <span class="n">_check_library_available</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">()</span>
@@ -2550,7 +2550,7 @@ not hold a control channel can assert on this.</p>
 <span class="normal">307</span>
 <span class="normal">308</span>
 <span class="normal">309</span>
-<span class="normal">310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ChronyConnection&quot;</span><span class="p">:</span>
+<span class="normal">310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Enter context manager, opening connection to chronyd.&quot;&quot;&quot;</span>
     <span class="n">_check_library_available</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_open</span><span class="p">()</span>
