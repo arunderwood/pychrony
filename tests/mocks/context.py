@@ -61,6 +61,7 @@ def patched_chrony_connection(
         patch("pychrony._core._bindings._lib", mock_session.lib),
         patch("pychrony._core._bindings._ffi", mock_session.ffi),
         patch("pychrony._core._bindings._LIBRARY_AVAILABLE", True),
+        patch("pychrony._core._bindings._wait_readable", mock_session.wait_readable),
         ChronyConnection() as conn,
     ):
         yield conn

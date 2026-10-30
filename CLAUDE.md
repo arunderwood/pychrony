@@ -28,7 +28,19 @@ cibuildwheel --platform linux             # build manylinux wheels (requires Doc
 git submodule update --init --recursive   # vendor/libchrony must be populated
 docker build -t pychrony-test -f docker/Dockerfile.test . && \
   docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+
+# Same suite against a built wheel instead of the source tree (wheelhouse/
+# must hold a wheel for the image's python3, Fedora 44's 3.14). CI runs the
+# source variant per PR; release.yml runs this against the shipped wheels.
+CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \
+  docker build -t pychrony-test -f docker/Dockerfile.test \
+    --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ . && \
+  docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+The image installs test dependencies from `uv.lock` and installs pychrony
+non-editably (source builds compile the bindings via `PYCHRONY_BUILD_CFFI=1`),
+so tests import the installed package, never `src/`.
 
 Keep the `&&` joining build and run. `pychrony-test` is a fixed tag, so if the
 build fails and `docker run` still executes, it silently reuses the last image
@@ -39,7 +51,7 @@ Never pipe the build through `tail`/`head` to trim output: the pipeline then
 exits with the pager's status, which defeats the `&&` and reintroduces exactly
 that stale-image failure.
 
-Cross-version testing (Python 3.10-3.15) is handled by CI.
+Cross-version testing (Python 3.11-3.15) is handled by CI.
 
 ## Before Committing
 
@@ -76,12 +88,12 @@ stale-image note above.
 - This is a read-only monitoring library; it does not control chronyd
 
 ## Active Technologies
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
 - N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
 - N/A (library package, no persistence) (005-pypi-packaging)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
 - N/A (test infrastructure, no persistence) (006-protocol-test-mocks)
 
 ## Recent Changes

@@ -217,6 +217,11 @@ class ChronyStateConfig:
             sources added or removed between the count and the record requests.
         rtc: RTC configuration (None if not available)
         error_injection: Map of operation names to error codes
+        dropped_requests: Requests chronyd never answers, numbered from 0 in
+            the order they are sent, counting resends. Simulates a lost
+            datagram or a firewalled command port.
+        late_requests: Requests chronyd answers only after the client's wait
+            for them has timed out, so the answer arrives after the resend.
     """
 
     stratum: int = 2
@@ -242,6 +247,10 @@ class ChronyStateConfig:
     # Error injection
     error_injection: dict[str, int] = field(default_factory=dict)
 
+    # Unanswered and late requests
+    dropped_requests: frozenset[int] = frozenset()
+    late_requests: frozenset[int] = frozenset()
+
     def __post_init__(self) -> None:
         """Validate ChronyStateConfig fields."""
         if not 0 <= self.stratum <= 16:
@@ -258,6 +267,11 @@ class ChronyStateConfig:
             raise ValueError("update_interval must be non-negative")
         if self.ref_time < 0:
             raise ValueError("ref_time must be non-negative")
+
+        if any(n < 0 for n in self.dropped_requests | self.late_requests):
+            raise ValueError("request numbers must be non-negative")
+        if self.dropped_requests & self.late_requests:
+            raise ValueError("a request cannot be both dropped and late")
 
         # Validate error injection keys
         valid_keys = {

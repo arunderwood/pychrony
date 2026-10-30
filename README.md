@@ -134,7 +134,7 @@ for details.
 
 ## Compatibility
 
-- **Python**: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15
+- **Python**: 3.11, 3.12, 3.13, 3.14, 3.15
 - **Platform**: Linux (primary), other platforms where libchrony is available
 - **chrony**: 4.x and later
 
