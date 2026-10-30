@@ -358,9 +358,9 @@ class MockChronySession:
 
         if report == "tracking":
             return 1
-        elif report in SOURCE_REPORTS:
+        if report in SOURCE_REPORTS:
             return len(self.sources)
-        elif report == "rtcdata":
+        if report == "rtcdata":
             rtc = self.config.rtc
             if rtc is not None and rtc.available:
                 return 1
@@ -386,11 +386,11 @@ class MockChronySession:
 
         if report == "tracking":
             return self._get_tracking_field(index)
-        elif report == "sources":
+        if report == "sources":
             return self._get_source_field(index)
-        elif report == "sourcestats":
+        if report == "sourcestats":
             return self._get_sourcestats_field(index)
-        elif report == "rtcdata":
+        if report == "rtcdata":
             return self._get_rtc_field(index)
 
         return 0

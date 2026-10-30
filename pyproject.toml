@@ -70,10 +70,26 @@ target-version = "py311"
 extend-exclude = ["specs/"]
 
 [tool.ruff.lint]
+extend-select = [
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",   # flake8-comprehensions
+    "I",    # isort
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific rules
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+]
 ignore = [
     # __all__ entries are grouped by category (enums, models, exceptions) with
     # explanatory comments; alphabetical sorting would destroy that structure.
     "RUF022",
+    # try/except inside a loop is free on 3.11+ (zero-cost exceptions), which is
+    # our minimum, and the source-list retry loop needs a handler per attempt.
+    "PERF203",
 ]
 
 [tool.ty]

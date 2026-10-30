@@ -574,7 +574,9 @@ class ChronyConnection:
                 )
         raise ChronyConnectionError(message, error_code=err)
 
-    def _await_response(self, resend: Callable[[], int], description: str) -> int:
+    # RET503: the loop falls through only into _raise_request_error, which is
+    # NoReturn; ruff does not follow that annotation on method calls.
+    def _await_response(self, resend: Callable[[], int], description: str) -> int:  # noqa: RET503
         """Process the response to the request just sent, resending on timeout.
 
         Each attempt waits up to the connection's timeout, on the monotonic
@@ -767,7 +769,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown leap_status value {leap_status_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         data = {
             "reference_id": ref_id,
@@ -863,7 +865,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown state value {state_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         try:
             mode = SourceMode(mode_int)
@@ -871,7 +873,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown mode value {mode_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         # In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
         # which exposes either "address" (NTP sources) or "reference ID" (refclocks).
