@@ -36,7 +36,6 @@ Homepage = "https://github.com/arunderwood/pychrony"
 Documentation = "https://pychrony.org/"
 Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
-Changelog = "https://github.com/arunderwood/pychrony/blob/main/CHANGELOG.md"
 
 [project.entry-points.pytest11]
 pychrony = "pychrony.testing"
