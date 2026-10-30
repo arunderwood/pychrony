@@ -1,0 +1,22 @@
+# setuptools-scm adds every git-tracked file to the sdist. Strip the
+# development tooling so the sdist carries only what a downstream packager
+# needs: src/, tests/, setup.py, pyproject.toml, README.md, LICENSE, LICENSES/.
+
+prune .claude
+prune .github
+prune .specify
+prune docker
+prune docs
+prune specs
+exclude .dockerignore .gitignore .gitmodules .python-version
+exclude CLAUDE.md TESTING.md mkdocs.yml uv.lock
+
+# vendor/libchrony is deliberately left out. The release workflow's
+# build-sdist job checks out without submodules, so the published sdist never
+# had it; pruning it here keeps local builds (where the submodule may be
+# populated) identical to the released one. Building from the sdist links
+# against the system libchrony, as distro packagers expect, and leaving the
+# LGPL source out keeps the sdist itself MIT code plus license texts. The
+# LGPL source offer for the libchrony bundled into the binary wheels is met
+# by the pinned submodule commit in the public git repository.
+prune vendor
