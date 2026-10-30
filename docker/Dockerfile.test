@@ -1,5 +1,13 @@
 # Test environment for pychrony with libchrony and chronyd
 # Multi-stage build: builder stage compiles libchrony, runtime stage runs tests
+#
+# PYCHRONY_INSTALL selects what gets tested:
+#   source (default)  build and install pychrony from this source tree
+#   wheel             install a prebuilt wheel instead, e.g. from cibuildwheel:
+#     docker build -t pychrony-test -f docker/Dockerfile.test \
+#       --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ .
+#   The wheelhouse must hold a wheel for this image's python3 (Fedora 44's).
+ARG PYCHRONY_INSTALL=source
 
 # =============================================================================
 # Stage 1: Builder - compile libchrony from vendored source
@@ -20,12 +28,24 @@ RUN make && \
     make install prefix=/usr/local DESTDIR=/libchrony-install
 
 # =============================================================================
+# Placeholder wheelhouse; replaced by --build-context wheelhouse=<dir> when
+# testing a wheel. Unused (and skipped) for source installs.
+# =============================================================================
+FROM scratch AS wheelhouse
+# The marker is what makes "no wheelhouse given" detectable, and it must stay:
+# BuildKit treats a COPY from an empty stage as a cache hit for the last
+# wheelhouse COPY, so a build that forgot --build-context would silently
+# reinstall whatever wheel an earlier build used.
+COPY <<EOF /NO_WHEELHOUSE
+EOF
+
+# =============================================================================
 # Stage 2: Runtime - minimal image with chrony and Python
 # =============================================================================
-FROM fedora:44
+FROM fedora:44 AS runtime
 
 # Install runtime dependencies
-# Note: gcc is needed to compile CFFI bindings at install time
+# Note: gcc is needed to compile CFFI bindings for source installs
 RUN dnf install -y \
     chrony \
     python3 \
@@ -60,31 +80,64 @@ RUN sed -i '/^pool /d' /etc/chrony.conf && \
 # Unprivileged user for tests that must not be able to reach the Unix socket
 RUN useradd -m testuser
 
-# Install UV for Python package management
-RUN pip3 install uv
+# Install a pinned uv; the test environment itself comes from uv.lock
+RUN pip3 install uv==0.11.32
 
-# Set working directory
+# Everything goes into one venv built with Fedora's python3. It is first on
+# PATH, so `pytest` and `python3` (and sys.executable in tests) resolve to it.
+ENV VIRTUAL_ENV=/opt/venv \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON=/usr/bin/python3 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
+    PATH=/opt/venv/bin:$PATH
+
 WORKDIR /app
 
-# Copy dependency specification first (better layer caching)
-COPY pyproject.toml README.md LICENSE ./
+# Install the locked runtime and test dependencies, but not pychrony itself.
+# This layer is cached until pyproject.toml or uv.lock change.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --group dev
+
+# =============================================================================
+# Stage 3a: install pychrony from the source tree (default)
+# =============================================================================
+FROM runtime AS install-source
+
+COPY setup.py README.md LICENSE ./
 COPY LICENSES/ LICENSES/
-
-# Install project dependencies before copying source
-# This layer will be cached if pyproject.toml doesn't change
-RUN uv pip install --system pytest pytest-cov setuptools cffi
-
-# Copy project source files
 COPY src/ src/
+
+# Non-editable build through setup.py, which compiles the CFFI extension
+# against the libchrony installed above when PYCHRONY_BUILD_CFFI=1. The
+# package then lives only in site-packages, so tests never import from src/.
+RUN PYCHRONY_BUILD_CFFI=1 uv sync --frozen --no-editable --group dev
+
+# =============================================================================
+# Stage 3b: install pychrony from a prebuilt wheel
+# =============================================================================
+FROM runtime AS install-wheel
+
+# Install the wheel matching this image's python3 from the wheelhouse build
+# context. No source tree is copied, so the wheel is the only pychrony there
+# is. Dependencies are already installed from uv.lock, hence --no-deps.
+COPY --from=wheelhouse / /wheelhouse/
+RUN if [ -e /wheelhouse/NO_WHEELHOUSE ] || ! ls /wheelhouse/*.whl >/dev/null 2>&1; then \
+        echo "No wheels in the wheelhouse build context. Build with" \
+             "--build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=<dir>" >&2; \
+        exit 1; \
+    fi && \
+    uv pip install --no-deps --no-index --only-binary :all: --prerelease allow \
+        --find-links /wheelhouse pychrony && \
+    rm -rf /wheelhouse
+
+# =============================================================================
+# Final stage: whichever install PYCHRONY_INSTALL selected, plus the tests
+# =============================================================================
+FROM install-${PYCHRONY_INSTALL}
+
 COPY tests/ tests/
-
-# Install the package in editable mode
-RUN uv pip install --system -e "."
-
-# Build CFFI bindings (requires libchrony headers)
-# ffi.compile() outputs to /app/pychrony/_core/, but editable install is at /app/src/pychrony/
-RUN python3 -c "from pychrony._core._build_bindings import ffi; ffi.compile(verbose=True)" && \
-    cp /app/pychrony/_core/_cffi_bindings*.so /app/src/pychrony/_core/
 
 # Integration tests must fail, not skip, if the compiled bindings are missing:
 # this image exists to prove they work, so a skipped run must not look green.

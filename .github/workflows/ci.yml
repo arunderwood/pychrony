@@ -103,16 +103,41 @@ jobs:
         run: uv run mkdocs build --strict
 
   # Full suite in Docker with libchrony - the only place integration
-  # tests run against a live chronyd.
+  # tests run against a live chronyd. "source" builds pychrony from this
+  # checkout; "wheel" installs a cibuildwheel manylinux wheel instead, the
+  # same kind of artifact release.yml publishes, so the shipped build is what
+  # gets exercised.
   docker-tests:
-    name: Integration tests (Docker)
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - install: source
+            name: Integration tests (Docker)
+          - install: wheel
+            name: Integration tests (Docker, manylinux wheel)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           submodules: true
+
+      # One wheel is enough: it has to match the test image's python3, which
+      # is Fedora 44's (3.14). If Fedora's Python moves, the image build fails
+      # with "no matching distribution" rather than testing something else;
+      # update CIBW_BUILD to match.
+      - name: Build manylinux wheel
+        if: matrix.install == 'wheel'
+        uses: pypa/cibuildwheel@b3395e271a35f73dad77f21802abe9b986dfe299 # v4.3.1
+        with:
+          extras: uv
+          output-dir: wheelhouse
+        env:
+          CIBW_BUILD: cp314-manylinux_x86_64
+          CIBW_ARCHS_LINUX: x86_64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
@@ -124,8 +149,10 @@ jobs:
           file: docker/Dockerfile.test
           tags: pychrony-test:latest
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: PYCHRONY_INSTALL=${{ matrix.install }}
+          build-contexts: ${{ matrix.install == 'wheel' && 'wheelhouse=wheelhouse' || '' }}
+          cache-from: type=gha,scope=docker-tests-${{ matrix.install }}
+          cache-to: type=gha,mode=max,scope=docker-tests-${{ matrix.install }}
 
       # chronyd answers commands before it has resolved its server name, and
       # the source list changes as the name resolves. Tests that

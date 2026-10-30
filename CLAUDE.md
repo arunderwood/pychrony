@@ -28,7 +28,18 @@ cibuildwheel --platform linux             # build manylinux wheels (requires Doc
 git submodule update --init --recursive   # vendor/libchrony must be populated
 docker build -t pychrony-test -f docker/Dockerfile.test . && \
   docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+
+# Same suite against a built wheel instead of the source tree (wheelhouse/
+# must hold a wheel for the image's python3, Fedora 44's 3.14)
+CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \
+  docker build -t pychrony-test -f docker/Dockerfile.test \
+    --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ . && \
+  docker run --rm --cap-add=SYS_TIME pychrony-test sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+The image installs test dependencies from `uv.lock` and installs pychrony
+non-editably (source builds compile the bindings via `PYCHRONY_BUILD_CFFI=1`),
+so tests import the installed package, never `src/`.
 
 Keep the `&&` joining build and run. `pychrony-test` is a fixed tag, so if the
 build fails and `docker run` still executes, it silently reuses the last image

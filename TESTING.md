@@ -440,13 +440,31 @@ uv run pytest tests/contract -v
 ### Integration Tests (Docker Required)
 
 ```bash
-# Build test image
-docker build -t pychrony-test -f docker/Dockerfile.test .
-
-# Run integration tests
-docker run --rm --cap-add=SYS_TIME pychrony-test \
+# Build the test image and run integration tests. Keep the && so a failed
+# build cannot fall through to a stale image under the same tag.
+docker build -t pychrony-test -f docker/Dockerfile.test . && \
+    docker run --rm --cap-add=SYS_TIME pychrony-test \
     sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+The image installs the test dependencies from `uv.lock` and installs pychrony
+non-editably, compiling the bindings through `setup.py` with
+`PYCHRONY_BUILD_CFFI=1`. Tests therefore run against the installed package.
+
+To test a built wheel instead of the source tree (this is what CI's
+"Integration tests (Docker, manylinux wheel)" job does), build a wheel for the
+image's Python (Fedora 44's 3.14) and pass the wheelhouse as a build context:
+
+```bash
+CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \
+    docker build -t pychrony-test -f docker/Dockerfile.test \
+        --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ . && \
+    docker run --rm --cap-add=SYS_TIME pychrony-test \
+    sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+```
+
+The wheel image contains no source tree, so the wheel is the only pychrony the
+tests can import. Building with `PYCHRONY_INSTALL=wheel` but no wheelhouse fails.
 
 ### All Tests with Coverage
 
