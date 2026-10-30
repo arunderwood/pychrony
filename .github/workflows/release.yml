@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        fetch-depth: 0  # Required for hatch-vcs versioning
+        fetch-depth: 0  # Required for setuptools-scm versioning
         submodules: recursive  # Required for vendor/libchrony
         persist-credentials: false
 
@@ -55,7 +55,7 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
-        fetch-depth: 0  # Required for hatch-vcs versioning
+        fetch-depth: 0  # Required for setuptools-scm versioning
         persist-credentials: false
 
     - name: Install UV
