@@ -45,6 +45,11 @@ fallback_version = "0.0.0.dev0"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Typing files. setuptools 69+ ships these by default; the build floor is 61.
+# _cffi_bindings.pyi types the CFFI extension, which only exists once built.
+[tool.setuptools.package-data]
+pychrony = ["py.typed", "_core/*.pyi"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -58,18 +63,6 @@ ignore = [
     # explanatory comments; alphabetical sorting would destroy that structure.
     "RUF022",
 ]
-
-[tool.ty]
-# Ignore warnings for CFFI bindings file - _lib and _ffi are dynamically imported
-# at runtime and may not exist until the package is built with libchrony
-[[tool.ty.overrides]]
-include = ["src/pychrony/_core/_bindings.py"]
-
-[tool.ty.overrides.rules]
-possibly-missing-attribute = "ignore"
-unresolved-attribute = "ignore"  # ty 0.0.21+ renamed possibly-missing-attribute
-invalid-argument-type = "ignore"  # Dict unpacking uses runtime validation
-unresolved-import = "ignore"  # _cffi_bindings is generated at install time
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
