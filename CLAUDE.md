@@ -60,6 +60,7 @@ stale-image note above.
 
 - **CFFI bindings**: `src/pychrony/_core/_bindings.py` wraps libchrony C library
 - **Build script**: `src/pychrony/_core/_build_bindings.py` generates `_cffi_bindings*.so` at install time
+- **setup.py** compiles the bindings by default (sdist/source installs need libchrony and fail with a clear message without it). `PYCHRONY_SKIP_CFFI=1` skips them; `[tool.uv]` in pyproject.toml sets it for `uv sync`/`uv pip`, so local dev and CI never have bindings and unit/contract tests mock them. `PYCHRONY_BUILD_CFFI=1` (or cibuildwheel's `CIBUILDWHEEL=1`) overrides the skip, e.g. `PYCHRONY_BUILD_CFFI=1 uv sync --reinstall-package pychrony` with libchrony installed.
 - **Data model**: `TrackingStatus` frozen dataclass in `models.py` (15 NTP tracking fields)
 - **Exceptions**: `ChronyError` base with 4 specific subclasses in `exceptions.py`
 - **libchrony reference**: `vendor/libchrony/` - submodule with API source (field definitions in `reports.h`)

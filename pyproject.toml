@@ -82,6 +82,14 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
 
+[tool.uv]
+# `uv sync` builds pychrony itself, and setup.py compiles the CFFI bindings by
+# default, which needs libchrony. Skip that so development and CI work without
+# libchrony; unit and contract tests mock the bindings. The Docker image builds
+# them separately for integration tests. This applies to uv only: pip and
+# other frontends installing an sdist still compile.
+extra-build-variables = { pychrony = { PYCHRONY_SKIP_CFFI = "1" } }
+
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
 build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"

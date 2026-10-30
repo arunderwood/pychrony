@@ -27,7 +27,17 @@ Pre-built wheels include libchrony—no system dependencies needed.
 <details>
 <summary><strong>Building from Source</strong></summary>
 
-Source installs (sdist or development) require [libchrony](https://gitlab.com/chrony/libchrony) to be installed on your system.
+Installing from source (the sdist, or any platform without a pre-built wheel)
+compiles pychrony's CFFI bindings, which requires a C compiler, the libffi
+headers, and [libchrony](https://gitlab.com/chrony/libchrony) with its headers.
+If `chrony.h` or the libchrony library cannot be found, the install stops with
+an error saying what is missing.
+
+To force a source build, e.g. to check a libchrony install:
+
+```bash
+pip install --no-binary pychrony pychrony
+```
 
 #### libchrony Package Availability
 
@@ -44,7 +54,7 @@ Source installs (sdist or development) require [libchrony](https://gitlab.com/ch
 ```bash
 # Install build dependencies
 # Debian/Ubuntu:
-sudo apt-get install build-essential libtool libffi-dev
+sudo apt-get install build-essential libtool-bin libffi-dev python3-dev
 
 # Alpine:
 sudo apk add gcc make libtool libffi-dev musl-dev
@@ -67,8 +77,20 @@ git clone https://github.com/arunderwood/pychrony.git
 cd pychrony
 git submodule update --init
 uv sync --all-groups
-uv pip install -e .
 ```
+
+`uv sync` (and `uv pip install` run from the checkout) installs pychrony
+**without** the compiled bindings: the `[tool.uv]` section of `pyproject.toml`
+sets `PYCHRONY_SKIP_CFFI=1` for the build, so development and the unit and
+contract tests work without libchrony. Connecting to chronyd from such an
+install raises `ChronyLibraryError`. Integration tests build the bindings in
+Docker (see [TESTING.md](TESTING.md)).
+
+Set `PYCHRONY_SKIP_CFFI=1` yourself to skip the bindings with any other
+installer, e.g. `PYCHRONY_SKIP_CFFI=1 pip install -e .`. With libchrony
+installed, `pip install -e .` (without the variable) builds them, as does
+`PYCHRONY_BUILD_CFFI=1 uv sync --reinstall-package pychrony`, which overrides
+the uv setting.
 
 </details>
 

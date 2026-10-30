@@ -130,10 +130,14 @@ def _check_library_available() -> None:
     """
     if not _LIBRARY_AVAILABLE:
         raise ChronyLibraryError(
-            "libchrony bindings not available. "
-            "Ensure libchrony and libchrony-devel are installed and "
-            "the CFFI bindings have been compiled. "
-            "Install with: pip install pychrony (on a system with libchrony-devel)"
+            "libchrony bindings not available: pychrony._core._cffi_bindings "
+            "could not be imported. Either this install was built with "
+            "PYCHRONY_SKIP_CFFI=1 (pychrony's uv config sets it for "
+            "`uv sync`), or libchrony's shared library is missing at runtime. "
+            "Install a pre-built wheel (`pip install pychrony`), or install "
+            "libchrony and its headers and rebuild from source without "
+            "PYCHRONY_SKIP_CFFI: "
+            "`pip install --force-reinstall --no-binary pychrony pychrony`."
         )
 
 
