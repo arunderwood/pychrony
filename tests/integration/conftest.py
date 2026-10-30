@@ -25,6 +25,6 @@ def pytest_configure(config: pytest.Config) -> None:
             "pychrony._core._cffi_bindings is not importable, so every "
             f"integration test would skip. {STRICT_ENV_VAR} is set, meaning "
             "this environment is supposed to have the compiled bindings. A "
-            "common cause is mounting the host's src/ over /app/src, which "
-            "hides the .so the image built."
+            "common cause is an install that skipped compiling them: a source "
+            "build without PYCHRONY_BUILD_CFFI=1, or a wheel built that way."
         )
