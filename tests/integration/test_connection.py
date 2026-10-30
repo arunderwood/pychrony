@@ -6,9 +6,11 @@ These tests verify proper error handling when connection to chronyd fails.
 import importlib.util
 import os
 import pwd
+import socket
 import stat
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -131,6 +133,49 @@ class TestConnectionReuse:
             # Verify we got data
             assert tracking.stratum <= 15
             assert len(sources) == len(stats)  # Should match
+
+
+@pytest.mark.skipif(not HAS_CFFI_BINDINGS, reason="CFFI bindings not compiled")
+class TestRequestTimeout:
+    """Tests for requests that chronyd never answers."""
+
+    def test_unanswered_command_port_times_out(self):
+        """A UDP peer that never answers raises after the timeout and resends.
+
+        The socket is bound, so the kernel sends no port unreachable and the
+        failure can only come from the timeout.
+        """
+        from pychrony._core._bindings import REQUEST_RETRIES
+
+        timeout = 0.2
+        limit = (REQUEST_RETRIES + 1) * timeout
+
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as silent:
+            silent.bind(("127.0.0.1", 0))
+            port = silent.getsockname()[1]
+
+            start = time.monotonic()
+            with (
+                pytest.raises(ChronyConnectionError) as exc_info,
+                ChronyConnection(f"127.0.0.1:{port}", timeout=timeout) as conn,
+            ):
+                conn.get_tracking()
+            elapsed = time.monotonic() - start
+
+            # Every copy of the request reached the socket, and none was answered
+            received = 0
+            silent.setblocking(False)
+            while True:
+                try:
+                    silent.recv(4096)
+                except BlockingIOError:
+                    break
+                received += 1
+
+        assert limit * 0.9 <= elapsed < limit + 1.0
+        assert received == REQUEST_RETRIES + 1
+        assert "Timed out" in str(exc_info.value)
+        assert exc_info.value.error_code is not None
 
 
 UNPRIVILEGED_USER = "testuser"

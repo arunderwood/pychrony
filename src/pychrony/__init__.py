@@ -84,6 +84,15 @@ Remote chronyd via UDP:
     >>> with ChronyConnection("192.168.1.100") as conn:
     ...     status = conn.get_tracking()
 
+Timeouts:
+    Each request waits `timeout` seconds (default 1.0) for chronyd's answer and
+    is resent up to twice, so an unanswered request raises
+    ChronyConnectionError after at most three times `timeout`. The command
+    port is UDP: a dropped datagram or a firewalled port is never answered.
+
+    >>> with ChronyConnection("192.168.1.100", timeout=0.5) as conn:
+    ...     status = conn.get_tracking()
+
 Thread Safety:
     ChronyConnection is NOT thread-safe. The underlying libchrony session
     maintains stateful request/response cycles that cannot be safely shared
