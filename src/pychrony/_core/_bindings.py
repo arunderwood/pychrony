@@ -658,6 +658,9 @@ class ChronyConnection:
             ChronyConnectionError: If REQUEST_RETRIES + 1 attempts went
                 unanswered
         """
+        # Requests are only made inside the context, where the socket is open.
+        fd = self._fd
+        assert fd is not None
         attempts = REQUEST_RETRIES + 1
         for attempt in range(attempts):
             if attempt > 0:
@@ -668,7 +671,7 @@ class ChronyConnection:
             deadline = time.monotonic() + self._timeout
             while _lib.chrony_needs_response(self._session):
                 remaining = deadline - time.monotonic()
-                if remaining <= 0 or not _wait_readable(self._fd, remaining):
+                if remaining <= 0 or not _wait_readable(fd, remaining):
                     break
                 err = _lib.chrony_process_response(self._session)
                 if err != 0:
