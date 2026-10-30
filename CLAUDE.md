@@ -39,7 +39,7 @@ Never pipe the build through `tail`/`head` to trim output: the pipeline then
 exits with the pager's status, which defeats the `&&` and reintroduces exactly
 that stale-image failure.
 
-Cross-version testing (Python 3.10-3.15) is handled by CI.
+Cross-version testing (Python 3.11-3.15) is handled by CI.
 
 ## Before Committing
 
@@ -76,12 +76,12 @@ stale-image note above.
 - This is a read-only monitoring library; it does not control chronyd
 
 ## Active Technologies
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode) + libchrony (system library) (003-multiple-reports-bindings)
 - N/A (read-only monitoring, no persistence) (003-multiple-reports-bindings)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (API mode), libchrony (system library), standard library Enum (004-categorical-enums)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + hatchling (build), hatch-vcs (versioning), cffi (runtime), cibuildwheel (CI wheel builds) (005-pypi-packaging)
 - N/A (library package, no persistence) (005-pypi-packaging)
-- Python 3.10+ (supports 3.10, 3.11, 3.12, 3.13, 3.14) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
+- Python 3.11+ (supports 3.11, 3.12, 3.13, 3.14, 3.15) + CFFI (runtime), pytest (testing), standard library dataclasses and enum (006-protocol-test-mocks)
 - N/A (test infrastructure, no persistence) (006-protocol-test-mocks)
 
 ## Recent Changes
