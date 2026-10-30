@@ -115,7 +115,9 @@ for details.
 ## Resources
 
 - [Documentation](https://pychrony.org/) — Full API reference and guides
+- [Changelog](CHANGELOG.md) — Release history
 - [GitHub Issues](https://github.com/arunderwood/pychrony/issues) — Report bugs or request features
+- [Security policy](SECURITY.md) — Reporting vulnerabilities
 - [chrony documentation](https://chrony-project.org/documentation.html) — Understanding NTP and chrony
 
 ## License

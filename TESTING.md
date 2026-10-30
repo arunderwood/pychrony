@@ -452,7 +452,7 @@ docker run --rm --cap-add=SYS_TIME pychrony-test \
 
 ```bash
 # Run all tests with coverage report
-uv run pytest --cov=src --cov-report=html
+uv run coverage run -m pytest && uv run coverage html
 
 # View report
 open htmlcov/index.html

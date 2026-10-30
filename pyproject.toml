@@ -36,6 +36,7 @@ Homepage = "https://github.com/arunderwood/pychrony"
 Documentation = "https://pychrony.org/"
 Repository = "https://github.com/arunderwood/pychrony.git"
 Issues = "https://github.com/arunderwood/pychrony/issues"
+Changelog = "https://github.com/arunderwood/pychrony/blob/main/CHANGELOG.md"
 
 [project.entry-points.pytest11]
 pychrony = "pychrony.testing"
@@ -81,6 +82,16 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
+
+# Measure with `coverage run -m pytest`, not `pytest --cov`: the pychrony.testing
+# pytest plugin imports the package before pytest-cov starts, so --cov misses
+# every module-level line imported at plugin load.
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+# Just below the unit + contract suite's measured coverage (90.4%).
+fail_under = 90
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"

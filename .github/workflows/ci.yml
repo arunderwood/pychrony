@@ -44,8 +44,18 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
+      # coverage run, not pytest --cov: see [tool.coverage.run] in pyproject.toml.
       - name: Run tests
-        run: uv run pytest --cov=src --cov-report=xml
+        run: uv run coverage run -m pytest
+
+      # Coverage does not vary meaningfully by interpreter, so one summary is
+      # enough. It runs before the threshold check so a drop is still reported.
+      - name: Write coverage summary
+        if: matrix.python-version == '3.12'
+        run: uv run coverage report --format=markdown --fail-under=0 >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check coverage threshold
+        run: uv run coverage report
 
   # Lint and type checking. Results do not vary by interpreter, so this
   # runs once rather than once per matrix entry.

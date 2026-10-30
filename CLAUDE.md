@@ -11,7 +11,7 @@ uv run pytest tests/unit -v                # run unit tests only
 uv run pytest tests/contract -v            # run contract tests
 uv run pytest tests/path/to/test.py -v     # run specific test file
 uv run pytest tests/unit/test_models.py::test_name -v  # run single test
-uv run pytest --cov=src --cov-report=html  # with coverage
+uv run coverage run -m pytest && uv run coverage html  # with coverage
 
 # Code quality
 uv run ruff check .                        # lint
