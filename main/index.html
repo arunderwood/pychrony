@@ -403,6 +403,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timeouts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thread-safety" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -635,6 +646,25 @@ monitoring commands only from localhost (<code>cmdallow</code>). Widening either
 chronyd's monitoring data to the network, so scope <code>cmdallow</code> to the hosts that
 need it. The command port is unauthenticated, so treat it as readable by anyone
 who can reach it.</p>
+<h2 id="timeouts">Timeouts</h2>
+<p>chronyd is reached over datagram sockets, and a lost datagram is never
+answered. Each request therefore waits <code>timeout</code> seconds (keyword-only,
+default <code>1.0</code>) for its answer, and is resent up to twice if none arrives —
+chronyc's default retry count. A request with no answer after three attempts
+raises <code>ChronyConnectionError</code>, so a call gives up after at most three times
+<code>timeout</code>:</p>
+<pre><code class="language-python">from pychrony import ChronyConnection, ChronyConnectionError
+
+try:
+    with ChronyConnection(&quot;192.168.1.100&quot;, timeout=0.5) as conn:
+        status = conn.get_tracking()
+except ChronyConnectionError as e:
+    print(f&quot;chronyd did not answer: {e}&quot;)
+</code></pre>
+<p>The command port is UDP, so opening a connection to it succeeds whether or not
+chronyd is listening. A disabled (<code>cmdport 0</code>), misaddressed or firewalled
+command port shows up as this timeout on the first request, not when the
+connection opens.</p>
 <h2 id="thread-safety">Thread Safety</h2>
 <p><code>ChronyConnection</code> is <strong>NOT thread-safe</strong>. The underlying libchrony session
 maintains stateful request/response cycles that cannot be safely shared
