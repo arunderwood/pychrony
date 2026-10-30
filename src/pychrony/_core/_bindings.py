@@ -12,7 +12,7 @@ import select
 import time
 from collections.abc import Callable
 from types import TracebackType
-from typing import Any, NoReturn, Self, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, Self, TypedDict, TypeVar, cast
 
 from ..exceptions import (
     ChronyConnectionError,
@@ -31,6 +31,9 @@ from ..models import (
     Transport,
     _ref_id_to_name,
 )
+
+if TYPE_CHECKING:
+    from ._cffi_bindings import _FFI, _ChronySession, _Lib, _Timespec
 
 _T = TypeVar("_T")
 
@@ -58,21 +61,18 @@ DEFAULT_COMMAND_PORTS = [
 # Conversion constants
 NANOSECONDS_PER_SECOND = 1e9
 
-# Try to import compiled CFFI bindings
-# These are generated at build time by CFFI, so they may not exist
-_lib: Any = None
-_ffi: Any = None
-
+# Try to import compiled CFFI bindings. They are generated at build time by
+# CFFI, so they may not exist; _cffi_bindings.pyi types them either way.
 try:
-    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
-        ffi as _ffi,
-    )
-    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
-        lib as _lib,
-    )
+    from pychrony._core._cffi_bindings import ffi as _ffi
+    from pychrony._core._cffi_bindings import lib as _lib
 
     _LIBRARY_AVAILABLE = True
 except ImportError:
+    # Placeholders so the names exist (unit tests patch them). Nothing reaches
+    # them unbuilt: __enter__ calls _check_library_available() first.
+    _ffi = cast("_FFI", None)
+    _lib = cast("_Lib", None)
     _LIBRARY_AVAILABLE = False
 
 # chrony_err values for a failed send()/recv(): chronyd could not be reached,
@@ -117,6 +117,63 @@ DEFAULT_TIMEOUT = 1.0
 # waits the same timeout, so a request gives up after (REQUEST_RETRIES + 1) *
 # timeout seconds.
 REQUEST_RETRIES = 2
+
+
+# Field values read from one record, keyed by the matching model's field names.
+# They let the validators run before the frozen model is built, while keeping
+# `Model(**data)` type-checked: ty matches each key against the model's fields.
+class _TrackingData(TypedDict):
+    reference_id: int
+    reference_id_name: str
+    reference_ip: str
+    stratum: int
+    leap_status: LeapStatus
+    ref_time: float
+    offset: float
+    last_offset: float
+    rms_offset: float
+    frequency: float
+    residual_freq: float
+    skew: float
+    root_delay: float
+    root_dispersion: float
+    update_interval: float
+
+
+class _SourceData(TypedDict):
+    address: str
+    poll: int
+    stratum: int
+    state: SourceState
+    mode: SourceMode
+    flags: int
+    reachability: int
+    last_sample_ago: int
+    orig_latest_meas: float
+    latest_meas: float
+    latest_meas_err: float
+
+
+class _SourceStatsData(TypedDict):
+    reference_id: int
+    address: str
+    samples: int
+    runs: int
+    span: int
+    std_dev: float
+    resid_freq: float
+    skew: float
+    offset: float
+    offset_err: float
+
+
+class _RTCDataData(TypedDict):
+    ref_time: float
+    samples: int
+    runs: int
+    span: int
+    offset: float
+    freq_offset: float
 
 
 def _is_unix_socket_address(address: str) -> bool:
@@ -175,7 +232,7 @@ def _check_library_available() -> None:
         )
 
 
-def _timespec_to_float(ts: Any) -> float:
+def _timespec_to_float(ts: "_Timespec") -> float:
     """Convert struct timespec to Python float (seconds since epoch).
 
     Args:
@@ -233,7 +290,7 @@ def _validate_non_negative_int(value: int, field_name: str) -> None:
         raise ChronyDataError(f"{field_name} must be non-negative: {value}")
 
 
-def _get_float_field(session: Any, name: str) -> float:
+def _get_float_field(session: "_ChronySession", name: str) -> float:
     """Get a float field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -241,7 +298,7 @@ def _get_float_field(session: Any, name: str) -> float:
     return _lib.chrony_get_field_float(session, index)
 
 
-def _get_uinteger_field(session: Any, name: str) -> int:
+def _get_uinteger_field(session: "_ChronySession", name: str) -> int:
     """Get an unsigned integer field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -249,7 +306,7 @@ def _get_uinteger_field(session: Any, name: str) -> int:
     return _lib.chrony_get_field_uinteger(session, index)
 
 
-def _get_integer_field(session: Any, name: str) -> int:
+def _get_integer_field(session: "_ChronySession", name: str) -> int:
     """Get a signed integer field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -257,7 +314,7 @@ def _get_integer_field(session: Any, name: str) -> int:
     return _lib.chrony_get_field_integer(session, index)
 
 
-def _get_string_field(session: Any, name: str) -> str:
+def _get_string_field(session: "_ChronySession", name: str) -> str:
     """Get a string field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -268,7 +325,7 @@ def _get_string_field(session: Any, name: str) -> str:
     return _ffi.string(result).decode("utf-8", errors="replace")
 
 
-def _get_timespec_field(session: Any, name: str) -> float:
+def _get_timespec_field(session: "_ChronySession", name: str) -> float:
     """Get a timespec field by name, convert to epoch float."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -463,10 +520,10 @@ class ChronyConnection:
 
         # Initialize session
         self._session_ptr = _ffi.new("chrony_session **")
-        err = _lib.chrony_init_session(self._session_ptr, self._fd)
+        err = _lib.chrony_init_session(self._session_ptr, fd)
         if err != 0:
             # Clean up socket on failure
-            _lib.chrony_close_socket(self._fd)
+            _lib.chrony_close_socket(fd)
             self._fd = None
             self._resolved_address = None
             raise ChronyConnectionError(
@@ -481,7 +538,7 @@ class ChronyConnection:
         candidates: list[str],
         denied_address: str | None,
         error_code: int,
-    ) -> None:
+    ) -> NoReturn:
         """Raise the most specific error for a failed set of connect attempts.
 
         Args:
@@ -606,6 +663,9 @@ class ChronyConnection:
             ChronyConnectionError: If REQUEST_RETRIES + 1 attempts went
                 unanswered
         """
+        # Requests are only made inside the context, where the socket is open.
+        fd = self._fd
+        assert fd is not None
         attempts = REQUEST_RETRIES + 1
         for attempt in range(attempts):
             if attempt > 0:
@@ -616,7 +676,7 @@ class ChronyConnection:
             deadline = time.monotonic() + self._timeout
             while _lib.chrony_needs_response(self._session):
                 remaining = deadline - time.monotonic()
-                if remaining <= 0 or not _wait_readable(self._fd, remaining):
+                if remaining <= 0 or not _wait_readable(fd, remaining):
                     break
                 err = _lib.chrony_process_response(self._session)
                 if err != 0:
@@ -776,7 +836,7 @@ class ChronyConnection:
                 "This may indicate a newer chrony version - please update pychrony."
             ) from None
 
-        data = {
+        data: _TrackingData = {
             "reference_id": ref_id,
             "reference_id_name": _ref_id_to_name(ref_id),
             "reference_ip": _get_string_field(self._session, "address"),
@@ -799,12 +859,12 @@ class ChronyConnection:
 
         return TrackingStatus(**data)
 
-    def _validate_tracking(self, data: dict) -> None:
+    def _validate_tracking(self, data: _TrackingData) -> None:
         """Validate tracking data before creating TrackingStatus."""
         if not 0 <= data["stratum"] <= 15:
             raise ChronyDataError(f"Invalid stratum: {data['stratum']}")
 
-        float_fields = [
+        float_fields = (
             "ref_time",
             "offset",
             "last_offset",
@@ -815,19 +875,19 @@ class ChronyConnection:
             "root_delay",
             "root_dispersion",
             "update_interval",
-        ]
+        )
         for field in float_fields:
             if math.isnan(data[field]) or math.isinf(data[field]):
                 raise ChronyDataError(f"Invalid {field}: {data[field]}")
 
-        non_negative = [
+        non_negative = (
             "ref_time",
             "rms_offset",
             "skew",
             "root_delay",
             "root_dispersion",
             "update_interval",
-        ]
+        )
         for field in non_negative:
             if data[field] < 0:
                 raise ChronyDataError(f"{field} must be non-negative: {data[field]}")
@@ -859,7 +919,7 @@ class ChronyConnection:
         self._validate_source(data)
         return Source(**data)
 
-    def _extract_source(self) -> dict:
+    def _extract_source(self) -> _SourceData:
         """Extract source fields from the current session record."""
         state_int = _get_uinteger_field(self._session, "state")
         mode_int = _get_uinteger_field(self._session, "mode")
@@ -907,7 +967,7 @@ class ChronyConnection:
             "latest_meas_err": _get_float_field(self._session, "last sample error"),
         }
 
-    def _validate_source(self, data: dict) -> None:
+    def _validate_source(self, data: _SourceData) -> None:
         """Validate source data before creating Source."""
         _validate_bounded_int(data["stratum"], "stratum", 0, 15)
         _validate_bounded_int(data["reachability"], "reachability", 0, 255)
@@ -948,7 +1008,7 @@ class ChronyConnection:
         self._validate_sourcestats(data)
         return SourceStats(**data)
 
-    def _extract_sourcestats(self) -> dict:
+    def _extract_sourcestats(self) -> _SourceStatsData:
         """Extract sourcestats fields from the current session record."""
         return {
             "reference_id": _get_uinteger_field(self._session, "reference ID"),
@@ -963,7 +1023,7 @@ class ChronyConnection:
             "offset_err": _get_float_field(self._session, "offset error"),
         }
 
-    def _validate_sourcestats(self, data: dict) -> None:
+    def _validate_sourcestats(self, data: _SourceStatsData) -> None:
         """Validate sourcestats data before creating SourceStats."""
         _validate_non_negative_int(data["samples"], "samples")
         _validate_non_negative_int(data["runs"], "runs")
@@ -1017,7 +1077,7 @@ class ChronyConnection:
 
         return RTCData(**data)
 
-    def _extract_rtc(self) -> dict:
+    def _extract_rtc(self) -> _RTCDataData:
         """Extract RTC fields from the current session record."""
         return {
             "ref_time": _get_timespec_field(self._session, "reference time"),
@@ -1028,7 +1088,7 @@ class ChronyConnection:
             "freq_offset": _get_float_field(self._session, "frequency offset"),
         }
 
-    def _validate_rtc(self, data: dict) -> None:
+    def _validate_rtc(self, data: _RTCDataData) -> None:
         """Validate RTC data before creating RTCData."""
         _validate_non_negative_int(data["samples"], "samples")
         _validate_non_negative_int(data["runs"], "runs")

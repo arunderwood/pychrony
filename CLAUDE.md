@@ -84,7 +84,7 @@ stale-image note above.
 
 ## Notes
 
-- ty configured to ignore `possibly-missing-attribute` in `_bindings.py` (dynamic CFFI imports)
+- `_core/_cffi_bindings.pyi` types the compiled CFFI module for ty; keep it in step with the cdef in `_build_bindings.py` (checked by `tests/unit/test_cffi_stub.py`)
 - This is a read-only monitoring library; it does not control chronyd
 
 ## Active Technologies
