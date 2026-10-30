@@ -112,7 +112,12 @@ build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 archs = ["x86_64", "aarch64"]
 environment = { CIBUILDWHEEL = "1" }
 test-requires = "pytest"
-test-command = "python -m pytest {project}/tests/unit {project}/tests/contract -v"
+# The unit and contract tests mock the C library, so check the compiled bindings
+# directly: a wheel missing _cffi_bindings*.so would otherwise pass.
+test-command = [
+    "python -c 'import pychrony._core._cffi_bindings, pychrony._core._bindings as b; assert b._LIBRARY_AVAILABLE'",
+    "python -m pytest {project}/tests/unit {project}/tests/contract -v",
+]
 
 [[tool.cibuildwheel.overrides]]
 select = "*-manylinux_*"

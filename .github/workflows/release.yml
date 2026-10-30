@@ -193,6 +193,15 @@ jobs:
             f'Version mismatch: {pychrony.__version__} != {expected}'
         "
 
+    - name: Verify compiled bindings
+      run: |
+        python -c "
+        import pychrony._core._cffi_bindings
+        import pychrony._core._bindings as b
+        assert b._LIBRARY_AVAILABLE, '_cffi_bindings imported but _LIBRARY_AVAILABLE is False'
+        print('Compiled CFFI bindings loaded')
+        "
+
     # On a free-threaded interpreter, prove the cp3XXt wheel was installed
     # (not the sdist, which has no compiled bindings) and that importing it
     # leaves the GIL disabled.
