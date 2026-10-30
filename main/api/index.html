@@ -1079,12 +1079,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
 
               <details class="mkdocstrings-source">
                 <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 275</span>
-<span class="normal"> 276</span>
-<span class="normal"> 277</span>
-<span class="normal"> 278</span>
-<span class="normal"> 279</span>
-<span class="normal"> 280</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 280</span>
 <span class="normal"> 281</span>
 <span class="normal"> 282</span>
 <span class="normal"> 283</span>
@@ -1845,12 +1840,7 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
 <span class="normal">1038</span>
 <span class="normal">1039</span>
 <span class="normal">1040</span>
-<span class="normal">1041</span>
-<span class="normal">1042</span>
-<span class="normal">1043</span>
-<span class="normal">1044</span>
-<span class="normal">1045</span>
-<span class="normal">1046</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
+<span class="normal">1041</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ChronyConnection</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for chrony connections.</span>
 
 <span class="sd">    Provides connection reuse for multiple queries to chronyd within a single</span>
@@ -2562,8 +2552,11 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            RuntimeError: If called outside context manager</span>
-<span class="sd">            ChronyConnectionError: If chronyd did not respond.</span>
-<span class="sd">            ChronyDataError: If RTC data is invalid or malformed.</span>
+<span class="sd">            ChronyConnectionError: If chronyd could not be reached, including</span>
+<span class="sd">                when it stops responding mid-session.</span>
+<span class="sd">            ChronyDataError: If chronyd rejected the request for any reason</span>
+<span class="sd">                other than having no RTC (e.g. unauthorized), or if the RTC</span>
+<span class="sd">                data is invalid or malformed.</span>
 
 <span class="sd">        Examples:</span>
 <span class="sd">            &gt;&gt;&gt; with ChronyConnection() as conn:</span>
@@ -2573,27 +2566,14 @@ https://chrony-project.org/doc/4.9/chronyc.html</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
-        <span class="n">num_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_report</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">num_records</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="c1"># Try to fetch rtcdata record - may fail if RTC not actually configured</span>
+        <span class="c1"># libchrony has no count request for rtcdata (its record count is always</span>
+        <span class="c1"># 1), so the record request itself is what reveals a missing RTC.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">err</span> <span class="o">=</span> <span class="n">_lib</span><span class="o">.</span><span class="n">chrony_request_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_request_record</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ChronyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">error_code</span> <span class="o">==</span> <span class="n">CHRONY_DISABLED</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
-
-            <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_await_response</span><span class="p">(</span>
-                <span class="k">lambda</span><span class="p">:</span> <span class="n">_lib</span><span class="o">.</span><span class="n">chrony_request_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-                <span class="s2">&quot;rtcdata record 0&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
-        <span class="c1"># Deliberately broad: this is a C-library boundary, and an absent RTC is a</span>
-        <span class="c1"># supported outcome reported as None rather than an error. Narrowing the</span>
-        <span class="c1"># catch risks surfacing a CFFI failure as a crash for that normal case.</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">raise</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_rtc</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_rtc</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -2772,12 +2752,7 @@ not hold a control channel can assert on this.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">350</span>
 <span class="normal">351</span>
 <span class="normal">352</span>
 <span class="normal">353</span>
@@ -2793,7 +2768,12 @@ not hold a control channel can assert on this.</p>
 <span class="normal">363</span>
 <span class="normal">364</span>
 <span class="normal">365</span>
-<span class="normal">366</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">DEFAULT_TIMEOUT</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize ChronyConnection with optional address and timeout.</span>
@@ -2860,12 +2840,7 @@ not hold a control channel can assert on this.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">373</span>
 <span class="normal">374</span>
 <span class="normal">375</span>
 <span class="normal">376</span>
@@ -2874,7 +2849,12 @@ not hold a control channel can assert on this.</p>
 <span class="normal">379</span>
 <span class="normal">380</span>
 <span class="normal">381</span>
-<span class="normal">382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Enter context manager, opening connection to chronyd.</span>
 
 <span class="sd">    Raises:</span>
@@ -2911,15 +2891,15 @@ not hold a control channel can assert on this.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">389</span>
 <span class="normal">390</span>
 <span class="normal">391</span>
-<span class="normal">392</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">exc_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">exc_val</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
@@ -3028,12 +3008,7 @@ not hold a control channel can assert on this.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">738</span>
-<span class="normal">739</span>
-<span class="normal">740</span>
-<span class="normal">741</span>
-<span class="normal">742</span>
-<span class="normal">743</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">743</span>
 <span class="normal">744</span>
 <span class="normal">745</span>
 <span class="normal">746</span>
@@ -3085,7 +3060,12 @@ not hold a control channel can assert on this.</p>
 <span class="normal">792</span>
 <span class="normal">793</span>
 <span class="normal">794</span>
-<span class="normal">795</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
+<span class="normal">795</span>
+<span class="normal">796</span>
+<span class="normal">797</span>
+<span class="normal">798</span>
+<span class="normal">799</span>
+<span class="normal">800</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get current tracking status from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3245,12 +3225,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">835</span>
 <span class="normal">836</span>
 <span class="normal">837</span>
 <span class="normal">838</span>
@@ -3264,7 +3239,12 @@ Empty list if no sources are configured.</p>
 <span class="normal">846</span>
 <span class="normal">847</span>
 <span class="normal">848</span>
-<span class="normal">849</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
+<span class="normal">849</span>
+<span class="normal">850</span>
+<span class="normal">851</span>
+<span class="normal">852</span>
+<span class="normal">853</span>
+<span class="normal">854</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Source</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get all configured time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3386,12 +3366,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">919</span>
-<span class="normal">920</span>
-<span class="normal">921</span>
-<span class="normal">922</span>
-<span class="normal">923</span>
-<span class="normal">924</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">924</span>
 <span class="normal">925</span>
 <span class="normal">926</span>
 <span class="normal">927</span>
@@ -3405,7 +3380,12 @@ Empty list if no sources are configured.</p>
 <span class="normal">935</span>
 <span class="normal">936</span>
 <span class="normal">937</span>
-<span class="normal">938</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
+<span class="normal">938</span>
+<span class="normal">939</span>
+<span class="normal">940</span>
+<span class="normal">941</span>
+<span class="normal">942</span>
+<span class="normal">943</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_source_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">SourceStats</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get statistical data for all time sources from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3498,7 +3478,8 @@ Empty list if no sources are configured.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If chronyd did not respond.</p>
+                <p>If chronyd could not be reached, including
+when it stops responding mid-session.</p>
               </div>
             </td>
           </tr>
@@ -3508,7 +3489,9 @@ Empty list if no sources are configured.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If RTC data is invalid or malformed.</p>
+                <p>If chronyd rejected the request for any reason
+other than having no RTC (e.g. unauthorized), or if the RTC
+data is invalid or malformed.</p>
               </div>
             </td>
           </tr>
@@ -3526,12 +3509,7 @@ Empty list if no sources are configured.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/_core/_bindings.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 979</span>
-<span class="normal"> 980</span>
-<span class="normal"> 981</span>
-<span class="normal"> 982</span>
-<span class="normal"> 983</span>
-<span class="normal"> 984</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 984</span>
 <span class="normal"> 985</span>
 <span class="normal"> 986</span>
 <span class="normal"> 987</span>
@@ -3565,12 +3543,7 @@ Empty list if no sources are configured.</p>
 <span class="normal">1015</span>
 <span class="normal">1016</span>
 <span class="normal">1017</span>
-<span class="normal">1018</span>
-<span class="normal">1019</span>
-<span class="normal">1020</span>
-<span class="normal">1021</span>
-<span class="normal">1022</span>
-<span class="normal">1023</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">1018</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_rtc_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get Real-Time Clock tracking data from chronyd.</span>
 
 <span class="sd">    Returns:</span>
@@ -3578,8 +3551,11 @@ Empty list if no sources are configured.</p>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        RuntimeError: If called outside context manager</span>
-<span class="sd">        ChronyConnectionError: If chronyd did not respond.</span>
-<span class="sd">        ChronyDataError: If RTC data is invalid or malformed.</span>
+<span class="sd">        ChronyConnectionError: If chronyd could not be reached, including</span>
+<span class="sd">            when it stops responding mid-session.</span>
+<span class="sd">        ChronyDataError: If chronyd rejected the request for any reason</span>
+<span class="sd">            other than having no RTC (e.g. unauthorized), or if the RTC</span>
+<span class="sd">            data is invalid or malformed.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; with ChronyConnection() as conn:</span>
@@ -3589,27 +3565,14 @@ Empty list if no sources are configured.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_context</span><span class="p">()</span>
 
-    <span class="n">num_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_report</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">num_records</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="c1"># Try to fetch rtcdata record - may fail if RTC not actually configured</span>
+    <span class="c1"># libchrony has no count request for rtcdata (its record count is always</span>
+    <span class="c1"># 1), so the record request itself is what reveals a missing RTC.</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">err</span> <span class="o">=</span> <span class="n">_lib</span><span class="o">.</span><span class="n">chrony_request_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_request_record</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ChronyDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">error_code</span> <span class="o">==</span> <span class="n">CHRONY_DISABLED</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_await_response</span><span class="p">(</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="n">_lib</span><span class="o">.</span><span class="n">chrony_request_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;rtcdata&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-            <span class="s2">&quot;rtcdata record 0&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-    <span class="c1"># Deliberately broad: this is a C-library boundary, and an absent RTC is a</span>
-    <span class="c1"># supported outcome reported as None rather than an error. Narrowing the</span>
-    <span class="c1"># catch risks surfacing a CFFI failure as a crash for that normal case.</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
-        <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">raise</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_rtc</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_validate_rtc</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
