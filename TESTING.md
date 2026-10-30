@@ -241,6 +241,7 @@ Key fields:
 - `source_list_changes`: Source lists chronyd moves to, one per source count it answers (see [Source List Changes](#source-list-changes))
 - `rtc`: Optional `RTCConfig` for RTC data
 - `error_injection`: Dict for injecting errors
+- `dropped_requests`, `late_requests`: Requests chronyd never answers, or answers only after the client has timed out (see [Unanswered Requests](#unanswered-requests))
 
 #### SourceConfig
 
@@ -342,6 +343,31 @@ def test_permission_error():
         pass
 ```
 
+### Unanswered Requests
+
+libchrony never times out on its own; `ChronyConnection` waits for each answer
+and resends the request when its timeout expires. The mock replaces that wait
+with `MockChronySession.wait_readable`, which never sleeps: it reports a
+timeout at once whenever no answer is waiting.
+
+Requests are numbered from 0 in the order they are sent, resends included. A
+request in `dropped_requests` is never answered; one in `late_requests` is
+answered only after the wait for it times out, so its answer arrives after the
+resend and has to be skipped:
+
+```python
+# get_tracking() sends 0 (count) and 1 (record). Losing every copy of the
+# count request exhausts the resends.
+config = ChronyStateConfig(dropped_requests=frozenset({0, 1, 2}))
+
+with pytest.raises(ChronyConnectionError), patched_chrony_connection(config) as conn:
+    conn.get_tracking()
+
+# The first answer is late: it is skipped, and the resend's answer is used.
+with patched_chrony_connection(ChronyStateConfig(late_requests=frozenset({0}))) as conn:
+    conn.get_tracking()
+```
+
 ### Source List Changes
 
 chronyd adds and removes sources while it resolves `pool` and `server` names,
@@ -440,13 +466,34 @@ uv run pytest tests/contract -v
 ### Integration Tests (Docker Required)
 
 ```bash
-# Build test image
-docker build -t pychrony-test -f docker/Dockerfile.test .
-
-# Run integration tests
-docker run --rm --cap-add=SYS_TIME pychrony-test \
+# Build the test image and run integration tests. Keep the && so a failed
+# build cannot fall through to a stale image under the same tag.
+docker build -t pychrony-test -f docker/Dockerfile.test . && \
+    docker run --rm --cap-add=SYS_TIME pychrony-test \
     sh -c "chronyd && sleep 2 && pytest tests/integration -v"
 ```
+
+The image installs the test dependencies from `uv.lock` and installs pychrony
+non-editably, compiling the bindings through `setup.py` with
+`PYCHRONY_BUILD_CFFI=1`. That variable is required: it overrides the
+`PYCHRONY_SKIP_CFFI=1` that `[tool.uv]` in `pyproject.toml` sets for every uv
+build. Tests therefore run against the installed package.
+
+CI runs this source variant on every PR. The release workflow runs the same
+suite against the x86_64 wheels it is about to publish, before Test PyPI.
+To do that locally, build a wheel for the image's Python (Fedora 44's 3.14)
+and pass the wheelhouse as a build context:
+
+```bash
+CIBW_BUILD=cp314-manylinux_x86_64 cibuildwheel --platform linux && \
+    docker build -t pychrony-test -f docker/Dockerfile.test \
+        --build-arg PYCHRONY_INSTALL=wheel --build-context wheelhouse=wheelhouse/ . && \
+    docker run --rm --cap-add=SYS_TIME pychrony-test \
+    sh -c "chronyd && sleep 2 && pytest tests/integration -v"
+```
+
+The wheel image contains no source tree, so the wheel is the only pychrony the
+tests can import. Building with `PYCHRONY_INSTALL=wheel` but no wheelhouse fails.
 
 ### All Tests with Coverage
 

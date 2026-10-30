@@ -51,11 +51,11 @@ class TestSourceStateEnum:
 
     def test_invalid_value_raises_valueerror(self):
         """Test SourceState raises ValueError for invalid integer."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceState"):
             SourceState(6)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceState"):
             SourceState(-1)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceState"):
             SourceState(99)
 
     def test_member_count(self):
@@ -116,11 +116,11 @@ class TestLeapStatusEnum:
 
     def test_invalid_value_raises_valueerror(self):
         """Test LeapStatus raises ValueError for invalid integer."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid LeapStatus"):
             LeapStatus(4)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid LeapStatus"):
             LeapStatus(-1)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid LeapStatus"):
             LeapStatus(99)
 
     def test_member_count(self):
@@ -167,11 +167,11 @@ class TestSourceModeEnum:
 
     def test_invalid_value_raises_valueerror(self):
         """Test SourceMode raises ValueError for invalid integer."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceMode"):
             SourceMode(3)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceMode"):
             SourceMode(-1)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not a valid SourceMode"):
             SourceMode(99)
 
     def test_member_count(self):

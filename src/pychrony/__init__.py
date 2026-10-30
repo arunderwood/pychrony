@@ -45,7 +45,12 @@ RTC Data:
     ...         print("RTC tracking not configured")
 
 Error Handling:
-    >>> from pychrony import ChronyConnection, ChronyError
+    >>> from pychrony import (
+    ...     ChronyConnection,
+    ...     ChronyConnectionError,
+    ...     ChronyLibraryError,
+    ...     ChronyPermissionError,
+    ... )
     >>> try:
     ...     with ChronyConnection() as conn:
     ...         status = conn.get_tracking()
@@ -67,9 +72,19 @@ Choosing a Transport:
     reads. Read-only consumers should prefer the command port. Note that
     joining the chrony group does not grant access to the Unix socket.
 
+    To use the command port, ask for it explicitly; an explicit address is
+    used as given, with no fallback:
+
     >>> from pychrony import ChronyConnection, Transport
+    >>> with ChronyConnection("127.0.0.1") as conn:
+    ...     status = conn.get_tracking()
+
+    With auto-detect, check what the connection settled on and refuse a
+    control channel rather than assume:
+
     >>> with ChronyConnection() as conn:
-    ...     assert conn.transport is Transport.COMMAND_PORT
+    ...     if conn.transport is not Transport.COMMAND_PORT:
+    ...         raise RuntimeError(f"refusing a control channel ({conn.address})")
     ...     status = conn.get_tracking()
 
 Custom Socket Path:
@@ -82,6 +97,15 @@ Remote chronyd via UDP:
     localhost (cmdallow) by default. The command port is unauthenticated.
 
     >>> with ChronyConnection("192.168.1.100") as conn:
+    ...     status = conn.get_tracking()
+
+Timeouts:
+    Each request waits `timeout` seconds (default 1.0) for chronyd's answer and
+    is resent up to twice, so an unanswered request raises
+    ChronyConnectionError after at most three times `timeout`. The command
+    port is UDP: a dropped datagram or a firewalled port is never answered.
+
+    >>> with ChronyConnection("192.168.1.100", timeout=0.5) as conn:
     ...     status = conn.get_tracking()
 
 Thread Safety:
@@ -108,6 +132,9 @@ Thread Safety:
 
     The returned dataclasses (TrackingStatus, Source, etc.) are frozen and
     immutable, so they can be safely shared across threads after retrieval.
+
+    The same rules apply on free-threaded CPython builds (3.14t and later):
+    disabling the GIL does not make a single ChronyConnection safe to share.
 
 For more information, see:
 - https://github.com/arunderwood/pychrony

@@ -192,6 +192,7 @@ class TrackingStatus:
             False otherwise.
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     status = conn.get_tracking()
             ...     if status.is_synchronized():
@@ -207,6 +208,7 @@ class TrackingStatus:
             False otherwise.
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     status = conn.get_tracking()
             ...     if status.is_leap_pending():
@@ -260,6 +262,7 @@ class Source:
             True if reachability register is non-zero (at least one successful poll).
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     for src in conn.get_sources():
             ...         if not src.is_reachable():
@@ -274,6 +277,7 @@ class Source:
             True if state is SELECTED.
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     for src in conn.get_sources():
             ...         if src.is_selected():
@@ -326,6 +330,7 @@ class SourceStats:
             True if samples >= minimum.
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     for stats in conn.get_source_stats():
             ...         if stats.has_sufficient_samples(8):
@@ -370,6 +375,7 @@ class RTCData:
             True if samples > 0 (some calibration exists).
 
         Examples:
+            >>> from pychrony import ChronyConnection
             >>> with ChronyConnection() as conn:
             ...     rtc = conn.get_rtc_data()
             ...     if rtc and rtc.is_calibrated():
