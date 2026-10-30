@@ -203,6 +203,6 @@ immutable, so they can be safely shared across threads after retrieval.
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.11+
 - libchrony (system library)
 - Linux (primary platform)
