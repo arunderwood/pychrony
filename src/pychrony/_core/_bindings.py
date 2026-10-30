@@ -8,9 +8,11 @@ Internal implementation - use pychrony.ChronyConnection instead.
 
 import math
 import os
+import select
+import time
 from collections.abc import Callable
 from types import TracebackType
-from typing import Any, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, Self, TypedDict, TypeVar, cast
 
 from ..exceptions import (
     ChronyConnectionError,
@@ -29,6 +31,9 @@ from ..models import (
     Transport,
     _ref_id_to_name,
 )
+
+if TYPE_CHECKING:
+    from ._cffi_bindings import _FFI, _ChronySession, _Lib, _Timespec
 
 _T = TypeVar("_T")
 
@@ -56,21 +61,18 @@ DEFAULT_COMMAND_PORTS = [
 # Conversion constants
 NANOSECONDS_PER_SECOND = 1e9
 
-# Try to import compiled CFFI bindings
-# These are generated at build time by CFFI, so they may not exist
-_lib: Any = None
-_ffi: Any = None
-
+# Try to import compiled CFFI bindings. They are generated at build time by
+# CFFI, so they may not exist; _cffi_bindings.pyi types them either way.
 try:
-    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
-        ffi as _ffi,
-    )
-    from pychrony._core._cffi_bindings import (  # type: ignore[import-not-found]
-        lib as _lib,
-    )
+    from pychrony._core._cffi_bindings import ffi as _ffi
+    from pychrony._core._cffi_bindings import lib as _lib
 
     _LIBRARY_AVAILABLE = True
 except ImportError:
+    # Placeholders so the names exist (unit tests patch them). Nothing reaches
+    # them unbuilt: __enter__ calls _check_library_available() first.
+    _ffi = cast("_FFI", None)
+    _lib = cast("_Lib", None)
     _LIBRARY_AVAILABLE = False
 
 # chrony_err values for a failed send()/recv(): chronyd could not be reached,
@@ -81,13 +83,18 @@ except ImportError:
 # CHRONY_UNEXPECTED_STATUS is how a request for a source index past the end of
 # chronyd's list comes back: chronyd answers STT_NOSUCHSOURCE, which libchrony
 # has no case for.
+#
+# CHRONY_DISABLED is how an rtcdata request comes back when chronyd is not
+# tracking an RTC: chronyd answers STT_NORTC, which libchrony maps to it.
 if _LIBRARY_AVAILABLE:
     CHRONY_SEND_FAILED = _lib.CHRONY_SEND_FAILED
     CHRONY_RECV_FAILED = _lib.CHRONY_RECV_FAILED
+    CHRONY_DISABLED = _lib.CHRONY_DISABLED
     CHRONY_UNEXPECTED_STATUS = _lib.CHRONY_UNEXPECTED_STATUS
 else:
     CHRONY_SEND_FAILED = 5
     CHRONY_RECV_FAILED = 6
+    CHRONY_DISABLED = 10
     CHRONY_UNEXPECTED_STATUS = 11
 
 TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
@@ -97,6 +104,76 @@ TRANSPORT_ERRORS = frozenset({CHRONY_SEND_FAILED, CHRONY_RECV_FAILED})
 # replaces unreachable pool servers, so the record count can be stale by the
 # time a record is requested. Each read starts over from a fresh count.
 SOURCE_LIST_READ_ATTEMPTS = 3
+
+# Seconds to wait for each response before resending the request, unless the
+# caller passes another timeout. Matches chronyc's default initial timeout.
+DEFAULT_TIMEOUT = 1.0
+
+# Resends of an unanswered request before giving up, so a request goes out at
+# most REQUEST_RETRIES + 1 times. libchrony neither times out nor resends: it
+# opens blocking datagram sockets and leaves waiting to the caller, and a lost
+# UDP datagram is otherwise never answered. Matches chronyc's default "retries
+# 2". Unlike chronyc, which doubles its timeout on each resend, every attempt
+# waits the same timeout, so a request gives up after (REQUEST_RETRIES + 1) *
+# timeout seconds.
+REQUEST_RETRIES = 2
+
+
+# Field values read from one record, keyed by the matching model's field names.
+# They let the validators run before the frozen model is built, while keeping
+# `Model(**data)` type-checked: ty matches each key against the model's fields.
+class _TrackingData(TypedDict):
+    reference_id: int
+    reference_id_name: str
+    reference_ip: str
+    stratum: int
+    leap_status: LeapStatus
+    ref_time: float
+    offset: float
+    last_offset: float
+    rms_offset: float
+    frequency: float
+    residual_freq: float
+    skew: float
+    root_delay: float
+    root_dispersion: float
+    update_interval: float
+
+
+class _SourceData(TypedDict):
+    address: str
+    poll: int
+    stratum: int
+    state: SourceState
+    mode: SourceMode
+    flags: int
+    reachability: int
+    last_sample_ago: int
+    orig_latest_meas: float
+    latest_meas: float
+    latest_meas_err: float
+
+
+class _SourceStatsData(TypedDict):
+    reference_id: int
+    address: str
+    samples: int
+    runs: int
+    span: int
+    std_dev: float
+    resid_freq: float
+    skew: float
+    offset: float
+    offset_err: float
+
+
+class _RTCDataData(TypedDict):
+    ref_time: float
+    samples: int
+    runs: int
+    span: int
+    offset: float
+    freq_offset: float
 
 
 def _is_unix_socket_address(address: str) -> bool:
@@ -122,6 +199,24 @@ def _is_permission_denied(address: str) -> bool:
     )
 
 
+def _wait_readable(fd: int, timeout: float) -> bool:
+    """Wait up to `timeout` seconds for `fd` to have something to receive.
+
+    Error and hangup conditions also end the wait, so that recv() reports them:
+    an ICMP port unreachable from a closed command port fails fast that way.
+
+    Args:
+        fd: Socket file descriptor
+        timeout: Seconds to wait
+
+    Returns:
+        True if recv() on `fd` will not block, False if the wait timed out
+    """
+    poller = select.poll()
+    poller.register(fd, select.POLLIN)
+    return bool(poller.poll(math.ceil(timeout * 1000)))
+
+
 def _check_library_available() -> None:
     """Check if libchrony CFFI bindings are available.
 
@@ -137,7 +232,7 @@ def _check_library_available() -> None:
         )
 
 
-def _timespec_to_float(ts: Any) -> float:
+def _timespec_to_float(ts: "_Timespec") -> float:
     """Convert struct timespec to Python float (seconds since epoch).
 
     Args:
@@ -209,7 +304,7 @@ def _validate_non_negative_float(value: float, field_name: str) -> None:
         raise ChronyDataError(f"{field_name} must be non-negative: {value}")
 
 
-def _get_float_field(session: Any, name: str) -> float:
+def _get_float_field(session: "_ChronySession", name: str) -> float:
     """Get a float field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -217,7 +312,7 @@ def _get_float_field(session: Any, name: str) -> float:
     return _lib.chrony_get_field_float(session, index)
 
 
-def _get_uinteger_field(session: Any, name: str) -> int:
+def _get_uinteger_field(session: "_ChronySession", name: str) -> int:
     """Get an unsigned integer field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -225,7 +320,7 @@ def _get_uinteger_field(session: Any, name: str) -> int:
     return _lib.chrony_get_field_uinteger(session, index)
 
 
-def _get_integer_field(session: Any, name: str) -> int:
+def _get_integer_field(session: "_ChronySession", name: str) -> int:
     """Get a signed integer field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -233,7 +328,7 @@ def _get_integer_field(session: Any, name: str) -> int:
     return _lib.chrony_get_field_integer(session, index)
 
 
-def _get_string_field(session: Any, name: str) -> str:
+def _get_string_field(session: "_ChronySession", name: str) -> str:
     """Get a string field by name from the session."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -244,7 +339,7 @@ def _get_string_field(session: Any, name: str) -> str:
     return _ffi.string(result).decode("utf-8", errors="replace")
 
 
-def _get_timespec_field(session: Any, name: str) -> float:
+def _get_timespec_field(session: "_ChronySession", name: str) -> float:
     """Get a timespec field by name, convert to epoch float."""
     index = _lib.chrony_get_field_index(session, name.encode())
     if index < 0:
@@ -270,6 +365,14 @@ class ChronyConnection:
               connection; the first that connects wins. `address` and
               `transport` report which one did.
 
+        timeout: Seconds to wait for each response from chronyd (keyword
+            only, default 1.0, must be positive). A request still unanswered
+            after `timeout` is resent, up to twice, so a request fails after
+            at most three times `timeout`. chronyd is reached over datagram
+            sockets, and a lost datagram is never answered: without the
+            timeout a dropped packet or a firewalled command port would block
+            the call forever.
+
     Methods:
         get_tracking: Get current NTP tracking status (returns `TrackingStatus`).
         get_sources: Get configured time sources (returns ``list[Source]``).
@@ -280,6 +383,19 @@ class ChronyConnection:
         The Unix socket is a control channel; the command port serves only
         monitoring commands, which covers every report this class reads. A
         read-only consumer should prefer it and can assert on `transport`.
+
+    Timeouts:
+        A request that gets no answer within `timeout`, after its resends,
+        raises `ChronyConnectionError`. The command port is UDP, so opening a
+        connection to it succeeds whether or not chronyd is listening; a
+        disabled, misaddressed or firewalled command port shows up as that
+        timeout on the first request.
+
+    Reuse:
+        A connection can be entered again after its ``with`` block exits;
+        each entry opens a fresh socket and session. It cannot be entered
+        while already open: a nested ``with`` on the same object raises
+        `RuntimeError` and leaves the open connection untouched.
 
     Thread Safety:
         NOT thread-safe. Each thread needs its own connection.
@@ -302,13 +418,22 @@ class ChronyConnection:
         ...     rtc = conn.get_rtc_data()
     """
 
-    def __init__(self, address: str | None = None) -> None:
-        """Initialize ChronyConnection with optional address.
+    def __init__(
+        self, address: str | None = None, *, timeout: float = DEFAULT_TIMEOUT
+    ) -> None:
+        """Initialize ChronyConnection with optional address and timeout.
 
         Args:
             address: Connection address (see class docstring for formats)
+            timeout: Seconds to wait for each response before resending
+
+        Raises:
+            ValueError: If timeout is not a positive, finite number
         """
+        if not math.isfinite(timeout) or timeout <= 0:
+            raise ValueError(f"timeout must be a positive number of seconds: {timeout}")
         self._address = address
+        self._timeout = timeout
         self._resolved_address: str | None = None
         self._denied_socket: str | None = None
         self._fd: int | None = None
@@ -316,8 +441,17 @@ class ChronyConnection:
         self._session_ptr: Any = None
         self._in_context = False
 
-    def __enter__(self) -> "ChronyConnection":
-        """Enter context manager, opening connection to chronyd."""
+    def __enter__(self) -> Self:
+        """Enter context manager, opening connection to chronyd.
+
+        Raises:
+            RuntimeError: If the connection is already open
+        """
+        if self._in_context:
+            raise RuntimeError(
+                "ChronyConnection is already open; it cannot be entered "
+                "again within its own 'with' block"
+            )
         _check_library_available()
         self._open()
         self._in_context = True
@@ -400,10 +534,10 @@ class ChronyConnection:
 
         # Initialize session
         self._session_ptr = _ffi.new("chrony_session **")
-        err = _lib.chrony_init_session(self._session_ptr, self._fd)
+        err = _lib.chrony_init_session(self._session_ptr, fd)
         if err != 0:
             # Clean up socket on failure
-            _lib.chrony_close_socket(self._fd)
+            _lib.chrony_close_socket(fd)
             self._fd = None
             self._resolved_address = None
             raise ChronyConnectionError(
@@ -418,7 +552,7 @@ class ChronyConnection:
         candidates: list[str],
         denied_address: str | None,
         error_code: int,
-    ) -> None:
+    ) -> NoReturn:
         """Raise the most specific error for a failed set of connect attempts.
 
         Args:
@@ -516,6 +650,60 @@ class ChronyConnection:
                 )
         raise ChronyConnectionError(message, error_code=err)
 
+    # RET503: the loop falls through only into _raise_request_error, which is
+    # NoReturn; ruff does not follow that annotation on method calls.
+    def _await_response(self, resend: Callable[[], int], description: str) -> int:  # noqa: RET503
+        """Process the response to the request just sent, resending on timeout.
+
+        Each attempt waits up to the connection's timeout, on the monotonic
+        clock, before every chrony_process_response(), so that its recv()
+        never blocks. libchrony skips datagrams that do not answer the request
+        outstanding, so a late answer to an earlier copy is passed over and the
+        wait goes on. A record request that libchrony follows up internally
+        stays within the same attempt.
+
+        Args:
+            resend: Sends the request again, returning its chrony_err. Each
+                send carries a fresh sequence number.
+            description: What was requested, for the timeout error, e.g.
+                "tracking report"
+
+        Returns:
+            0 once the response is processed, otherwise the chrony_err from
+            chrony_process_response() or from a failed resend, for the caller
+            to interpret.
+
+        Raises:
+            ChronyConnectionError: If REQUEST_RETRIES + 1 attempts went
+                unanswered
+        """
+        # Requests are only made inside the context, where the socket is open.
+        fd = self._fd
+        assert fd is not None
+        attempts = REQUEST_RETRIES + 1
+        for attempt in range(attempts):
+            if attempt > 0:
+                err = resend()
+                if err != 0:
+                    return err
+
+            deadline = time.monotonic() + self._timeout
+            while _lib.chrony_needs_response(self._session):
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not _wait_readable(fd, remaining):
+                    break
+                err = _lib.chrony_process_response(self._session)
+                if err != 0:
+                    return err
+            else:
+                return 0
+
+        self._raise_request_error(
+            f"Timed out waiting for {description} ({attempts} attempts, "
+            f"{self._timeout:g} s each)",
+            CHRONY_RECV_FAILED,
+        )
+
     def _request_report(self, report_name: bytes) -> int:
         """Request number of records for a report type.
 
@@ -535,12 +723,16 @@ class ChronyConnection:
                 f"Failed to request {report_name.decode()} report", err
             )
 
-        while _lib.chrony_needs_response(self._session):
-            err = _lib.chrony_process_response(self._session)
-            if err != 0:
-                self._raise_request_error(
-                    f"Failed to process {report_name.decode()} response", err
-                )
+        err = self._await_response(
+            lambda: _lib.chrony_request_report_number_records(
+                self._session, report_name
+            ),
+            f"{report_name.decode()} report",
+        )
+        if err != 0:
+            self._raise_request_error(
+                f"Failed to process {report_name.decode()} response", err
+            )
 
         return _lib.chrony_get_report_number_records(self._session)
 
@@ -561,12 +753,14 @@ class ChronyConnection:
                 f"Failed to request {report_name.decode()} record {index}", err
             )
 
-        while _lib.chrony_needs_response(self._session):
-            err = _lib.chrony_process_response(self._session)
-            if err != 0:
-                self._raise_request_error(
-                    f"Failed to process {report_name.decode()} record {index}", err
-                )
+        err = self._await_response(
+            lambda: _lib.chrony_request_record(self._session, report_name, index),
+            f"{report_name.decode()} record {index}",
+        )
+        if err != 0:
+            self._raise_request_error(
+                f"Failed to process {report_name.decode()} record {index}", err
+            )
 
     def _read_records(
         self, report_name: bytes, read_record: Callable[[], _T]
@@ -654,9 +848,9 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown leap_status value {leap_status_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
-        data = {
+        data: _TrackingData = {
             "reference_id": ref_id,
             "reference_id_name": _ref_id_to_name(ref_id),
             "reference_ip": _get_string_field(self._session, "address"),
@@ -679,11 +873,11 @@ class ChronyConnection:
 
         return TrackingStatus(**data)
 
-    def _validate_tracking(self, data: dict) -> None:
+    def _validate_tracking(self, data: _TrackingData) -> None:
         """Validate tracking data before creating TrackingStatus."""
         _validate_bounded_int(data["stratum"], "stratum", 0, 15)
 
-        float_fields = [
+        float_fields = (
             "ref_time",
             "offset",
             "last_offset",
@@ -694,18 +888,18 @@ class ChronyConnection:
             "root_delay",
             "root_dispersion",
             "update_interval",
-        ]
+        )
         for field in float_fields:
             _validate_finite_float(data[field], field)
 
-        non_negative = [
+        non_negative = (
             "ref_time",
             "rms_offset",
             "skew",
             "root_delay",
             "root_dispersion",
             "update_interval",
-        ]
+        )
         for field in non_negative:
             _validate_non_negative_float(data[field], field)
 
@@ -736,7 +930,7 @@ class ChronyConnection:
         self._validate_source(data)
         return Source(**data)
 
-    def _extract_source(self) -> dict:
+    def _extract_source(self) -> _SourceData:
         """Extract source fields from the current session record."""
         state_int = _get_uinteger_field(self._session, "state")
         mode_int = _get_uinteger_field(self._session, "mode")
@@ -747,7 +941,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown state value {state_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         try:
             mode = SourceMode(mode_int)
@@ -755,7 +949,7 @@ class ChronyConnection:
             raise ChronyDataError(
                 f"Unknown mode value {mode_int}. "
                 "This may indicate a newer chrony version - please update pychrony."
-            )
+            ) from None
 
         # In libchrony 0.2, sources report uses TYPE_ADDRESS_OR_UINT32_IN_ADDRESS
         # which exposes either "address" (NTP sources) or "reference ID" (refclocks).
@@ -784,7 +978,7 @@ class ChronyConnection:
             "latest_meas_err": _get_float_field(self._session, "last sample error"),
         }
 
-    def _validate_source(self, data: dict) -> None:
+    def _validate_source(self, data: _SourceData) -> None:
         """Validate source data before creating Source."""
         _validate_bounded_int(data["stratum"], "stratum", 0, 15)
         _validate_bounded_int(data["reachability"], "reachability", 0, 255)
@@ -822,7 +1016,7 @@ class ChronyConnection:
         self._validate_sourcestats(data)
         return SourceStats(**data)
 
-    def _extract_sourcestats(self) -> dict:
+    def _extract_sourcestats(self) -> _SourceStatsData:
         """Extract sourcestats fields from the current session record."""
         return {
             "reference_id": _get_uinteger_field(self._session, "reference ID"),
@@ -837,7 +1031,7 @@ class ChronyConnection:
             "offset_err": _get_float_field(self._session, "offset error"),
         }
 
-    def _validate_sourcestats(self, data: dict) -> None:
+    def _validate_sourcestats(self, data: _SourceStatsData) -> None:
         """Validate sourcestats data before creating SourceStats."""
         _validate_non_negative_int(data["samples"], "samples")
         _validate_non_negative_int(data["runs"], "runs")
@@ -857,8 +1051,11 @@ class ChronyConnection:
 
         Raises:
             RuntimeError: If called outside context manager
-            ChronyConnectionError: If chronyd did not respond.
-            ChronyDataError: If RTC data is invalid or malformed.
+            ChronyConnectionError: If chronyd could not be reached, including
+                when it stops responding mid-session.
+            ChronyDataError: If chronyd rejected the request for any reason
+                other than having no RTC (e.g. unauthorized), or if the RTC
+                data is invalid or malformed.
 
         Examples:
             >>> with ChronyConnection() as conn:
@@ -868,32 +1065,21 @@ class ChronyConnection:
         """
         self._ensure_context()
 
-        num_records = self._request_report(b"rtcdata")
-        if num_records < 1:
-            return None
-
-        # Try to fetch rtcdata record - may fail if RTC not actually configured
+        # libchrony has no count request for rtcdata (its record count is always
+        # 1), so the record request itself is what reveals a missing RTC.
         try:
-            err = _lib.chrony_request_record(self._session, b"rtcdata", 0)
-            if err != 0:
+            self._request_record(b"rtcdata", 0)
+        except ChronyDataError as e:
+            if e.error_code == CHRONY_DISABLED:
                 return None
-
-            while _lib.chrony_needs_response(self._session):
-                err = _lib.chrony_process_response(self._session)
-                if err != 0:
-                    return None
-        # Deliberately broad: this is a C-library boundary, and an absent RTC is a
-        # supported outcome reported as None rather than an error. Narrowing the
-        # catch risks surfacing a CFFI failure as a crash for that normal case.
-        except Exception:  # noqa: BLE001
-            return None
+            raise
 
         data = self._extract_rtc()
         self._validate_rtc(data)
 
         return RTCData(**data)
 
-    def _extract_rtc(self) -> dict:
+    def _extract_rtc(self) -> _RTCDataData:
         """Extract RTC fields from the current session record."""
         return {
             "ref_time": _get_timespec_field(self._session, "reference time"),
@@ -904,7 +1090,7 @@ class ChronyConnection:
             "freq_offset": _get_float_field(self._session, "frequency offset"),
         }
 
-    def _validate_rtc(self, data: dict) -> None:
+    def _validate_rtc(self, data: _RTCDataData) -> None:
         """Validate RTC data before creating RTCData."""
         _validate_non_negative_int(data["samples"], "samples")
         _validate_non_negative_int(data["runs"], "runs")

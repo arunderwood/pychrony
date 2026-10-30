@@ -110,7 +110,10 @@ class TestChronyConnectionContextManager:
         mock_ffi.NULL = None
         mock_lib.chrony_init_session.return_value = 0
 
-        with pytest.raises(ValueError), ChronyConnection("/test.sock"):
+        with (
+            pytest.raises(ValueError, match="test error"),
+            ChronyConnection("/test.sock"),
+        ):
             raise ValueError("test error")
 
         mock_lib.chrony_deinit_session.assert_called_once()
@@ -476,57 +479,6 @@ class TestConstants:
             assert path.endswith(".sock")
 
 
-class TestGetRtcDataReturnsNone:
-    """Tests for get_rtc_data() returning None when RTC unavailable."""
-
-    @patch("pychrony._core._bindings._check_library_available")
-    @patch("pychrony._core._bindings._lib")
-    @patch("pychrony._core._bindings._ffi")
-    def test_returns_none_when_no_rtc_records(self, mock_ffi, mock_lib, mock_check):
-        """Test that get_rtc_data returns None when num_records < 1."""
-        # Setup mocks for connection
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
-        mock_ffi.NULL = None
-        mock_lib.chrony_init_session.return_value = 0
-
-        # Setup mocks for rtcdata request
-        mock_lib.chrony_request_report_number_records.return_value = 0
-        mock_lib.chrony_needs_response.side_effect = [True, False]
-        mock_lib.chrony_process_response.return_value = 0
-        mock_lib.chrony_get_report_number_records.return_value = 0  # No records
-
-        with ChronyConnection("/test.sock") as conn:
-            result = conn.get_rtc_data()
-
-        assert result is None
-
-    @patch("pychrony._core._bindings._check_library_available")
-    @patch("pychrony._core._bindings._lib")
-    @patch("pychrony._core._bindings._ffi")
-    def test_returns_none_when_rtc_fetch_fails(self, mock_ffi, mock_lib, mock_check):
-        """Test that get_rtc_data returns None when rtcdata fetch fails."""
-        # Setup mocks for connection
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
-        mock_ffi.NULL = None
-        mock_lib.chrony_init_session.return_value = 0
-
-        # Setup mocks for rtcdata request
-        mock_lib.chrony_request_report_number_records.return_value = 0
-        mock_lib.chrony_needs_response.side_effect = [True, False, True]
-        mock_lib.chrony_process_response.side_effect = [0, 10]  # Second call fails
-        mock_lib.chrony_get_report_number_records.return_value = 1  # Has record
-        mock_lib.chrony_request_record.return_value = 0
-
-        with ChronyConnection("/test.sock") as conn:
-            result = conn.get_rtc_data()
-
-        assert result is None
-
-
 class TestResponseFailureDiagnostics:
     """Tests for classifying and diagnosing a failure to reach chronyd."""
 
@@ -625,3 +577,54 @@ class TestResponseFailureDiagnostics:
 
         with pytest.raises(ChronyDataError), ChronyConnection() as conn:
             conn.get_tracking()
+
+
+class TestChronyConnectionReentry:
+    """Tests for entering a connection that is already open."""
+
+    @pytest.fixture
+    def mock_session(self):
+        """Patch the bindings with a mock session that tracks open sockets."""
+        from tests.mocks import SCENARIO_NTP_SYNCED
+        from tests.mocks.session import MockChronySession
+
+        session = MockChronySession(SCENARIO_NTP_SYNCED)
+        with (
+            patch("pychrony._core._bindings._lib", session.lib),
+            patch("pychrony._core._bindings._ffi", session.ffi),
+            patch("pychrony._core._bindings._LIBRARY_AVAILABLE", True),
+            patch("pychrony._core._bindings._wait_readable", session.wait_readable),
+        ):
+            yield session
+
+    def test_nested_entry_raises_without_leaking(self, mock_session):
+        """Test that a nested 'with' raises and opens no second socket."""
+        conn = ChronyConnection()
+        with conn:
+            fd = conn._fd
+            with pytest.raises(RuntimeError, match="already open"), conn:
+                pass
+            assert mock_session.open_sockets == {fd}
+            assert conn._fd == fd
+        assert mock_session.open_sockets == set()
+
+    def test_connection_usable_after_nested_entry_error(self, mock_session):
+        """Test that the outer block keeps a working connection."""
+        conn = ChronyConnection()
+        with conn:
+            address = conn.address
+            with pytest.raises(RuntimeError), conn:
+                pass
+            assert conn._in_context
+            assert conn.address == address
+            assert conn.get_tracking() is not None
+
+    def test_sequential_reuse_works(self, mock_session):
+        """Test that a connection can be entered again after exiting."""
+        conn = ChronyConnection()
+        for _ in range(2):
+            with conn:
+                assert len(mock_session.open_sockets) == 1
+                assert conn.get_tracking() is not None
+            assert mock_session.open_sockets == set()
+            assert conn.address is None

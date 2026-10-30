@@ -92,13 +92,12 @@ command port, using the first that connects — the same candidates
 The two are not equivalent in privilege. The Unix socket is chronyd's control
 channel, restricted to the root or `chrony` user; the command port serves
 monitoring commands only, which is everything pychrony reads. Read-only
-consumers should prefer the command port and can require it:
+consumers should prefer the command port, and can ask for it explicitly:
 
 ```python
-from pychrony import ChronyConnection, Transport
+from pychrony import ChronyConnection
 
-with ChronyConnection() as conn:
-    assert conn.transport is Transport.COMMAND_PORT
+with ChronyConnection("127.0.0.1") as conn:
     status = conn.get_tracking()
 ```
 
@@ -108,7 +107,7 @@ for details.
 
 ## Compatibility
 
-- **Python**: 3.10, 3.11, 3.12, 3.13, 3.14, 3.15
+- **Python**: 3.11, 3.12, 3.13, 3.14, 3.15
 - **Platform**: Linux (primary), other platforms where libchrony is available
 - **chrony**: 4.x and later
 

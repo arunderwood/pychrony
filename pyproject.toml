@@ -1,5 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "cffi>=1.14.0"]
+# PEP 639 license expressions + license-files need setuptools 77; the first
+# 77.x on PyPI is 77.0.1. cffi floors are the first release supporting each
+# Python (keep in sync with [project] dependencies).
+requires = [
+    "setuptools>=77.0.1",
+    "setuptools-scm>=8.0",
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +20,7 @@ description = "Python bindings for chrony NTP client"
 readme = "README.md"
 license = "MIT AND LGPL-2.1-or-later"
 license-files = ["LICENSE", "LICENSES/*"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     {name = "arunderwood", email = "arunderwood@users.noreply.github.com"}
 ]
@@ -17,18 +28,23 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Free Threading :: 3 - Stable",
     "Topic :: System :: Networking :: Time Synchronization",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-    "cffi>=1.14.0",
+    # First cffi release supporting each Python version.
+    "cffi>=1.15.1; python_version == '3.11'",
+    "cffi>=1.16.0; python_version == '3.12'",
+    "cffi>=1.17.0; python_version == '3.13'",
+    "cffi>=2.0.0; python_version == '3.14'",
+    "cffi>=2.1.0; python_version >= '3.15'",
 ]
 
 [project.urls]
@@ -46,34 +62,40 @@ fallback_version = "0.0.0.dev0"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Typing files. setuptools 69+ ships these by default; the build floor is 61.
+# _cffi_bindings.pyi types the CFFI extension, which only exists once built.
+[tool.setuptools.package-data]
+pychrony = ["py.typed", "_core/*.pyi"]
+
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 # specs/ holds frozen spec-kit design documents; they are historical records and
 # are not kept in sync with the code, so exclude them from linting/formatting.
 extend-exclude = ["specs/"]
 
 [tool.ruff.lint]
+extend-select = [
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",   # flake8-comprehensions
+    "I",    # isort
+    "PERF", # perflint
+    "PIE",  # flake8-pie
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "RUF",  # ruff-specific rules
+    "SIM",  # flake8-simplify
+    "UP",   # pyupgrade
+]
 ignore = [
     # __all__ entries are grouped by category (enums, models, exceptions) with
     # explanatory comments; alphabetical sorting would destroy that structure.
     "RUF022",
-    # Wants __enter__ to return `Self`, which is only in typing from 3.11 on.
-    # This package supports 3.10 and has no typing_extensions dependency.
-    "PYI034",
+    # try/except inside a loop is free on 3.11+ (zero-cost exceptions), which is
+    # our minimum, and the source-list retry loop needs a handler per attempt.
+    "PERF203",
 ]
-
-[tool.ty]
-# Ignore warnings for CFFI bindings file - _lib and _ffi are dynamically imported
-# at runtime and may not exist until the package is built with libchrony
-[[tool.ty.overrides]]
-include = ["src/pychrony/_core/_bindings.py"]
-
-[tool.ty.overrides.rules]
-possibly-missing-attribute = "ignore"
-unresolved-attribute = "ignore"  # ty 0.0.21+ renamed possibly-missing-attribute
-invalid-argument-type = "ignore"  # Dict unpacking uses runtime validation
-unresolved-import = "ignore"  # _cffi_bindings is generated at install time
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -84,7 +106,7 @@ addopts = ["-v", "--tb=short"]
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-build = "cp310-* cp311-* cp312-* cp313-* cp314-* cp315-*"
+build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
