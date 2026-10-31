@@ -496,8 +496,9 @@ non-editably, compiling the bindings through `setup.py` with
 `[tool.uv]` in `pyproject.toml` sets for uv installs of the project. Tests
 therefore run against the installed package.
 
-CI runs this source variant on every PR. The release workflow runs the same
-suite against the x86_64 wheels it is about to publish, before Test PyPI.
+CI runs this source variant on every PR. The release workflow runs the
+integration tests against the x86_64 wheels it is about to publish, before
+Test PyPI (cibuildwheel has already run the unit and contract tests on them).
 To do that locally, build a wheel for the image's Python (Fedora 44's 3.14)
 and pass the wheelhouse as a build context:
 
