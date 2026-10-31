@@ -475,9 +475,9 @@ docker build -t pychrony-test -f docker/Dockerfile.test . && \
 
 The image installs the test dependencies from `uv.lock` and installs pychrony
 non-editably, compiling the bindings through `setup.py` with
-`PYCHRONY_BUILD_CFFI=1`. That variable is required: it overrides the
-`PYCHRONY_SKIP_CFFI=1` that `[tool.uv]` in `pyproject.toml` sets for every uv
-build. Tests therefore run against the installed package.
+`PYCHRONY_BUILD_CFFI=1`, which overrides the `PYCHRONY_SKIP_CFFI=1` that
+`[tool.uv]` in `pyproject.toml` sets for uv installs of the project. Tests
+therefore run against the installed package.
 
 CI runs this source variant on every PR. The release workflow runs the same
 suite against the x86_64 wheels it is about to publish, before Test PyPI.

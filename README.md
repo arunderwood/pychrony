@@ -28,14 +28,13 @@ Pre-built wheels include libchrony—no system dependencies needed.
 <summary><strong>Building from Source</strong></summary>
 
 Installing from source (the sdist, or any platform without a pre-built wheel)
-compiles pychrony's CFFI bindings, which requires a C compiler, the libffi
-headers, and [libchrony](https://gitlab.com/chrony/libchrony) with its headers.
-The build finds libchrony through `pkg-config` (libchrony installs
-`libchrony.pc`), so for a non-standard prefix add `<prefix>/lib/pkgconfig` to
-`PKG_CONFIG_PATH`. If `chrony.h` or the libchrony library cannot be found, the
-install stops with an error saying what is missing.
+compiles the CFFI bindings, so it needs a C compiler, the libffi headers, and
+[libchrony](https://gitlab.com/chrony/libchrony) with its headers. libchrony is
+found through `pkg-config`; for a non-standard prefix, add
+`<prefix>/lib/pkgconfig` to `PKG_CONFIG_PATH`. A missing `chrony.h` or library
+stops the install with an error naming it.
 
-To force a source build, e.g. to check a libchrony install:
+To build from source even where a wheel exists:
 
 ```bash
 pip install --no-binary pychrony pychrony
@@ -81,17 +80,15 @@ git submodule update --init
 uv sync --all-groups
 ```
 
-`uv sync` (and `uv pip install` run from the checkout) installs pychrony
-**without** the compiled bindings: the `[tool.uv]` section of `pyproject.toml`
-sets `PYCHRONY_SKIP_CFFI=1` for the build, so development and the unit and
-contract tests work without libchrony. Connecting to chronyd from such an
-install raises `ChronyLibraryError`. Integration tests build the bindings in
-Docker (see [TESTING.md](TESTING.md)).
+`uv sync` and `uv pip install` from the checkout install pychrony **without**
+the compiled bindings: `[tool.uv]` in `pyproject.toml` sets
+`PYCHRONY_SKIP_CFFI=1`, so development and the unit and contract tests need no
+libchrony. Connecting to chronyd from such an install raises
+`ChronyLibraryError`. Integration tests build the bindings in Docker (see
+[TESTING.md](TESTING.md)).
 
-Set `PYCHRONY_SKIP_CFFI=1` yourself to skip the bindings with any other
-installer, e.g. `PYCHRONY_SKIP_CFFI=1 pip install -e .`. With libchrony
-installed, `pip install -e .` (without the variable) builds them, as does
-`PYCHRONY_BUILD_CFFI=1 uv sync`, which overrides the uv setting.
+With libchrony installed, `PYCHRONY_BUILD_CFFI=1 uv sync` or `pip install -e .`
+builds the bindings. With other installers, `PYCHRONY_SKIP_CFFI=1` skips them.
 
 </details>
 
