@@ -1,4 +1,4 @@
-"""Unit tests for pychrony.testing and the pychrony pytest plugins."""
+"""Unit tests for pychrony.testing and pychrony.pytest_plugin."""
 
 import subprocess
 import sys
@@ -120,10 +120,10 @@ class TestMakeRtcData:
 
 
 class TestTestingWithoutPytest:
-    """pychrony.testing must stay importable when pytest is not installed."""
+    """pychrony.testing must import without pytest installed."""
 
     def test_import_with_pytest_blocked(self):
-        """Test factories import and work with pytest blocked from importing."""
+        """Test the factories import and run with pytest unimportable."""
         code = (
             "import sys\n"
             "sys.modules['pytest'] = None\n"
@@ -158,7 +158,7 @@ def test_prefixed(
     assert isinstance(chrony_rtc_data, RTCData)
 """
 
-OLD_FIXTURE_TESTS = """
+UNPREFIXED_FIXTURE_TESTS = """
 from pychrony import RTCData, Source, SourceStats, TrackingStatus
 
 def test_tracking_status(tracking_status):
@@ -188,15 +188,15 @@ class TestPytestPlugin:
         result.assert_outcomes(passed=1)
 
     def test_opt_in_does_not_provide_unprefixed_names(self, pytester):
-        """Test the plugin registers no generic fixture names."""
+        """Test the plugin registers no unprefixed fixture names."""
         pytester.makeconftest(OPT_IN_CONFTEST)
-        pytester.makepyfile(OLD_FIXTURE_TESTS)
+        pytester.makepyfile(UNPREFIXED_FIXTURE_TESTS)
         result = pytester.runpytest()
         result.assert_outcomes(errors=4)
         result.stdout.fnmatch_lines(["*fixture 'tracking_status' not found*"])
 
     def test_no_fixtures_without_opt_in(self, pytester):
-        """Test installing pychrony does not add fixtures to every pytest run."""
+        """Test pychrony adds no fixtures to a run that does not enable the plugin."""
         pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
         result = pytester.runpytest()
         result.assert_outcomes(errors=1)

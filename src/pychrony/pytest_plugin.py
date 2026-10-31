@@ -1,8 +1,11 @@
 """Pytest fixtures for testing code that uses pychrony.
 
-Enable the plugin explicitly in your top-level ``conftest.py``:
+Enable the plugin in your top-level ``conftest.py``; pytest rejects
+``pytest_plugins`` in nested conftest files:
 
     pytest_plugins = ["pychrony.pytest_plugin"]
+
+Then request the fixtures by name:
 
     def test_something(chrony_tracking_status, chrony_source):
         assert chrony_tracking_status.is_synchronized()

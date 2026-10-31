@@ -1,8 +1,8 @@
 """Testing utilities for pychrony.
 
 This module provides factory functions for creating test instances of
-pychrony dataclasses with sensible defaults. It does not import pytest and
-works with any test framework.
+pychrony dataclasses with sensible defaults. It works with any test
+framework and must not import pytest, which is not a runtime dependency.
 
 Factory Functions:
     from pychrony.testing import make_tracking, make_source
