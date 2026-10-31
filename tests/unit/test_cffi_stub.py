@@ -14,7 +14,7 @@ CORE = Path(__file__).parents[2] / "src" / "pychrony" / "_core"
 
 def _cdef_source() -> str:
     source = (CORE / "_build_bindings.py").read_text()
-    match = re.search(r'ffi\.cdef\("""(.*?)"""\)', source, re.DOTALL)
+    match = re.search(r'ffibuilder\.cdef\("""(.*?)"""\)', source, re.DOTALL)
     assert match, "cdef block not found in _build_bindings.py"
     # Drop // comments so prose cannot look like a declaration.
     return re.sub(r"//[^\n]*", "", match.group(1))
