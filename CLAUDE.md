@@ -76,7 +76,8 @@ stale-image note above.
 - **Field registry**: `src/pychrony/_core/_fields.py` maps libchrony field names to `FieldType` per report (`TRACKING_FIELDS`, `SOURCE_FIELDS`, `SOURCESTATS_FIELDS`, `RTC_FIELDS`); shared by `_bindings.py` and `tests/mocks/`
 - **Data models** (`models.py`): frozen dataclasses `TrackingStatus`, `Source`, `SourceStats`, `RTCData`; enums `LeapStatus`, `SourceState`, `SourceMode`, `Transport`
 - **Exceptions** (`exceptions.py`): `ChronyError` base with `ChronyConnectionError`, `ChronyPermissionError`, `ChronyDataError`, `ChronyLibraryError`
-- **Testing utilities** (`testing.py`): `make_tracking()`/`make_source()`/`make_source_stats()`/`make_rtc_data()` factories and pytest fixtures, registered as a `pytest11` plugin
+- **Testing utilities** (`testing.py`): `make_tracking()`/`make_source()`/`make_source_stats()`/`make_rtc_data()` factories; no pytest import
+- **Pytest plugin** (`pytest_plugin.py`): opt-in `chrony_*` fixtures, enabled with `pytest_plugins = ["pychrony.pytest_plugin"]` (no `pytest11` entry point)
 - **libchrony reference**: `vendor/libchrony/` - submodule with API source (field definitions in `reports.h`)
 
 ## Testing Structure

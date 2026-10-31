@@ -170,33 +170,12 @@ def test_source_reachable(chrony_source):
 Available fixtures: `chrony_tracking_status`, `chrony_source`,
 `chrony_source_stats`, `chrony_rtc_data`
 
-### Migrating from the Unprefixed Fixtures
+The plugin is opt-in: pychrony does not register a `pytest11` entry point, so
+these fixtures exist only in projects that enable them.
 
-Earlier releases registered fixtures named `tracking_status`, `source`,
-`source_stats` and `rtc_data` in every pytest run wherever pychrony was
-installed. Those generic names could clash with other projects' fixtures. In
-this release:
-
-- The plugin is still loaded automatically (as the `pychrony` plugin), so
-  existing suites keep running.
-- The unprefixed names still work, but each use emits a `DeprecationWarning`
-  naming its replacement.
-- The `chrony_*` names are available both through automatic loading and
-  through `pytest_plugins = ["pychrony.pytest_plugin"]`.
-
-The next major release will remove the unprefixed names and the automatic
-loading. To migrate:
-
-1. Rename `tracking_status` → `chrony_tracking_status`, `source` →
-   `chrony_source`, `source_stats` → `chrony_source_stats`, `rtc_data` →
-   `chrony_rtc_data`.
-2. Add `pytest_plugins = ["pychrony.pytest_plugin"]` to your top-level
-   `conftest.py`.
-3. Optionally, turn off the deprecated automatic plugin now with
-   `-p no:pychrony` (for example in `addopts`) so the old names are gone.
-
-A fixture you define yourself with one of the old names always takes
-precedence over pychrony's.
+Releases before 3.0 registered unprefixed fixtures (`tracking_status`,
+`source`, `source_stats`, `rtc_data`) automatically. If you used them, rename
+each to its `chrony_` form and add the `pytest_plugins` line above.
 
 ---
 

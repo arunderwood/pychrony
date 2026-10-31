@@ -178,56 +178,26 @@ OPT_IN_CONFTEST = 'pytest_plugins = ["pychrony.pytest_plugin"]\n'
 
 
 class TestPytestPlugin:
-    """Tests for the opt-in plugin and the deprecated auto-loaded plugin."""
+    """Tests for the opt-in pychrony.pytest_plugin."""
 
-    def test_autoload_provides_prefixed_fixtures(self, pytester):
-        """Test prefixed fixtures work through the auto-loaded plugin."""
+    def test_opt_in_provides_prefixed_fixtures(self, pytester):
+        """Test the chrony_* fixtures are available once the plugin is enabled."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
         pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
-        result = pytester.runpytest("-W", "error::DeprecationWarning")
+        result = pytester.runpytest()
         result.assert_outcomes(passed=1)
 
-    def test_autoload_old_names_warn(self, pytester):
-        """Test old fixture names still work but emit DeprecationWarning."""
+    def test_opt_in_does_not_provide_unprefixed_names(self, pytester):
+        """Test the plugin registers no generic fixture names."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
         pytester.makepyfile(OLD_FIXTURE_TESTS)
         result = pytester.runpytest()
-        result.assert_outcomes(passed=4, warnings=4)
-        for old, new in [
-            ("tracking_status", "chrony_tracking_status"),
-            ("source", "chrony_source"),
-            ("source_stats", "chrony_source_stats"),
-            ("rtc_data", "chrony_rtc_data"),
-        ]:
-            result.stdout.fnmatch_lines(
-                [
-                    (
-                        f"*DeprecationWarning: The pychrony '{old}' fixture is "
-                        f"deprecated*use '{new}' instead*"
-                    )
-                ]
-            )
-
-    def test_opt_in_alone_provides_only_prefixed(self, pytester):
-        """Test the opt-in plugin without autoload adds no unprefixed names."""
-        pytester.makeconftest(OPT_IN_CONFTEST)
-        pytester.makepyfile(
-            test_prefixed=PREFIXED_FIXTURE_TESTS, test_old=OLD_FIXTURE_TESTS
-        )
-        result = pytester.runpytest("-p", "no:pychrony")
-        result.assert_outcomes(passed=1, errors=4)
+        result.assert_outcomes(errors=4)
         result.stdout.fnmatch_lines(["*fixture 'tracking_status' not found*"])
 
-    def test_opt_in_with_autoload(self, pytester):
-        """Test opting in while the deprecated autoload is still active."""
-        pytester.makeconftest(OPT_IN_CONFTEST)
+    def test_no_fixtures_without_opt_in(self, pytester):
+        """Test installing pychrony does not add fixtures to every pytest run."""
         pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
-        result = pytester.runpytest("-W", "error::DeprecationWarning")
-        result.assert_outcomes(passed=1)
-
-    def test_user_fixture_overrides_old_name(self, pytester):
-        """Test a user's own fixture named like an old alias takes precedence."""
-        pytester.makeconftest(
-            "import pytest\n\n@pytest.fixture\ndef source():\n    return 'mine'\n"
-        )
-        pytester.makepyfile("def test_source(source):\n    assert source == 'mine'\n")
-        result = pytester.runpytest("-W", "error::DeprecationWarning")
-        result.assert_outcomes(passed=1)
+        result = pytester.runpytest()
+        result.assert_outcomes(errors=1)
+        result.stdout.fnmatch_lines(["*fixture 'chrony_tracking_status' not found*"])

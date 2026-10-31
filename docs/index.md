@@ -242,10 +242,8 @@ pytest users can enable fixtures (`chrony_tracking_status`, `chrony_source`,
 pytest_plugins = ["pychrony.pytest_plugin"]
 ```
 
-The unprefixed fixture names (`tracking_status`, `source`, `source_stats`,
-`rtc_data`) that earlier releases registered automatically still work but are
-deprecated and emit a `DeprecationWarning`. They and the automatic plugin
-loading will be removed in the next major release. See
+The plugin is not loaded automatically, so installing pychrony adds no
+fixtures to other projects' test runs. See
 [TESTING.md](https://github.com/arunderwood/pychrony/blob/main/TESTING.md#pytest-fixtures)
 for details.
 
