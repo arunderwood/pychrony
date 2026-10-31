@@ -5,6 +5,7 @@ import pytest
 from pychrony._core._bindings import (
     _validate_bounded_int,
     _validate_finite_float,
+    _validate_non_negative_float,
     _validate_non_negative_int,
 )
 from pychrony.exceptions import ChronyDataError
@@ -88,3 +89,21 @@ class TestValidateNonNegativeInt:
         with pytest.raises(ChronyDataError) as exc_info:
             _validate_non_negative_int(-1, "test_field")
         assert "must be non-negative" in str(exc_info.value)
+
+
+class TestValidateNonNegativeFloat:
+    """Tests for _validate_non_negative_float() function."""
+
+    def test_positive_passes(self):
+        """Test that a positive float passes validation."""
+        _validate_non_negative_float(1.5, "test_field")  # Should not raise
+
+    def test_zero_passes(self):
+        """Test that zero passes validation."""
+        _validate_non_negative_float(0.0, "test_field")  # Should not raise
+
+    def test_negative_rejected(self):
+        """Test that a negative float is rejected."""
+        with pytest.raises(ChronyDataError) as exc_info:
+            _validate_non_negative_float(-0.5, "test_field")
+        assert str(exc_info.value) == "test_field must be non-negative: -0.5"

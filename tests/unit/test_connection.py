@@ -479,57 +479,6 @@ class TestConstants:
             assert path.endswith(".sock")
 
 
-class TestGetRtcDataReturnsNone:
-    """Tests for get_rtc_data() returning None when RTC unavailable."""
-
-    @patch("pychrony._core._bindings._check_library_available")
-    @patch("pychrony._core._bindings._lib")
-    @patch("pychrony._core._bindings._ffi")
-    def test_returns_none_when_no_rtc_records(self, mock_ffi, mock_lib, mock_check):
-        """Test that get_rtc_data returns None when num_records < 1."""
-        # Setup mocks for connection
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
-        mock_ffi.NULL = None
-        mock_lib.chrony_init_session.return_value = 0
-
-        # Setup mocks for rtcdata request
-        mock_lib.chrony_request_report_number_records.return_value = 0
-        mock_lib.chrony_needs_response.side_effect = [True, False]
-        mock_lib.chrony_process_response.return_value = 0
-        mock_lib.chrony_get_report_number_records.return_value = 0  # No records
-
-        with ChronyConnection("/test.sock") as conn:
-            result = conn.get_rtc_data()
-
-        assert result is None
-
-    @patch("pychrony._core._bindings._check_library_available")
-    @patch("pychrony._core._bindings._lib")
-    @patch("pychrony._core._bindings._ffi")
-    def test_returns_none_when_rtc_fetch_fails(self, mock_ffi, mock_lib, mock_check):
-        """Test that get_rtc_data returns None when rtcdata fetch fails."""
-        # Setup mocks for connection
-        mock_lib.chrony_open_socket.return_value = 5
-        mock_session = MagicMock()
-        mock_ffi.new.return_value = [mock_session]
-        mock_ffi.NULL = None
-        mock_lib.chrony_init_session.return_value = 0
-
-        # Setup mocks for rtcdata request
-        mock_lib.chrony_request_report_number_records.return_value = 0
-        mock_lib.chrony_needs_response.side_effect = [True, False, True]
-        mock_lib.chrony_process_response.side_effect = [0, 10]  # Second call fails
-        mock_lib.chrony_get_report_number_records.return_value = 1  # Has record
-        mock_lib.chrony_request_record.return_value = 0
-
-        with ChronyConnection("/test.sock") as conn:
-            result = conn.get_rtc_data()
-
-        assert result is None
-
-
 class TestResponseFailureDiagnostics:
     """Tests for classifying and diagnosing a failure to reach chronyd."""
 

@@ -103,6 +103,7 @@ def make_tracking(**overrides: Any) -> TrackingStatus:
         TrackingStatus instance
 
     Examples:
+        >>> from pychrony import LeapStatus
         >>> make_tracking()  # Synchronized status
         >>> make_tracking(stratum=16, reference_id=0)  # Unsynchronized
         >>> make_tracking(leap_status=LeapStatus.INSERT)  # Leap pending
@@ -122,6 +123,7 @@ def make_source(**overrides: Any) -> Source:
         Source instance.
 
     Examples:
+        >>> from pychrony import SourceState
         >>> make_source()  # Selected, reachable source
         >>> make_source(state=SourceState.FALSETICKER)  # Falseticker
         >>> make_source(reachability=0)  # Unreachable source
