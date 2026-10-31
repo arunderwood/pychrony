@@ -77,9 +77,18 @@ Exception hierarchy for error handling.
 
 ## Testing Utilities
 
-Factory functions and pytest fixtures for testing code that uses pychrony.
+Factory functions for testing code that uses pychrony. They do not require
+pytest.
 
 ::: pychrony.testing
+    options:
+      show_root_heading: true
+      members_order: source
+
+Pytest fixtures, enabled with `pytest_plugins = ["pychrony.pytest_plugin"]` in
+your top-level `conftest.py`.
+
+::: pychrony.pytest_plugin
     options:
       show_root_heading: true
       members_order: source

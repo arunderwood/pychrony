@@ -125,6 +125,30 @@ Note that joining the `chrony` group does **not** grant access to the Unix
 socket. See [Choosing a Transport](https://pychrony.org/#choosing-a-transport)
 for details.
 
+## Testing Your Code
+
+`pychrony.testing` has factories that build pychrony objects with realistic
+defaults. They work in any test framework and do not need pytest:
+
+```python
+from pychrony.testing import make_tracking
+
+status = make_tracking(stratum=16, reference_id=0)
+assert not status.is_synchronized()
+```
+
+pytest users can enable fixtures (`chrony_tracking_status`, `chrony_source`,
+`chrony_source_stats`, `chrony_rtc_data`) in their top-level `conftest.py`:
+
+```python
+pytest_plugins = ["pychrony.pytest_plugin"]
+```
+
+The plugin is not loaded automatically, so installing pychrony adds no
+fixtures to other projects' test runs. See
+[TESTING.md](https://github.com/arunderwood/pychrony/blob/main/TESTING.md#pytest-fixtures)
+for details.
+
 ## Compatibility
 
 - **Python**: 3.11, 3.12, 3.13, 3.14, 3.15

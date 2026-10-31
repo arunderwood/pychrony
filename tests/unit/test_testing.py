@@ -1,5 +1,7 @@
-"""Unit tests for pychrony.testing module."""
+"""Unit tests for pychrony.testing and pychrony.pytest_plugin."""
 
+import subprocess
+import sys
 from dataclasses import FrozenInstanceError
 
 import pytest
@@ -115,3 +117,87 @@ class TestMakeRtcData:
         """Test overriding offset."""
         rtc = make_rtc_data(offset=0.5)
         assert rtc.offset == 0.5
+
+
+class TestTestingWithoutPytest:
+    """pychrony.testing must import without pytest installed."""
+
+    def test_import_with_pytest_blocked(self):
+        """Test the factories import and run with pytest unimportable."""
+        code = (
+            "import sys\n"
+            "sys.modules['pytest'] = None\n"
+            "from pychrony.testing import (\n"
+            "    RTCDATA_DEFAULTS, SOURCE_DEFAULTS, SOURCESTATS_DEFAULTS,\n"
+            "    TRACKING_DEFAULTS, make_rtc_data, make_source,\n"
+            "    make_source_stats, make_tracking,\n"
+            ")\n"
+            "assert make_tracking().is_synchronized()\n"
+            "make_source(); make_source_stats(); make_rtc_data()\n"
+            "assert 'pychrony.pytest_plugin' not in sys.modules\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+
+
+PREFIXED_FIXTURE_TESTS = """
+from pychrony import RTCData, Source, SourceStats, TrackingStatus
+
+def test_prefixed(
+    chrony_tracking_status, chrony_source, chrony_source_stats, chrony_rtc_data
+):
+    assert isinstance(chrony_tracking_status, TrackingStatus)
+    assert chrony_tracking_status.is_synchronized()
+    assert isinstance(chrony_source, Source)
+    assert isinstance(chrony_source_stats, SourceStats)
+    assert isinstance(chrony_rtc_data, RTCData)
+"""
+
+UNPREFIXED_FIXTURE_TESTS = """
+from pychrony import RTCData, Source, SourceStats, TrackingStatus
+
+def test_tracking_status(tracking_status):
+    assert isinstance(tracking_status, TrackingStatus)
+
+def test_source(source):
+    assert isinstance(source, Source)
+
+def test_source_stats(source_stats):
+    assert isinstance(source_stats, SourceStats)
+
+def test_rtc_data(rtc_data):
+    assert isinstance(rtc_data, RTCData)
+"""
+
+OPT_IN_CONFTEST = 'pytest_plugins = ["pychrony.pytest_plugin"]\n'
+
+
+class TestPytestPlugin:
+    """Tests for the opt-in pychrony.pytest_plugin."""
+
+    def test_opt_in_provides_prefixed_fixtures(self, pytester):
+        """Test the chrony_* fixtures are available once the plugin is enabled."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
+        pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
+        result = pytester.runpytest()
+        result.assert_outcomes(passed=1)
+
+    def test_opt_in_does_not_provide_unprefixed_names(self, pytester):
+        """Test the plugin registers no unprefixed fixture names."""
+        pytester.makeconftest(OPT_IN_CONFTEST)
+        pytester.makepyfile(UNPREFIXED_FIXTURE_TESTS)
+        result = pytester.runpytest()
+        result.assert_outcomes(errors=4)
+        result.stdout.fnmatch_lines(["*fixture 'tracking_status' not found*"])
+
+    def test_no_fixtures_without_opt_in(self, pytester):
+        """Test pychrony adds no fixtures to a run that does not enable the plugin."""
+        pytester.makepyfile(PREFIXED_FIXTURE_TESTS)
+        result = pytester.runpytest()
+        result.assert_outcomes(errors=1)
+        result.stdout.fnmatch_lines(["*fixture 'chrony_tracking_status' not found*"])
