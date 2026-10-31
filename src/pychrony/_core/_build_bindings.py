@@ -51,7 +51,7 @@ const char *chrony_get_field_string(chrony_session *s, int field);
 
 // Timespec for reference time. "int..." and the trailing "..." let CFFI take
 // time_t's size and the struct's layout from <time.h> at compile time, so a
-// platform with 64-bit time_t on 32-bit long, or padding, still matches.
+// platform with 64-bit time_t on 32-bit long, or padding, matches too.
 typedef int... time_t;
 struct timespec {
     time_t tv_sec;

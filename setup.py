@@ -9,10 +9,10 @@ without libchrony. The resulting install imports, but any connection attempt
 raises ChronyLibraryError. ``[tool.uv]`` in pyproject.toml sets this for uv
 installs of the project (``uv sync``, ``uv pip install -e .``).
 
-PYCHRONY_BUILD_CFFI=1, formerly the opt-in, overrides PYCHRONY_SKIP_CFFI, e.g.
+PYCHRONY_BUILD_CFFI=1 forces compilation and overrides PYCHRONY_SKIP_CFFI, e.g.
 ``PYCHRONY_BUILD_CFFI=1 uv sync`` builds the bindings despite the uv config.
-Otherwise it is a no-op. cibuildwheel (CIBUILDWHEEL=1) always compiles, since a
-wheel without bindings would be broken.
+cibuildwheel (CIBUILDWHEEL=1) always compiles, since a wheel without bindings
+would be broken.
 """
 
 import os
