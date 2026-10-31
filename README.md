@@ -27,7 +27,18 @@ Pre-built wheels include libchrony—no system dependencies needed.
 <details>
 <summary><strong>Building from Source</strong></summary>
 
-Source installs (sdist or development) require [libchrony](https://gitlab.com/chrony/libchrony) to be installed on your system.
+Installing from source (the sdist, or any platform without a pre-built wheel)
+compiles the CFFI bindings, so it needs a C compiler, the libffi headers, and
+[libchrony](https://gitlab.com/chrony/libchrony) with its headers. libchrony is
+found through `pkg-config`; for a non-standard prefix, add
+`<prefix>/lib/pkgconfig` to `PKG_CONFIG_PATH`. A missing `chrony.h` or library
+stops the install with an error naming it.
+
+To build from source even where a wheel exists:
+
+```bash
+pip install --no-binary pychrony pychrony
+```
 
 #### libchrony Package Availability
 
@@ -44,7 +55,7 @@ Source installs (sdist or development) require [libchrony](https://gitlab.com/ch
 ```bash
 # Install build dependencies
 # Debian/Ubuntu:
-sudo apt-get install build-essential libtool libffi-dev
+sudo apt-get install build-essential libtool-bin libffi-dev python3-dev
 
 # Alpine:
 sudo apk add gcc make libtool libffi-dev musl-dev
@@ -67,8 +78,17 @@ git clone https://github.com/arunderwood/pychrony.git
 cd pychrony
 git submodule update --init
 uv sync --all-groups
-uv pip install -e .
 ```
+
+`uv sync` and `uv pip install` from the checkout install pychrony **without**
+the compiled bindings: `[tool.uv]` in `pyproject.toml` sets
+`PYCHRONY_SKIP_CFFI=1`, so development and the unit and contract tests need no
+libchrony. Connecting to chronyd from such an install raises
+`ChronyLibraryError`. Integration tests build the bindings in Docker (see
+[TESTING.md](TESTING.md)).
+
+With libchrony installed, `PYCHRONY_BUILD_CFFI=1 uv sync` or `pip install -e .`
+builds the bindings. With other installers, `PYCHRONY_SKIP_CFFI=1` skips them.
 
 </details>
 

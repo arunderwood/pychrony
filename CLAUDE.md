@@ -19,7 +19,7 @@ uv run ruff format .                       # format
 uv run ty check src/                       # type check
 
 # Building wheels
-uv build                                   # build sdist and wheel in dist/
+uv build                                   # build sdist and wheel in dist/ (the wheel needs libchrony)
 uv pip install cibuildwheel               # install cibuildwheel for manylinux builds
 cibuildwheel --platform linux             # build manylinux wheels (requires Docker)
                                           # output in wheelhouse/
@@ -73,6 +73,7 @@ stale-image note above.
 - **Build**: setuptools + setuptools-scm (version from git tags); `setup.py` hooks in the CFFI build
 - **CFFI bindings**: `src/pychrony/_core/_bindings.py` wraps libchrony; `ChronyConnection` context manager with `get_tracking()`, `get_sources()`, `get_source_stats()`, `get_rtc_data()`, and `address`/`transport` properties
 - **Build script**: `src/pychrony/_core/_build_bindings.py` generates `_cffi_bindings*.so` at install time
+- **setup.py** compiles the bindings by default and fails with a clear message without libchrony (found via pkg-config, else default compiler paths). `PYCHRONY_SKIP_CFFI=1` skips them; `[tool.uv]` sets it for `uv sync`/`uv pip`, so dev and the CI test/lint/docs jobs need no libchrony (unit/contract tests mock the bindings). `uv build` ignores it. `PYCHRONY_BUILD_CFFI=1` or `CIBUILDWHEEL=1` overrides it: `docker/Dockerfile.test` depends on that, and `PYCHRONY_BUILD_CFFI=1 uv sync` builds them locally (`cache-keys` triggers the rebuild). Tests: `tests/unit/test_setup.py`.
 - **Field registry**: `src/pychrony/_core/_fields.py` maps libchrony field names to `FieldType` per report (`TRACKING_FIELDS`, `SOURCE_FIELDS`, `SOURCESTATS_FIELDS`, `RTC_FIELDS`); shared by `_bindings.py` and `tests/mocks/`
 - **Data models** (`models.py`): frozen dataclasses `TrackingStatus`, `Source`, `SourceStats`, `RTCData`; enums `LeapStatus`, `SourceState`, `SourceMode`, `Transport`
 - **Exceptions** (`exceptions.py`): `ChronyError` base with `ChronyConnectionError`, `ChronyPermissionError`, `ChronyDataError`, `ChronyLibraryError`

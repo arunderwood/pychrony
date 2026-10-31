@@ -101,6 +101,25 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
 
+[tool.uv]
+# The first uv with extra-build-variables; older uv rejects this file.
+required-version = ">=0.8.6"
+# Lets development and the CI test/lint/docs jobs run without libchrony; unit
+# and contract tests mock the bindings. Applies to uv installs of the project
+# only, not `uv build`, pip or cibuildwheel. PYCHRONY_BUILD_CFFI=1 overrides it.
+extra-build-variables = { pychrony = { PYCHRONY_SKIP_CFFI = "1" } }
+# Replaces uv's default (pyproject.toml, setup.py, setup.cfg), so those are
+# listed too.
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "setup.py" },
+    { file = "src/pychrony/_core/_build_bindings.py" },
+    # setuptools-scm takes the version from git.
+    { git = { commit = true, tags = true } },
+    { env = "PYCHRONY_BUILD_CFFI" },
+    { env = "PYCHRONY_SKIP_CFFI" },
+]
+
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
 build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
@@ -136,6 +155,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "pyyaml>=6.0.3",
     "ruff>=0.14.11",
+    "setuptools>=77.0.1",
     "ty>=0.0.1",
 ]
 docs = [

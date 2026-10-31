@@ -25,6 +25,8 @@ def pytest_configure(config: pytest.Config) -> None:
             "pychrony._core._cffi_bindings is not importable, so every "
             f"integration test would skip. {STRICT_ENV_VAR} is set, meaning "
             "this environment is supposed to have the compiled bindings. A "
-            "common cause is an install that skipped compiling them: a source "
-            "build without PYCHRONY_BUILD_CFFI=1, or a wheel built that way."
+            "common cause is an install that skipped compiling them: a build "
+            "with PYCHRONY_SKIP_CFFI=1 (pychrony's [tool.uv] config sets it, so "
+            "uv builds need PYCHRONY_BUILD_CFFI=1 to override it), or a wheel "
+            "built that way."
         )
