@@ -425,6 +425,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#testing-your-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing Your Code
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-links" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -692,6 +703,22 @@ immutable, so they can be safely shared across threads after retrieval.</p>
 <p>The same rules apply on free-threaded CPython builds (3.14t and later), which
 pychrony ships wheels for. Disabling the GIL does not make a single
 <code>ChronyConnection</code> safe to share; keep one connection per thread.</p>
+<h2 id="testing-your-code">Testing Your Code</h2>
+<p><code>pychrony.testing</code> has factories that build pychrony objects with realistic
+defaults. They work in any test framework and do not need pytest:</p>
+<pre><code class="language-python">from pychrony.testing import make_tracking
+
+status = make_tracking(stratum=16, reference_id=0)
+assert not status.is_synchronized()
+</code></pre>
+<p>pytest users can enable fixtures (<code>chrony_tracking_status</code>, <code>chrony_source</code>,
+<code>chrony_source_stats</code>, <code>chrony_rtc_data</code>) in their top-level <code>conftest.py</code>:</p>
+<pre><code class="language-python">pytest_plugins = [&quot;pychrony.pytest_plugin&quot;]
+</code></pre>
+<p>The plugin is not loaded automatically, so installing pychrony adds no
+fixtures to other projects' test runs. See
+<a href="https://github.com/arunderwood/pychrony/blob/main/TESTING.md#pytest-fixtures">TESTING.md</a>
+for details.</p>
 <h2 id="quick-links">Quick Links</h2>
 <ul>
 <li><a href="api/">API Reference</a> - Complete API documentation</li>

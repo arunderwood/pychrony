@@ -812,11 +812,28 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#pychrony.testing.tracking_status" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pychrony.pytest_plugin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        tracking_status
+        pytest_plugin
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="pytest_plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pychrony.pytest_plugin.chrony_tracking_status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        chrony_tracking_status
       
     </span>
   </a>
@@ -824,10 +841,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pychrony.testing.source" class="md-nav__link">
+  <a href="#pychrony.pytest_plugin.chrony_source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        source
+        chrony_source
       
     </span>
   </a>
@@ -835,10 +852,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pychrony.testing.source_stats" class="md-nav__link">
+  <a href="#pychrony.pytest_plugin.chrony_source_stats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        source_stats
+        chrony_source_stats
       
     </span>
   </a>
@@ -846,10 +863,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pychrony.testing.rtc_data" class="md-nav__link">
+  <a href="#pychrony.pytest_plugin.chrony_rtc_data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        rtc_data
+        chrony_rtc_data
       
     </span>
   </a>
@@ -6661,7 +6678,8 @@ instead, so "chronyd is unreachable" is one exception to catch, not two.</p>
     </div>
 
 </div><h2 id="testing-utilities">Testing Utilities</h2>
-<p>Factory functions and pytest fixtures for testing code that uses pychrony.</p>
+<p>Factory functions for testing code that uses pychrony. They do not require
+pytest.</p>
 
 
 <div class="doc doc-object doc-module">
@@ -6677,14 +6695,17 @@ instead, so "chronyd is unreachable" is one exception to catch, not two.</p>
     <div class="doc doc-contents first">
 
         <p>Testing utilities for pychrony.</p>
-<p>This module provides factory functions and pytest fixtures for creating
-test instances of pychrony dataclasses with sensible defaults.</p>
-<p>Factory Functions (for any test framework):
-    from pychrony.testing import make_tracking, make_source
-    status = make_tracking(stratum=3, offset=-0.001)</p>
-<p>Pytest Fixtures (auto-discovered via plugin):
-    def test_something(tracking_status, source):
-        assert tracking_status.is_synchronized()</p>
+<p>This module provides factory functions for creating test instances of
+pychrony dataclasses with sensible defaults. It works with any test
+framework and must not import pytest, which is not a runtime dependency.</p>
+
+
+<details class="factory-functions" open>
+  <summary>Factory Functions</summary>
+  <p>from pychrony.testing import make_tracking, make_source
+status = make_tracking(stratum=3, offset=-0.001)</p>
+</details>        <p>Pytest fixtures live in <code>pychrony.pytest_plugin</code>; enable them with
+<code>pytest_plugins = ["pychrony.pytest_plugin"]</code> in your <code>conftest.py</code>.</p>
 
 
 
@@ -6790,7 +6811,9 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
 <span class="normal"> 99</span>
@@ -6805,9 +6828,7 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_tracking</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_tracking</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a TrackingStatus instance with sensible defaults.</span>
 
 <span class="sd">    Default state is synchronized (reference_id != 0, stratum=2).</span>
@@ -6915,7 +6936,9 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
 <span class="normal">119</span>
@@ -6930,9 +6953,7 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
+<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a Source instance with sensible defaults.</span>
 
 <span class="sd">    Default state is selected and reachable.</span>
@@ -7039,7 +7060,9 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
@@ -7053,9 +7076,7 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source_stats</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_source_stats</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a SourceStats instance with sensible defaults.</span>
 
 <span class="sd">    Default has 8 samples (sufficient for statistics).</span>
@@ -7161,7 +7182,9 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
@@ -7175,9 +7198,7 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <span class="normal">166</span>
 <span class="normal">167</span>
 <span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_rtc_data</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
+<span class="normal">169</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">make_rtc_data</span><span class="p">(</span><span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an RTCData instance with sensible defaults.</span>
 
 <span class="sd">    Default is calibrated (samples &gt; 0).</span>
@@ -7200,11 +7221,65 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
 </div>
 
+
+
+  </div>
+
+    </div>
+
+</div><p>Pytest fixtures, enabled with <code>pytest_plugins = ["pychrony.pytest_plugin"]</code> in
+your top-level <code>conftest.py</code>.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="pychrony.pytest_plugin" class="doc doc-heading">
+            <code>pytest_plugin</code>
+
+
+</h2>
+
+    <div class="doc doc-contents first">
+
+        <p>Pytest fixtures for testing code that uses pychrony.</p>
+<p>Enable the plugin in your top-level <code>conftest.py</code>; pytest rejects
+<code>pytest_plugins</code> in nested conftest files:</p>
+<pre><code>pytest_plugins = ["pychrony.pytest_plugin"]
+</code></pre>
+<p>Then request the fixtures by name:</p>
+<pre><code>def test_something(chrony_tracking_status, chrony_source):
+    assert chrony_tracking_status.is_synchronized()
+</code></pre>
+<p>Each fixture returns the matching <code>pychrony.testing</code> factory's default
+instance. Use the factories directly when a test needs custom field values.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pychrony.testing.tracking_status" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">tracking_status</span><span class="p">()</span></code>
+<h3 id="pychrony.pytest_plugin.chrony_tracking_status" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">chrony_tracking_status</span><span class="p">()</span></code>
 
 </h3>
 
@@ -7215,12 +7290,12 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">tracking_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
+              <summary>Source code in <code>src/pychrony/pytest_plugin.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chrony_tracking_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TrackingStatus</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a synchronized TrackingStatus with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_tracking</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
@@ -7232,8 +7307,8 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pychrony.testing.source" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">source</span><span class="p">()</span></code>
+<h3 id="pychrony.pytest_plugin.chrony_source" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">chrony_source</span><span class="p">()</span></code>
 
 </h3>
 
@@ -7244,12 +7319,12 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
+              <summary>Source code in <code>src/pychrony/pytest_plugin.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chrony_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Source</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a selected, reachable Source with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_source</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
@@ -7261,8 +7336,8 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pychrony.testing.source_stats" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">source_stats</span><span class="p">()</span></code>
+<h3 id="pychrony.pytest_plugin.chrony_source_stats" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">chrony_source_stats</span><span class="p">()</span></code>
 
 </h3>
 
@@ -7273,12 +7348,12 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">source_stats</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
+              <summary>Source code in <code>src/pychrony/pytest_plugin.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chrony_source_stats</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">SourceStats</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a SourceStats with sufficient samples.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_source_stats</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
@@ -7290,8 +7365,8 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pychrony.testing.rtc_data" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">rtc_data</span><span class="p">()</span></code>
+<h3 id="pychrony.pytest_plugin.chrony_rtc_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">chrony_rtc_data</span><span class="p">()</span></code>
 
 </h3>
 
@@ -7302,12 +7377,12 @@ test instances of pychrony dataclasses with sensible defaults.</p>
 
 
             <details class="mkdocstrings-source">
-              <summary>Source code in <code>src/pychrony/testing.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">rtc_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
+              <summary>Source code in <code>src/pychrony/pytest_plugin.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chrony_rtc_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">RTCData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fixture providing a calibrated RTCData with defaults.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">make_rtc_data</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
