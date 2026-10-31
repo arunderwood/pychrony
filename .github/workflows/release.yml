@@ -111,8 +111,11 @@ jobs:
         build-args: PYCHRONY_INSTALL=wheel
         build-contexts: wheelhouse=wheelhouse
 
+    # Only the integration tests: the unit and contract tests already ran
+    # against these wheels in cibuildwheel's test-command, and some of them
+    # (test_setup.py) need the source tree, which this image leaves out.
     - name: Run tests
-      run: docker run --rm --cap-add=SYS_TIME pychrony-test:latest run-integration.sh
+      run: docker run --rm --cap-add=SYS_TIME pychrony-test:latest run-integration.sh tests/integration -v --tb=short
 
   publish-testpypi:
     name: Publish to Test PyPI
