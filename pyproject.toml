@@ -105,23 +105,20 @@ python_functions = ["test_*"]
 addopts = ["-v", "--tb=short"]
 
 [tool.uv]
-# extra-build-variables needs uv 0.8.6; older uv rejects this file outright.
+# The first uv with extra-build-variables; older uv rejects this file.
 required-version = ">=0.8.6"
-# setup.py compiles the CFFI bindings by default, which needs libchrony. uv
-# installs of the project itself (`uv sync`, `uv pip install -e .`) skip that,
-# so development and the CI test/lint/docs jobs work without libchrony; unit and
-# contract tests mock the bindings. PYCHRONY_BUILD_CFFI=1 overrides it.
-# `uv build`, pip and cibuildwheel do not apply this, so wheels always compile.
+# Lets development and the CI test/lint/docs jobs run without libchrony; unit
+# and contract tests mock the bindings. Applies to uv installs of the project
+# only, not `uv build`, pip or cibuildwheel. PYCHRONY_BUILD_CFFI=1 overrides it.
 extra-build-variables = { pychrony = { PYCHRONY_SKIP_CFFI = "1" } }
-# What uv watches to decide when to rebuild pychrony. Setting this replaces
-# uv's default (pyproject.toml, setup.py, setup.cfg), so those are listed too.
+# Replaces uv's default (pyproject.toml, setup.py, setup.cfg), so those are
+# listed too.
 cache-keys = [
     { file = "pyproject.toml" },
     { file = "setup.py" },
     { file = "src/pychrony/_core/_build_bindings.py" },
     # setuptools-scm takes the version from git.
     { git = { commit = true, tags = true } },
-    # Turning the bindings on or off changes what gets built.
     { env = "PYCHRONY_BUILD_CFFI" },
     { env = "PYCHRONY_SKIP_CFFI" },
 ]

@@ -49,9 +49,9 @@ uint64_t chrony_get_field_uinteger(chrony_session *s, int field);
 int64_t chrony_get_field_integer(chrony_session *s, int field);
 const char *chrony_get_field_string(chrony_session *s, int field);
 
-// Timespec for reference time. "int..." and the trailing "..." let CFFI take
-// time_t's size and the struct's layout from <time.h> at compile time, so a
-// platform with 64-bit time_t on 32-bit long, or padding, matches too.
+// Timespec for reference time. "int..." and the trailing "..." make CFFI take
+// time_t's size and the struct's layout from <time.h>, which differ across
+// platforms (e.g. 64-bit time_t with 32-bit long).
 typedef int... time_t;
 struct timespec {
     time_t tv_sec;
@@ -64,10 +64,8 @@ struct timespec chrony_get_field_timespec(chrony_session *s, int field);
 MODULE_NAME = "pychrony._core._cffi_bindings"
 SOURCE = "#include <chrony.h>"
 
-# Set up compiled bindings (API mode). libchrony installs libchrony.pc, so ask
-# pkg-config for its include and library paths; that finds installs under any
-# prefix on PKG_CONFIG_PATH. Without pkg-config or the .pc file, fall back to
-# the compiler's default search paths (plus CFLAGS/LDFLAGS).
+# libchrony installs libchrony.pc. Without pkg-config or that file, the
+# compiler's default paths plus CFLAGS/LDFLAGS have to find it.
 try:
     ffibuilder.set_source_pkgconfig(MODULE_NAME, ["libchrony"], SOURCE)
 except PkgConfigError:

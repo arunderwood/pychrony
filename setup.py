@@ -1,18 +1,10 @@
-"""Setup script for building CFFI extensions.
+"""Compiling by default means a source install either works or fails at build
+time, never yielding a package that cannot reach chronyd.
 
-The CFFI bindings to libchrony are compiled by default, so an sdist install
-produces a working package. That requires libchrony (chrony.h and the shared
-library) and a C compiler at build time.
-
-Set PYCHRONY_SKIP_CFFI=1 to skip compilation, e.g. for development on a system
-without libchrony. The resulting install imports, but any connection attempt
-raises ChronyLibraryError. ``[tool.uv]`` in pyproject.toml sets this for uv
-installs of the project (``uv sync``, ``uv pip install -e .``).
-
-PYCHRONY_BUILD_CFFI=1 forces compilation and overrides PYCHRONY_SKIP_CFFI, e.g.
-``PYCHRONY_BUILD_CFFI=1 uv sync`` builds the bindings despite the uv config.
-cibuildwheel (CIBUILDWHEEL=1) always compiles, since a wheel without bindings
-would be broken.
+PYCHRONY_SKIP_CFFI=1 is for development without libchrony; ``[tool.uv]`` in
+pyproject.toml sets it for uv installs of the project. Such an install imports,
+but connecting raises ChronyLibraryError. cibuildwheel always compiles because a
+wheel without bindings is broken.
 """
 
 import os
@@ -43,11 +35,8 @@ pychrony cannot query chronyd), set PYCHRONY_SKIP_CFFI=1."""
 
 
 class build_ext_with_libchrony_check(build_ext):
-    """build_ext that checks for libchrony before compiling the bindings.
-
-    Without this, a missing libchrony surfaces as a raw compiler or linker
-    error from the CFFI-generated source.
-    """
+    """Without this, a missing libchrony surfaces as a raw compiler or linker
+    error from the CFFI-generated source."""
 
     def build_extension(self, ext):
         if ext.name == CFFI_EXTENSION:
@@ -87,7 +76,6 @@ class build_ext_with_libchrony_check(build_ext):
 
 
 def should_build_cffi(environ=os.environ):
-    """Whether this build compiles the CFFI bindings."""
     if environ.get("CIBUILDWHEEL") == "1" or environ.get("PYCHRONY_BUILD_CFFI") == "1":
         return True
     return environ.get("PYCHRONY_SKIP_CFFI") != "1"

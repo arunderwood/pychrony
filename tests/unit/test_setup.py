@@ -1,9 +1,7 @@
-"""Tests for setup.py: when the CFFI bindings build, and missing-libchrony errors.
+"""setup.py only runs setup() as __main__, so importing it is side-effect free.
 
-setup.py only runs setup() as __main__, so importing it here is side-effect
-free. setuptools is a dev dependency but is absent from cibuildwheel's wheel
-test environment (which runs tests/unit too) or may be older there, so these
-skip unless the build-system minimum is installed.
+cibuildwheel's wheel-test environment also runs tests/unit, and its setuptools
+may be missing or older than the build-system minimum.
 """
 
 import importlib.util
@@ -48,7 +46,6 @@ def test_should_build_cffi(environ, expected):
 
 
 def test_cffi_modules_target_exists():
-    """The "path:attribute" setup.py hands cffi names a real FFI builder."""
     module = _load(
         "pychrony_build_bindings", ROOT / "src/pychrony/_core/_build_bindings.py"
     )
