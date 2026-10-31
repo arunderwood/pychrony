@@ -30,8 +30,10 @@ Pre-built wheels include libchrony—no system dependencies needed.
 Installing from source (the sdist, or any platform without a pre-built wheel)
 compiles pychrony's CFFI bindings, which requires a C compiler, the libffi
 headers, and [libchrony](https://gitlab.com/chrony/libchrony) with its headers.
-If `chrony.h` or the libchrony library cannot be found, the install stops with
-an error saying what is missing.
+The build finds libchrony through `pkg-config` (libchrony installs
+`libchrony.pc`), so for a non-standard prefix add `<prefix>/lib/pkgconfig` to
+`PKG_CONFIG_PATH`. If `chrony.h` or the libchrony library cannot be found, the
+install stops with an error saying what is missing.
 
 To force a source build, e.g. to check a libchrony install:
 
@@ -89,8 +91,7 @@ Docker (see [TESTING.md](TESTING.md)).
 Set `PYCHRONY_SKIP_CFFI=1` yourself to skip the bindings with any other
 installer, e.g. `PYCHRONY_SKIP_CFFI=1 pip install -e .`. With libchrony
 installed, `pip install -e .` (without the variable) builds them, as does
-`PYCHRONY_BUILD_CFFI=1 uv sync --reinstall-package pychrony`, which overrides
-the uv setting.
+`PYCHRONY_BUILD_CFFI=1 uv sync`, which overrides the uv setting.
 
 </details>
 

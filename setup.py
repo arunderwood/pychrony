@@ -6,8 +6,8 @@ library) and a C compiler at build time.
 
 Set PYCHRONY_SKIP_CFFI=1 to skip compilation, e.g. for development on a system
 without libchrony. The resulting install imports, but any connection attempt
-raises ChronyLibraryError. ``[tool.uv]`` in pyproject.toml sets this for
-``uv sync`` and ``uv pip``.
+raises ChronyLibraryError. ``[tool.uv]`` in pyproject.toml sets this for uv
+installs of the project (``uv sync``, ``uv pip install -e .``).
 
 PYCHRONY_BUILD_CFFI=1, formerly the opt-in, overrides PYCHRONY_SKIP_CFFI, e.g.
 ``PYCHRONY_BUILD_CFFI=1 uv sync`` builds the bindings despite the uv config.
@@ -34,8 +34,9 @@ Install libchrony and a C compiler, then retry:
   Others:      build https://gitlab.com/chrony/libchrony
                make && make install prefix=/usr && ldconfig
 
-For a non-standard prefix, set CFLAGS=-I<prefix>/include
-and LDFLAGS=-L<prefix>/lib.
+For a non-standard prefix, add <prefix>/lib/pkgconfig to
+PKG_CONFIG_PATH (or set CFLAGS=-I<prefix>/include and
+LDFLAGS=-L<prefix>/lib).
 
 To install without the bindings (development only:
 pychrony cannot query chronyd), set PYCHRONY_SKIP_CFFI=1."""
@@ -85,16 +86,20 @@ class build_ext_with_libchrony_check(build_ext):
                 ) from None
 
 
-force = (
-    os.environ.get("CIBUILDWHEEL") == "1"
-    or os.environ.get("PYCHRONY_BUILD_CFFI") == "1"
-)
-skip = os.environ.get("PYCHRONY_SKIP_CFFI") == "1" and not force
+def should_build_cffi(environ=os.environ):
+    """Whether this build compiles the CFFI bindings."""
+    if environ.get("CIBUILDWHEEL") == "1" or environ.get("PYCHRONY_BUILD_CFFI") == "1":
+        return True
+    return environ.get("PYCHRONY_SKIP_CFFI") != "1"
 
-if skip:
-    setup()
-else:
-    setup(
-        cffi_modules=["src/pychrony/_core/_build_bindings.py:ffi"],
-        cmdclass={"build_ext": build_ext_with_libchrony_check},
-    )
+
+# setuptools' PEP 517 backend runs this file as __main__; the guard lets tests
+# import it without running setup().
+if __name__ == "__main__":
+    if should_build_cffi():
+        setup(
+            cffi_modules=["src/pychrony/_core/_build_bindings.py:ffibuilder"],
+            cmdclass={"build_ext": build_ext_with_libchrony_check},
+        )
+    else:
+        setup()

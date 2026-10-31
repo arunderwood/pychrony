@@ -1,17 +1,18 @@
 """CFFI build script for libchrony bindings.
 
 This module generates compiled CFFI bindings to libchrony using API mode.
-Run directly to compile: python -m pychrony._core._build_bindings
+setup.py builds it through ``cffi_modules``; run it directly to compile in
+place: python -m pychrony._core._build_bindings
 
-Requires libchrony-devel headers at build time.
+Requires libchrony and its headers at build time.
 """
 
-from cffi import FFI
+from cffi import FFI, PkgConfigError
 
-ffi = FFI()
+ffibuilder = FFI()
 
 # Define the C interface to libchrony's high-level introspection API
-ffi.cdef("""
+ffibuilder.cdef("""
 // Opaque session handle
 typedef struct chrony_session chrony_session;
 
@@ -48,20 +49,29 @@ uint64_t chrony_get_field_uinteger(chrony_session *s, int field);
 int64_t chrony_get_field_integer(chrony_session *s, int field);
 const char *chrony_get_field_string(chrony_session *s, int field);
 
-// Timespec for reference time
+// Timespec for reference time. "int..." and the trailing "..." let CFFI take
+// time_t's size and the struct's layout from <time.h> at compile time, so a
+// platform with 64-bit time_t on 32-bit long, or padding, still matches.
+typedef int... time_t;
 struct timespec {
-    long tv_sec;
+    time_t tv_sec;
     long tv_nsec;
+    ...;
 };
 struct timespec chrony_get_field_timespec(chrony_session *s, int field);
 """)
 
-# Set up compiled bindings (API mode)
-ffi.set_source(
-    "pychrony._core._cffi_bindings",
-    "#include <chrony.h>",
-    libraries=["chrony"],
-)
+MODULE_NAME = "pychrony._core._cffi_bindings"
+SOURCE = "#include <chrony.h>"
+
+# Set up compiled bindings (API mode). libchrony installs libchrony.pc, so ask
+# pkg-config for its include and library paths; that finds installs under any
+# prefix on PKG_CONFIG_PATH. Without pkg-config or the .pc file, fall back to
+# the compiler's default search paths (plus CFLAGS/LDFLAGS).
+try:
+    ffibuilder.set_source_pkgconfig(MODULE_NAME, ["libchrony"], SOURCE)
+except PkgConfigError:
+    ffibuilder.set_source(MODULE_NAME, SOURCE, libraries=["chrony"])
 
 if __name__ == "__main__":
-    ffi.compile(verbose=True)
+    ffibuilder.compile(verbose=True)
