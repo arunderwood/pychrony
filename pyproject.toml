@@ -121,6 +121,7 @@ cache-keys = [
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
+# cp311 builds the abi3 wheel; cp312-cp315 reuse it and run the tests on it.
 build = "cp311-* cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 
 [tool.cibuildwheel.linux]

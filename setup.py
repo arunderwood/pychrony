@@ -8,6 +8,8 @@ wheel without bindings is broken.
 """
 
 import os
+import sys
+import sysconfig
 import tempfile
 
 from setuptools import setup
@@ -15,6 +17,7 @@ from setuptools.command.build_ext import build_ext
 from setuptools.errors import CompileError, LinkError, PlatformError
 
 CFFI_EXTENSION = "pychrony._core._cffi_bindings"
+GIL_DISABLED = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 LIBCHRONY_HELP = """\
 pychrony needs libchrony to compile its CFFI bindings.
@@ -81,6 +84,14 @@ def should_build_cffi(environ=os.environ):
     return environ.get("PYCHRONY_SKIP_CFFI") != "1"
 
 
+def wheel_options(version_info=sys.version_info, gil_disabled=GIL_DISABLED):
+    # abi3 excludes free-threaded builds, and a cp311 tag would make a wheel built
+    # on 3.10 uninstallable there.
+    if version_info < (3, 11) or gil_disabled:
+        return {}
+    return {"bdist_wheel": {"py_limited_api": "cp311"}}
+
+
 # setuptools' PEP 517 backend runs this file as __main__; the guard lets tests
 # import it without running setup().
 if __name__ == "__main__":
@@ -88,6 +99,7 @@ if __name__ == "__main__":
         setup(
             cffi_modules=["src/pychrony/_core/_build_bindings.py:ffibuilder"],
             cmdclass={"build_ext": build_ext_with_libchrony_check},
+            options=wheel_options(),
         )
     else:
         setup()

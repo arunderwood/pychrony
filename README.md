@@ -22,7 +22,9 @@ Query your system's time synchronization status from Python. PyChrony provides b
 pip install pychrony
 ```
 
-Pre-built wheels include libchrony—no system dependencies needed.
+Pre-built wheels include libchrony—no system dependencies needed. They cover
+Linux x86_64 and aarch64 (glibc and musl): one wheel for CPython 3.11 and later,
+plus free-threaded 3.14t and 3.15t. Python 3.10 installs from source.
 
 <details>
 <summary><strong>Building from Source</strong></summary>

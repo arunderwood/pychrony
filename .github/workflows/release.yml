@@ -213,10 +213,24 @@ jobs:
         print('Compiled CFFI bindings loaded')
         "
 
-    # On a free-threaded interpreter, prove the cp3XXt wheel was installed
-    # (not the sdist, which has no compiled bindings) and that importing it
-    # leaves the GIL disabled.
-    - name: Verify free-threaded wheel
+    - name: Verify wheel tag
+      run: |
+        python -c "
+        import sys, sysconfig
+        from importlib.metadata import distribution
+        wheel = distribution('pychrony').read_text('WHEEL') or ''
+        tags = [l[5:] for l in wheel.splitlines() if l.startswith('Tag: ')]
+        v = f'{sys.version_info.major}{sys.version_info.minor}'
+        if sysconfig.get_config_var('Py_GIL_DISABLED'):
+            expected = f'cp{v}-cp{v}t-manylinux'
+        else:
+            expected = 'cp311-abi3-manylinux'
+        print(f'Installed wheel tags: {tags}')
+        assert tags and all(t.startswith(expected) for t in tags), \
+            f'expected a {expected}* wheel'
+        "
+
+    - name: Verify GIL stays disabled
       if: endsWith(matrix.python, 't')
       run: |
         python -c "
