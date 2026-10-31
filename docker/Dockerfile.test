@@ -125,11 +125,7 @@ FROM runtime AS install-wheel
 # Install the wheel matching this image's python3 from the wheelhouse build
 # context. No source tree is copied, so the wheel is the only pychrony there
 # is. Dependencies are already installed from uv.lock, hence --no-deps.
-#
-# --python is required: uv pip install treats UV_PYTHON (set above for uv sync)
-# as its install target and would put the wheel into the system python3, out
-# of the venv's sight. The import check fails the build if it ends up anywhere
-# pytest cannot see it.
+# --python: uv pip would otherwise install into UV_PYTHON, outside the venv.
 COPY --from=wheelhouse / /wheelhouse/
 RUN if [ -e /wheelhouse/NO_WHEELHOUSE ] || ! ls /wheelhouse/*.whl >/dev/null 2>&1; then \
         echo "No wheels in the wheelhouse build context. Build with" \
