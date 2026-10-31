@@ -109,3 +109,17 @@ def test_missing_header_is_a_clear_error():
 def test_missing_library_is_a_clear_error():
     with pytest.raises(PlatformError, match="libchrony shared library not found"):
         _check(_FakeCompiler(fail_link=True))
+
+
+@pytest.mark.parametrize(
+    ("version_info", "gil_disabled", "expected"),
+    [
+        ((3, 11, 0), None, {"bdist_wheel": {"py_limited_api": "cp311"}}),
+        ((3, 14, 0), 0, {"bdist_wheel": {"py_limited_api": "cp311"}}),
+        ((3, 14, 0), 1, {}),
+        ((3, 15, 0), 1, {}),
+        ((3, 10, 12), None, {}),
+    ],
+)
+def test_wheel_options(version_info, gil_disabled, expected):
+    assert setup_py.wheel_options(version_info, gil_disabled) == expected
