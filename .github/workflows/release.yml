@@ -100,8 +100,7 @@ jobs:
       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
     # No gha cache here: like the sdist build, a release must not build from a
-    # cache that a PR run could have written. The build record is not uploaded
-    # either: it is of no use here and would be one more artifact in the run.
+    # cache that a PR run could have written.
     - name: Build Docker image
       uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
       env:
@@ -114,9 +113,7 @@ jobs:
         build-args: PYCHRONY_INSTALL=wheel
         build-contexts: wheelhouse=wheelhouse
 
-    # Only the integration tests: the unit and contract tests already ran
-    # against these wheels in cibuildwheel's test-command, and some of them
-    # (test_setup.py) need the source tree, which this image leaves out.
+    # cibuildwheel already ran the unit and contract tests on these wheels.
     - name: Run tests
       run: docker run --rm --cap-add=SYS_TIME pychrony-test:latest run-integration.sh tests/integration -v --tb=short
 
@@ -131,10 +128,7 @@ jobs:
       id-token: write  # OIDC token for Test PyPI Trusted Publishing
 
     steps:
-    # Download the distributions by name, not every artifact in the run: the
-    # run also uploads non-distribution artifacts (docker/build-push-action's
-    # build record), and anything in dist/ that is not a wheel or sdist fails
-    # the upload's twine check.
+    # By name: any other artifact in dist/ fails the upload's twine check.
     - name: Download wheels
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
@@ -247,10 +241,7 @@ jobs:
       id-token: write  # OIDC token for PyPI Trusted Publishing
 
     steps:
-    # Download the distributions by name, not every artifact in the run: the
-    # run also uploads non-distribution artifacts (docker/build-push-action's
-    # build record), and anything in dist/ that is not a wheel or sdist fails
-    # the upload's twine check.
+    # By name: any other artifact in dist/ fails the upload's twine check.
     - name: Download wheels
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
