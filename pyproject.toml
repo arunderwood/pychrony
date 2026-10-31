@@ -59,7 +59,8 @@ fallback_version = "0.0.0.dev0"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-# Typing files. setuptools 69+ ships these by default; the build floor is 61.
+# Typing files. setuptools 69+ already ships these by default; listing them
+# keeps the wheel's typing support explicit rather than tied to that default.
 # _cffi_bindings.pyi types the CFFI extension, which only exists once built.
 [tool.setuptools.package-data]
 pychrony = ["py.typed", "_core/*.pyi"]
