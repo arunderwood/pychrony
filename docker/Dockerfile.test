@@ -11,7 +11,7 @@ ARG PYCHRONY_INSTALL=source
 
 # Pinned uv, copied into the runtime image below. A FROM line (rather than a
 # pip install) lets Dependabot's docker ecosystem bump it.
-FROM ghcr.io/astral-sh/uv:0.11.32 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.6 AS uv
 
 # =============================================================================
 # Stage 1: Builder - compile libchrony from vendored source
