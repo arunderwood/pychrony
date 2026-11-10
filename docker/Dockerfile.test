@@ -16,7 +16,7 @@ FROM ghcr.io/astral-sh/uv:0.13.7 AS uv
 # =============================================================================
 # Stage 1: Builder - compile libchrony from vendored source
 # =============================================================================
-FROM fedora:44 AS builder
+FROM fedora:45 AS builder
 
 # Install build tools only
 RUN dnf install -y \
@@ -46,7 +46,7 @@ EOF
 # =============================================================================
 # Stage 2: Runtime - minimal image with chrony and Python
 # =============================================================================
-FROM fedora:44 AS runtime
+FROM fedora:45 AS runtime
 
 # Install runtime dependencies
 # Note: gcc is needed to compile CFFI bindings for source installs
